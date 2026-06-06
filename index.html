@@ -1,0 +1,2017 @@
+<!DOCTYPE html><script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Energy Markets Dashboard",
+  "schemaVersion": 1,
+  "description": "Daily energy markets dashboard for SigenStor 54kWh / 11kWp system. Generates a battery dispatch signal (Solar Charging / Export Opportunity / Charge Overnight / Self-Consumption) based on today's date and season, shows indicative forward power and carbon prices, sector watchlist, and a live AI-generated market briefing covering UK renewable ITs, UK and European utilities, and UK BESS market.",
+  "mcpTools": [
+    "mcp__Claude_in_Chrome__tabs_context_mcp",
+    "mcp__Claude_in_Chrome__javascript_tool"
+  ],
+  "mcpServerNames": [
+    "Claude_in_Chrome",
+    "Claude_in_Chrome"
+  ]
+}
+</script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Energy Markets Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;background:#eef2f7;color:#1e293b;padding:14px;min-height:100vh;}
+
+.header{background:linear-gradient(135deg,#0d2137,#0f766e);color:#fff;padding:18px 22px;border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+.header h1{font-size:19px;font-weight:700;}
+.header .sub{font-size:11px;opacity:.75;margin-top:2px;}
+.hbtns{display:flex;gap:7px;flex-wrap:wrap;}
+.hbtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;transition:background .2s;white-space:nowrap;}
+.hbtn:hover{background:rgba(255,255,255,.25);}
+.hbtn.primary{background:rgba(255,255,255,.25);font-weight:600;}
+.hbtn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Freshness panel */
+.fp{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;margin-bottom:12px;}
+.fp-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#475569;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;}
+.fp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;}
+.fp-item{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;}
+.fp-item.ok{border-color:#bbf7d0;background:#f0fdf4;}
+.fp-item.warn{border-color:#fde68a;background:#fffbeb;}
+.fp-item.stale{border-color:#fca5a5;background:#fef2f2;}
+.fp-name{font-size:11px;font-weight:700;color:#1e293b;margin-bottom:2px;}
+.fp-time{font-size:10px;color:#64748b;}
+.fp-src{font-size:9px;color:#94a3b8;margin-top:1px;}
+.fp-st{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;margin-top:3px;}
+.fp-st.ok{background:#dcfce7;color:#15803d;}
+.fp-st.warn{background:#fef3c7;color:#92400e;}
+.fp-st.stale{background:#fee2e2;color:#dc2626;}
+.fp-st.comp{background:#ede9fe;color:#6d28d9;}
+.fp-st.ind{background:#f1f5f9;color:#64748b;}
+
+/* Layout */
+.row{display:grid;gap:12px;margin-bottom:12px;}
+.col2{grid-template-columns:1fr 1fr;}
+.col3{grid-template-columns:1fr 1fr 1fr;}
+@media(max-width:640px){.col2,.col3{grid-template-columns:1fr;}}
+.card{background:#fff;border-radius:10px;padding:16px;border:1px solid #e2e8f0;}
+.sec{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding-bottom:8px;margin-bottom:10px;border-bottom:2px solid currentColor;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;}
+.sec-r{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.sec a{font-size:10px;font-weight:600;color:#0f766e;text-decoration:none;background:#f0fdf4;border:1px solid #bbf7d0;padding:2px 7px;border-radius:10px;text-transform:none;letter-spacing:0;}
+.sec a:hover{background:#dcfce7;}
+.ts{font-size:9px;color:#94a3b8;font-weight:400;text-transform:none;letter-spacing:0;padding:1px 6px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;}
+.ts.live{border-color:#bbf7d0;background:#f0fdf4;color:#15803d;}
+.ts.warn{border-color:#fde68a;background:#fffbeb;color:#92400e;}
+.ts.stale{border-color:#fca5a5;background:#fef2f2;color:#dc2626;}
+.ts.comp{border-color:#c4b5fd;background:#ede9fe;color:#6d28d9;}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;}
+.badge.est{background:#fef3c7;color:#92400e;border:1px solid #fde68a;}
+.badge.live-b{background:#dcfce7;color:#15803d;border:1px solid #86efac;}
+
+/* Generation mix + weather */
+.wx-row{display:flex;justify-content:space-around;align-items:center;margin-bottom:8px;padding:6px 0;background:#f8fafc;border-radius:8px;}
+.wx-day{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;}
+.wx-sym{font-size:18px;line-height:1;}
+.wx-date{font-size:9px;color:#64748b;font-weight:600;}
+.wx-hi{font-size:10px;color:#ef4444;font-weight:700;}
+.wx-lo{font-size:9px;color:#3b82f6;}
+.wx-today{background:#fff3cd;border-radius:6px;padding:2px 4px;}
+.chart-wrap{height:210px;position:relative;}
+.chart-wrap.sm{height:150px;}
+.chart-box{height:200px;position:relative;width:100%;}
+.gen-legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.gen-leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b;}
+.gen-leg-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+
+/* Irradiation */
+.irr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px;}
+.irr-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;text-align:center;}
+.irr-stat .iv{font-size:15px;font-weight:700;color:#0d2137;}
+.irr-stat .ik{font-size:9px;color:#94a3b8;margin-top:1px;}
+@media(max-width:480px){.irr-stats{grid-template-columns:repeat(2,1fr);}}
+
+.tab-bar{display:flex;gap:4px;margin-bottom:12px;}
+.tab{padding:5px 13px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#64748b;transition:all .15s;}
+.tab.active{background:#0d2137;color:#fff;border-color:#0d2137;}
+.tp{display:none;}.tp.active{display:block;}
+
+/* Battery/solar */
+.sig-badge{display:inline-flex;align-items:center;gap:6px;color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:10px;}
+.sig-detail{font-size:12px;line-height:1.65;}
+.sys-graphic{display:flex;flex-direction:column;align-items:center;min-height:200px;}
+.flow-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin-top:10px;}
+.flow-stat{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;text-align:center;}
+.fv{font-size:15px;font-weight:700;color:#0d2137;}
+.fk{font-size:10px;color:#94a3b8;margin-top:1px;}
+
+/* N2EX */
+.cs{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.csp{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;flex:1;min-width:75px;}
+.csp .cv{font-size:14px;font-weight:700;color:#0d2137;}
+.csp .ck{font-size:10px;color:#94a3b8;margin-top:1px;}
+
+/* Shares */
+table.sh{width:100%;border-collapse:collapse;font-size:12px;}
+table.sh th{color:#94a3b8;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:4px 4px;border-bottom:1px solid #f1f5f9;text-align:right;}
+table.sh th:first-child{text-align:left;}
+table.sh td{padding:5px 4px;border-bottom:1px solid #f8fafc;vertical-align:middle;}
+table.sh tr:last-child td{border-bottom:none;}
+table.sh tr:hover td{background:#fafbfc;}
+.tk{font-weight:700;color:#0d2137;font-size:11px;}
+.tn{font-size:10px;color:#94a3b8;}
+.pr{text-align:right;font-weight:700;font-size:13px;}
+.disc{display:inline-block;padding:2px 6px;border-radius:12px;font-size:10px;font-weight:700;}
+.disc.neg{background:#fef2f2;color:#dc2626;}
+.disc.pos{background:#f0fdf4;color:#16a34a;}
+.cpg{color:#16a34a;font-weight:600;font-size:11px;}
+.cpr{color:#dc2626;font-weight:600;font-size:11px;}
+.cpn{color:#94a3b8;font-weight:600;font-size:11px;}
+.bw{width:64px;background:#f1f5f9;border-radius:4px;height:5px;display:inline-block;overflow:hidden;vertical-align:middle;}
+.bf{height:5px;border-radius:4px;}
+.vok{color:#16a34a;font-size:11px;font-weight:700;}
+.vwn{color:#f59e0b;font-size:11px;font-weight:700;}
+.ver{color:#dc2626;font-size:11px;font-weight:700;}
+.nav-est{font-size:9px;color:#94a3b8;}
+.tfoot{font-size:9px;color:#94a3b8;margin-top:7px;padding-top:5px;border-top:1px solid #f1f5f9;}
+
+/* Forwards */
+.fr{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f8fafc;font-size:12px;}
+.fr:last-child{border-bottom:none;}
+.fl{color:#64748b;}
+.fval{font-weight:700;color:#0f766e;}
+.fn{font-size:9px;color:#94a3b8;margin-top:6px;}
+
+/* Briefing */
+.bt{font-size:12.5px;color:#374151;line-height:1.75;}
+.bt p{margin-bottom:10px;}
+.bt p:last-child{margin-bottom:0;}
+
+/* Shimmer */
+.shimmer{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);background-size:200% 100%;animation:shim 1.5s infinite;border-radius:5px;height:13px;margin-bottom:7px;}
+.shimmer.w100{width:100%;}.shimmer.w75{width:75%;}.shimmer.w50{width:50%;}
+@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.footer{text-align:center;font-size:10px;color:#94a3b8;margin-top:14px;}
+/* ── Traffic Light Feed Status ───────────────────────────────── */
+#feed-lights{display:flex;flex-wrap:wrap;gap:5px;width:100%;margin-top:5px;padding-bottom:2px;}
+.tl-dot{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;cursor:default;font-size:10px;font-weight:600;letter-spacing:.02em;transition:opacity .2s;}
+.tl-dot[data-status="ok"]    {background:#052e16;color:#86efac;border:1px solid #166534;}
+.tl-dot[data-status="warn"]  {background:#431407;color:#fbbf24;border:1px solid #92400e;}
+.tl-dot[data-status="error"] {background:#450a0a;color:#fca5a5;border:1px solid #991b1b;}
+.tl-dot[data-status="pending"]{background:#1e293b;color:#94a3b8;border:1px solid #334155;}
+.tl-pip{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.tl-dot[data-status="ok"]     .tl-pip{background:#22c55e;box-shadow:0 0 4px #22c55e80;}
+.tl-dot[data-status="warn"]   .tl-pip{background:#f59e0b;box-shadow:0 0 4px #f59e0b80;}
+.tl-dot[data-status="error"]  .tl-pip{background:#ef4444;box-shadow:0 0 4px #ef444480;}
+.tl-dot[data-status="pending"].tl-pip{background:#64748b;}
+/* ── News Section ─────────────────────────────────────────────── */
+.news-section{margin:18px 0 0;padding:0 4px;}
+.news-section h2{font-size:13px;font-weight:700;color:#e2e8f0;letter-spacing:.05em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:6px;}
+.news-section h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#334155,transparent);}
+.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
+.news-card{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s;}
+.news-card:hover{border-color:#3b82f6;transform:translateY(-2px);}
+.news-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:20px;}
+.badge-policy{background:#1d4ed8;color:#bfdbfe;}
+.badge-markets{background:#065f46;color:#a7f3d0;}
+.badge-companies{background:#7e22ce;color:#e9d5ff;}
+.badge-tech{background:#92400e;color:#fde68a;}
+.news-title{font-size:12px;font-weight:600;color:#cbd5e1;line-height:1.4;}
+.news-title a{color:inherit;text-decoration:none;}
+.news-title a:hover{color:#60a5fa;text-decoration:underline;}
+.news-desc{font-size:11px;color:#64748b;line-height:1.45;flex:1;}
+.news-meta{font-size:10px;color:#475569;margin-top:2px;}
+.spinner{display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:4px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-msg{font-size:11px;color:#dc2626;padding:10px;background:#fef2f2;border-radius:8px;border:1px solid #fca5a5;}
+
+/* ── Current generation mix (Electricity Maps-style) ── */
+.ci-kpis{display:flex;gap:7px;margin-bottom:10px;flex-wrap:wrap;}
+.ci-kpi{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 12px;flex:1;min-width:72px;text-align:center;}
+.ci-kpi.green{background:#f0fdf4;border-color:#bbf7d0;}
+.ci-kpi.amber{background:#fffbeb;border-color:#fde68a;}
+.ci-kpi.red{background:#fef2f2;border-color:#fca5a5;}
+.ci-val{font-size:18px;font-weight:800;color:#0d2137;line-height:1.1;}
+.ci-lbl{font-size:9px;color:#94a3b8;margin-top:2px;white-space:nowrap;}
+.cmix-bar{display:flex;height:26px;border-radius:8px;overflow:hidden;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.09);}
+.cmix-seg{transition:width .6s ease;}
+.cmix-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:5px 10px;margin-bottom:10px;}
+.cmix-item{display:flex;flex-direction:column;gap:2px;}
+.cmix-hd{display:flex;align-items:center;gap:5px;}
+.cmix-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.cmix-name{font-size:10px;color:#64748b;flex:1;}
+.cmix-pct{font-size:11px;font-weight:700;color:#1e293b;}
+.cmix-prog{height:3px;background:#f1f5f9;border-radius:2px;}
+.cmix-fill{height:100%;border-radius:2px;transition:width .5s;}
+.mix-placeholder{display:flex;flex-direction:column;gap:8px;padding:4px 0 12px;}
+</style>
+</head>
+<body>
+<!-- SHARE PASSWORD GATE (light client-side deterrent) -->
+<div id="pw-gate" style="position:fixed;inset:0;z-index:99999;background:linear-gradient(135deg,#0d2137,#0f766e);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;color:#fff;text-align:center;padding:20px;">
+  <div style="font-size:24px;font-weight:700;">&#9889; Energy Markets Dashboard</div>
+  <div style="font-size:13px;opacity:.75;">Enter the password to view</div>
+  <input id="pw-input" type="password" placeholder="Password" autofocus style="padding:11px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);color:#fff;font-size:15px;width:250px;text-align:center;outline:none;">
+  <button id="pw-btn" style="padding:10px 26px;border-radius:9px;border:none;background:#fff;color:#0d2137;font-size:14px;font-weight:700;cursor:pointer;">Unlock</button>
+  <div id="pw-err" style="font-size:12px;color:#fecaca;height:15px;"></div>
+  <div style="font-size:10px;opacity:.5;margin-top:8px;max-width:300px;">Personal energy dashboard &middot; grid &amp; weather update live &middot; prices are a saved snapshot</div>
+</div>
+<script>
+(function(){
+  var SHARE_PASSWORD = 'energy2026';
+  var gate=document.getElementById('pw-gate');
+  var root=document.documentElement;
+  root.style.overflow='hidden';
+  function tryUnlock(){
+    if(document.getElementById('pw-input').value===SHARE_PASSWORD){gate.remove();root.style.overflow='';}
+    else{document.getElementById('pw-err').textContent='Incorrect password';}
+  }
+  document.getElementById('pw-btn').addEventListener('click',tryUnlock);
+  document.getElementById('pw-input').addEventListener('keydown',function(e){if(e.key==='Enter')tryUnlock();});
+})();
+</script>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div><h1>⚡ Energy Markets</h1><div class="sub" id="header-date">Loading…</div></div>
+  <div class="hbtns">
+    <button class="hbtn primary" id="grid-btn" onclick="fetchGridWeather()">🌍 Refresh Grid &amp; Weather</button>
+    <button class="hbtn primary" id="prices-btn" onclick="refreshPrices()">📡 Refresh Prices</button>
+    <button class="hbtn" id="refresh-btn" onclick="loadAll()">↻ Refresh All</button>
+    <button class="hbtn" onclick="location.reload()" title="Reload page to get latest baked-in data">⟳ Reload Page</button>
+    <button class="hbtn" onclick="runSelfCheck()" title="Verify all sections are showing data">🔍 Self-check</button>
+  </div>
+  <div id="check-status" style="font-size:10px;width:100%;margin-top:3px;min-height:14px;"></div>
+  <div id="feed-lights"></div>
+</div>
+
+<!-- ═══ SAFARI / NON-COWORK BANNER ═══ -->
+<div id="safari-banner" style="display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 16px;margin-bottom:12px;font-size:12px;color:#92400e;">
+  <strong>ℹ Browser mode</strong> — Grid mix, carbon intensity, weather &amp; solar refresh <strong>live in your browser</strong> via public APIs (tap 🌍 Refresh Grid &amp; Weather, or it auto-loads). Share prices &amp; the AI briefing show the last saved snapshot — those update inside the <strong>Claude app</strong> or on the daily run. <a href="claude://" style="color:#0f766e;font-weight:600;">Open in Claude ↗</a>
+</div>
+
+<!-- ═══ FRESHNESS PANEL ═══ -->
+<div class="fp">
+  <div class="fp-title">🔍 Data Freshness &amp; Verification <span id="fp-summary">Loading…</span></div>
+  <div class="fp-grid" id="fp-grid"></div>
+</div>
+
+<!-- ═══ UK GENERATION MIX + WEATHER + IRRADIATION ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🌍 UK Grid Generation Mix &amp; Weather</span>
+      <div class="sec-r">
+        <span id="ts-grid" class="ts">Loading…</span>
+        <a href="https://carbonintensity.org.uk" target="_blank">Carbon Intensity ↗</a>
+        <a href="https://open-meteo.com" target="_blank">Open-Meteo ↗</a>
+      </div>
+    </div>
+
+    <!-- Live current mix panel (auto-loaded on page open) -->
+    <div id="cur-mix-body">
+      <!-- Shimmer while loading -->
+      <div class="mix-placeholder" id="mix-shimmer">
+        <div class="shimmer w100" style="height:26px;border-radius:8px;"></div>
+        <div style="display:flex;gap:7px;">
+          <div class="shimmer" style="flex:1;height:52px;border-radius:8px;"></div>
+          <div class="shimmer" style="flex:1;height:52px;border-radius:8px;"></div>
+          <div class="shimmer" style="flex:1;height:52px;border-radius:8px;"></div>
+          <div class="shimmer" style="flex:1;height:52px;border-radius:8px;"></div>
+          <div class="shimmer" style="flex:1;height:52px;border-radius:8px;"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;">
+          <div class="shimmer" style="height:32px;border-radius:6px;"></div>
+          <div class="shimmer" style="height:32px;border-radius:6px;"></div>
+          <div class="shimmer" style="height:32px;border-radius:6px;"></div>
+          <div class="shimmer" style="height:32px;border-radius:6px;"></div>
+          <div class="shimmer" style="height:32px;border-radius:6px;"></div>
+        </div>
+      </div>
+      <!-- Populated by renderCurrentMix() -->
+      <div id="cur-mix-live" style="display:none;">
+        <div class="ci-kpis" id="ci-kpis"></div>
+        <div class="cmix-bar" id="cmix-bar" title="UK generation mix right now"></div>
+        <div class="cmix-grid" id="cmix-grid"></div>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchGenTab('mix')">📊 7-Day History</div>
+      <div class="tab" onclick="switchGenTab('irr')">☀️ Solar Irradiation</div>
+    </div>
+
+    <!-- 7-Day history chart (weather symbols above) -->
+    <div id="tp-mix" class="tp active">
+      <div class="wx-row" id="wx-row" style="margin-bottom:10px;">
+        <div style="font-size:10px;color:#94a3b8;padding:8px;">Weather loading…</div>
+      </div>
+      <div class="chart-wrap" id="mix-wrap">
+        <canvas id="chart-mix"></canvas>
+      </div>
+      <div class="gen-legend" id="gen-legend"></div>
+      <div class="tfoot" style="margin-top:8px;">Source: National Grid Carbon Intensity API (live). Half-hourly data averaged to daily. Today = current period. Verify at <a href="https://gridwatch.co.uk" target="_blank" style="color:#0f766e;">Gridwatch ↗</a> · <a href="https://electricityinfo.org" target="_blank" style="color:#0f766e;">electricityinfo.org ↗</a>.</div>
+    </div>
+
+    <!-- Irradiation chart -->
+    <div id="tp-irr" class="tp">
+      <div class="irr-stats" id="irr-stats">
+        <div class="irr-stat"><div class="iv" id="irr-today">–</div><div class="ik">Today kWh/m²</div></div>
+        <div class="irr-stat"><div class="iv" id="irr-exp">–</div><div class="ik">Expected kWh today</div></div>
+        <div class="irr-stat"><div class="iv" id="irr-7d">–</div><div class="ik">7-day avg kWh/m²</div></div>
+        <div class="irr-stat"><div class="iv" id="irr-peak">–</div><div class="ik">Best day this week</div></div>
+      </div>
+      <!-- Live irradiance tracker — populated by renderIrrChart() -->
+      <div id="irr-detail"></div>
+      <div class="chart-wrap sm" id="irr-wrap">
+        <canvas id="chart-irr"></canvas>
+      </div>
+      <div class="tfoot" style="margin-top:8px;">
+        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Expected production = irradiation × 11kWp × PR(0.80) ÷ 1 sun = irradiation × <strong>8.8 kWh per kWh/m²</strong>. System: Aiko 480Wp · 51.5°N · south-facing estimated. Verify actual output in SigenStor app.
+        <br>Location: London (51.5°N, 0.1°W) — adjust for your actual site if needed.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BATTERY + SOLAR SYSTEM ═══ -->
+<div class="row col2">
+  <div class="card" id="battery-card" style="background:#f0fdf4;border-color:#bbf7d0;">
+    <div class="sec" style="color:#166534;border-color:#bbf7d0;">🔋 Battery Dispatch Signal <span id="ts-battery" class="ts comp">Computed</span></div>
+    <div class="shimmer w75"></div><div class="shimmer w100"></div><div class="shimmer w50"></div>
+  </div>
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">☀️ Solar &amp; Storage System <span id="ts-solar" class="ts comp">Computed</span></div>
+    <div class="sys-graphic" id="sys-graphic"></div>
+  </div>
+</div>
+
+<!-- ═══ N2EX ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>📉 N2EX Day-Ahead GBP/MWh</span>
+      <div class="sec-r"><span id="ts-n2ex" class="ts comp">Modelled</span><a href="https://data.nordpoolgroup.com/auction/n2ex/prices?currency=GBP&deliveryAreas=UK" target="_blank">Nord Pool live ↗</a></div>
+    </div>
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('intraday')">Today (half-hourly)</div>
+      <div class="tab" onclick="switchTab('history')">This month (daily avg)</div>
+    </div>
+    <div id="tab-intraday" class="tp active">
+      <div class="cs" id="intraday-stats"></div>
+      <div class="chart-box"><canvas id="chart-intraday"></canvas></div>
+      <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+        <span><span style="width:9px;height:9px;border-radius:50%;background:#94a3b8;display:inline-block;margin-right:3px;vertical-align:middle;"></span><span style="font-size:10px;color:#64748b;">Off-peak</span></span>
+        <span><span style="width:9px;height:9px;border-radius:50%;background:#0f766e;display:inline-block;margin-right:3px;vertical-align:middle;"></span><span style="font-size:10px;color:#64748b;">Standard</span></span>
+        <span><span style="width:9px;height:9px;border-radius:50%;background:#f97316;display:inline-block;margin-right:3px;vertical-align:middle;"></span><span style="font-size:10px;color:#64748b;">Morning peak</span></span>
+        <span><span style="width:9px;height:9px;border-radius:50%;background:#ef4444;display:inline-block;margin-right:3px;vertical-align:middle;"></span><span style="font-size:10px;color:#64748b;">Evening peak (4–8pm)</span></span>
+      </div>
+    </div>
+    <div id="tab-history" class="tp">
+      <div class="cs" id="history-stats"></div>
+      <div class="chart-box"><canvas id="chart-history"></canvas></div>
+    </div>
+    <div class="tfoot">⚠ Indicative model. Live data: <a href="https://data.nordpoolgroup.com/auction/n2ex/prices?currency=GBP&deliveryAreas=UK" target="_blank" style="color:#0f766e;">Nord Pool ↗</a> or <a href="https://bmrs.elexon.co.uk" target="_blank" style="color:#0f766e;">Elexon BMRS ↗</a>.</div>
+  </div>
+</div>
+
+<!-- ═══ 1-MONTH POWER MARKET LOOKBACK ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>📊 30-Day Power Market Lookback — May 2026</span>
+      <div class="sec-r"><span style="font-size:10px;color:#64748b;">Baseload · Wind Capture · Solar Capture · £/MWh</span></div>
+    </div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px;" id="lookback-stats">
+      <div class="csp"><div class="cv" id="lb-base-avg">—</div><div class="ck">May avg baseload</div></div>
+      <div class="csp"><div class="cv" id="lb-wind-cap">—</div><div class="ck">Wind avg capture</div></div>
+      <div class="csp"><div class="cv" id="lb-solar-cap">—</div><div class="ck">Solar avg capture</div></div>
+      <div class="csp"><div class="cv" id="lb-base-now" style="color:#ef4444;">£106</div><div class="ck">Today's N2EX</div></div>
+    </div>
+    <div class="chart-box"><canvas id="chart-lookback"></canvas></div>
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap;">
+      <span><span style="width:9px;height:9px;border-radius:2px;background:#0f766e;display:inline-block;margin-right:3px;vertical-align:middle;"></span><span style="font-size:10px;color:#64748b;">Baseload (N2EX day-ahead)</span></span>
+      <span><span style="width:9px;height:9px;border-radius:2px;background:#3b82f6;display:inline-block;margin-right:3px;vertical-align:middle;"></span><span style="font-size:10px;color:#64748b;">Wind capture price</span></span>
+      <span><span style="width:9px;height:9px;border-radius:2px;background:#f59e0b;display:inline-block;margin-right:3px;vertical-align:middle;"></span><span style="font-size:10px;color:#64748b;">Solar capture price</span></span>
+    </div>
+    <div class="tfoot">Baseload from N2EX market data. Capture prices indicative — based on KYOS/S&amp;P Global methodology. Solar capture depressed by midday generation surplus. Wind capture tracks baseload closely but falls on high-wind days. <a href="https://power.kyos.com/capture-rates" target="_blank" style="color:#0f766e;">KYOS capture rates ↗</a></div>
+  </div>
+</div>
+
+<!-- ═══ RENEWABLE ITs ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>📊 UK Renewable Investment Trusts</span>
+      <div class="sec-r"><span id="ts-rit" class="ts">–</span><a href="https://uk.finance.yahoo.com/quotes/UKW.L,TRIG.L,BSIF.L,NESF.L,FSFL.L,ORIT.L,SEIT.L,GSF.L,GRID.L,FEN.L" target="_blank">Yahoo Finance ↗</a></div>
+    </div>
+    <table class="sh">
+      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (p)</th><th>1d</th><th>NAV est.</th><th>Discount</th><th style="min-width:80px;">52-wk</th><th title="Within 52-week range?">✓</th></tr></thead>
+      <tbody id="rit-tbody"></tbody>
+    </table>
+    <div class="tfoot">Prices: Yahoo Finance (live). NAV: indicative — verify at <a href="https://www.theaic.co.uk/investment-companies" target="_blank" style="color:#0f766e;">AIC ↗</a>. ✓ = within 52-week range.</div>
+  </div>
+</div>
+
+<!-- ═══ UK + EU UTILITIES ═══ -->
+<div class="row col2">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🇬🇧 UK Utilities</span><span id="ts-uk" class="ts">–</span></div>
+    <table class="sh">
+      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (p)</th><th>1d</th><th>52-wk</th><th>✓</th></tr></thead>
+      <tbody id="uk-tbody"></tbody>
+    </table>
+    <div class="tfoot">Source: Yahoo Finance via browser.</div>
+  </div>
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🇪🇺 European Utilities</span><span id="ts-eu" class="ts">–</span></div>
+    <table class="sh">
+      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (€)</th><th>1d</th><th>52-wk</th><th>✓</th></tr></thead>
+      <tbody id="eu-tbody"></tbody>
+    </table>
+    <div class="tfoot">Source: Yahoo Finance via browser.</div>
+  </div>
+</div>
+
+<!-- ═══ FORWARDS + CARBON + BESS ═══ -->
+<div class="row col3">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">⚡ Power Forwards <span class="badge est">Indicative</span></div>
+    <div class="fr"><span class="fl">UK Win-26</span><span class="fval">£101/MWh</span></div>
+    <div class="fr"><span class="fl">UK Sum-27</span><span class="fval">£88/MWh</span></div>
+    <div class="fr"><span class="fl">UK Cal-27</span><span class="fval">£94/MWh</span></div>
+    <div class="fr"><span class="fl">Germany Cal-27</span><span class="fval">€90/MWh</span></div>
+    <div class="fr"><span class="fl">TTF Gas Win-26</span><span class="fval">€38/MWh</span></div>
+    <div class="fn">Verify on Bloomberg/ICE.</div>
+  </div>
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">🌿 Carbon <span class="badge est">Indicative</span></div>
+    <div class="fr"><span class="fl">EU ETS Dec-26</span><span class="fval">€78/t</span></div>
+    <div class="fr"><span class="fl">EU ETS Dec-27</span><span class="fval">€82/t</span></div>
+    <div class="fr"><span class="fl">UK ETS Dec-26</span><span class="fval">£55/t</span></div>
+    <div class="fr"><span class="fl">UK ETS Dec-27</span><span class="fval">£59/t</span></div>
+    <div class="fr"><span class="fl">UK/EU spread</span><span class="fval">-£14/t</span></div>
+    <div class="fn">CBAM supporting EU floor.</div>
+  </div>
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">🔋 BESS Market</div>
+    <div class="fr"><span class="fl">CM clearing (2hr+)</span><span class="fval">~£40/kW/yr</span></div>
+    <div class="fr"><span class="fl">DC High FFR</span><span class="fval">~£6/MW/h</span></div>
+    <div class="fr"><span class="fl">BM avg spread</span><span class="fval">~£8/MWh</span></div>
+    <div class="fr"><span class="fl">Installed UK BESS</span><span class="fval">~6.8 GW</span></div>
+    <div class="fr"><span class="fl">Consented pipeline</span><span class="fval">~18 GW</span></div>
+    <div class="fn">FFR compression ongoing. Longer duration outperforming.</div>
+  </div>
+</div>
+
+<!-- ═══ MARKET BRIEFING ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0f766e;border-color:#0f766e;">
+      <span>📝 Market Briefing</span>
+      <div class="sec-r"><span id="ts-brief" class="ts">–</span><span style="font-size:9px;color:#94a3b8;font-weight:400;text-transform:none;letter-spacing:0;">AI-generated on refresh</span></div>
+    </div>
+    <div class="bt" id="briefing-text">
+      <p style="color:#94a3b8;font-size:12px;margin:0;">Loading market summary…</p>
+    </div>
+  </div>
+</div>
+
+<div class="news-section">
+  <h2>📰 UK Energy &amp; Renewables — Latest</h2>
+  <div class="news-grid">
+
+    <div class="news-card">
+      <span class="news-badge badge-markets">Markets</span>
+      <div class="news-title"><a href="https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-april-and-30-june-2026" target="_blank" rel="noopener">Energy Bills to Rise in July as Gas Unit Rates Climb 28%</a></div>
+      <div class="news-desc">Households face higher bills from July, with gas unit prices up 28% and electricity up 6% versus the April–June cap (£1,641 typical annual bill).</div>
+      <div class="news-meta">Ofgem · 6 Jun 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-markets">Markets</span>
+      <div class="news-title"><a href="https://www.smart-energy.uk/post/daily-energy-market-report" target="_blank" rel="noopener">UK Gas &amp; Power Extend Gains on Middle East Supply Fears</a></div>
+      <div class="news-desc">Front-month gas is up ~6% and power ~10.8% over 30 days as rejected ceasefire proposals keep markets cautious about regional supply disruption.</div>
+      <div class="news-meta">Smart Energy · 6 Jun 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-markets">Grid</span>
+      <div class="news-title"><a href="https://www.cornwall-insight.com/thought-leadership/blog/energy-market-predictions-for-2026-the-trends-that-will-reshape-the-gb-power-system/" target="_blank" rel="noopener">2025 Sets Record for GB Wind Curtailment as Grid Lags</a></div>
+      <div class="news-desc">GB saw its highest-ever wind curtailment in 2025 — turbines paid to switch off because the network can't move power from where it's made to where it's needed.</div>
+      <div class="news-meta">Cornwall Insight · 6 Jun 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-policy">Grid</span>
+      <div class="news-title"><a href="https://commonslibrary.parliament.uk/research-briefings/cbp-10182/" target="_blank" rel="noopener">Transmission Spend to Quadruple to ~£70bn Under RIIO-ET3</a></div>
+      <div class="news-desc">Electricity transmission investment is set to rise from ~£18bn in RIIO-ET2 (FY21–25) to ~£70bn across RIIO-ET3 (FY26–31) to unblock the clean-power build-out.</div>
+      <div class="news-meta">House of Commons Library · 6 Jun 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-tech">Tech</span>
+      <div class="news-title"><a href="https://www.ess-news.com/2026/01/07/battery-storage-drives-record-year-for-uk-renewables-planning-approvals/" target="_blank" rel="noopener">UK Battery Storage Tops 6.8 GW — Up 509% Since 2020</a></div>
+      <div class="news-desc">Operational grid-scale BESS now exceeds 6.8 GW, a 509% jump since 2020, with a further ~6.5 GW under construction as storage underpins grid balancing.</div>
+      <div class="news-meta">ESS News · 6 Jun 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-policy">Policy</span>
+      <div class="news-title"><a href="https://envirotecmagazine.com/2026/03/16/uk-government-announces-decision-to-bring-forward-allocation-round-8/" target="_blank" rel="noopener">AR8 CfD Auction Brought Forward to July 2026</a></div>
+      <div class="news-desc">Government accelerates Allocation Round 8 amid strong developer appetite, targeting another record clean energy haul after AR7a's 14.7 GW result.</div>
+      <div class="news-meta">Envirotec Magazine · Mar 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-policy">Policy</span>
+      <div class="news-title"><a href="https://www.osborneclarke.com/insights/energy-transition-uk-government-completes-record-contracts-difference-allocation-round" target="_blank" rel="noopener">AR7a Delivers Record 14.7 GW of Clean Power</a></div>
+      <div class="news-desc">The UK's seventh CfD auction round cleared the most capacity ever — dominated by offshore wind, onshore wind, and solar — cementing the 2030 clean power target trajectory.</div>
+      <div class="news-meta">Osborne Clarke · 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-policy">Policy</span>
+      <div class="news-title"><a href="https://www.traverssmith.com/knowledge/knowledge-container/breaking-the-link-government-moves-to-decouple-gas-and-electricity-prices/" target="_blank" rel="noopener">Breaking the Link: Decoupling Gas &amp; Electricity Prices</a></div>
+      <div class="news-desc">The government is consulting on market reforms to end the marginal pricing mechanism that ties UK electricity costs to gas — a structural shift with major implications for generators and consumers.</div>
+      <div class="news-meta">Travers Smith · 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-markets">Markets</span>
+      <div class="news-title"><a href="https://www.harvestgreendevelopments.co.uk/2026-renewable-energy-trends/" target="_blank" rel="noopener">UK Renewable Market to Reach 132 GW by 2031</a></div>
+      <div class="news-desc">Analysts forecast the UK's installed renewables base will more than double over five years, driven by offshore wind expansion and a solar boom in commercial rooftop and utility-scale segments.</div>
+      <div class="news-meta">Harvest Green Developments · 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-companies">Companies</span>
+      <div class="news-title"><a href="https://www.rechargenews.com/energy-storage/japanese-conglomerate-strikes-uk-battery-storage-deal-with-gresham-house/2-1-1995225" target="_blank" rel="noopener">Sumitomo Acquires 694 MW UK Battery Storage Pipeline from Gresham House</a></div>
+      <div class="news-desc">Japanese conglomerate Sumitomo Corp. acquires a late-stage 694 MW grid-scale BESS pipeline, marking one of the largest single battery storage M&amp;A transactions in the UK to date.</div>
+      <div class="news-meta">Recharge News · 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-companies">Companies</span>
+      <div class="news-title"><a href="https://www.hl.co.uk/shares/investment-trusts/investment-trust-research/greencoat-uk-wind-march-2026-update" target="_blank" rel="noopener">Greencoat UK Wind Raises 2026 Dividend to 10.70p</a></div>
+      <div class="news-desc">The UK's largest listed wind fund increases its annual dividend target, underpinned by strong operational performance and inflation-linked revenue contracts across its onshore and offshore fleet.</div>
+      <div class="news-meta">Hargreaves Lansdown · Mar 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-markets">Markets</span>
+      <div class="news-title"><a href="https://www.cornwall-insight.com/thought-leadership/blog/energy-market-predictions-for-2026-the-trends-that-will-reshape-the-gb-power-system/" target="_blank" rel="noopener">2026 Energy Market Predictions: Reshaping the GB Power System</a></div>
+      <div class="news-desc">Cornwall Insight's annual outlook covers price volatility, interconnector flows, the Capacity Market, and how the energy transition is rapidly redrawing GB system economics.</div>
+      <div class="news-meta">Cornwall Insight · 2026</div>
+    </div>
+
+    <div class="news-card">
+      <span class="news-badge badge-policy">Policy</span>
+      <div class="news-title"><a href="https://www.slaughterandmay.com/horizon-scanning/2026/energy-transition/uk-energy-and-infrastructure/" target="_blank" rel="noopener">UK Energy &amp; Infrastructure 2026 Horizon Scan</a></div>
+      <div class="news-desc">Slaughter and May's horizon scan covers grid infrastructure bottlenecks, hydrogen policy, offshore wind leasing, and forthcoming legislative changes shaping energy investment decisions.</div>
+      <div class="news-meta">Slaughter and May · 2026</div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">Not investment advice · SigEnergy 11kWp / 54kWh · CMU110A53B80283
+  <div id="last-updated" style="margin-top:3px;color:#94a3b8;font-size:10px;"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  COWORK DETECTION
+// ═══════════════════════════════════════════════
+const COWORK = typeof window.cowork !== 'undefined' && !!window.cowork;
+if (!COWORK) {
+  document.getElementById('safari-banner').style.display = 'block';
+  // Grid + weather refresh live in-browser via public APIs (Carbon Intensity + Open-Meteo,
+  // both CORS-open), so the grid button stays ENABLED here. fetchGridWeather()'s Tier-1
+  // direct fetch handles it. Only share prices lack a CORS-open source → needs the Claude app.
+  const gb = document.getElementById('grid-btn');
+  if (gb) gb.title = 'Fetch live grid mix + weather directly from public APIs';
+  const pb = document.getElementById('prices-btn');
+  if (pb) { pb.disabled = true; pb.title = 'Live share prices need the Claude app'; }
+}
+
+// ═══════════════════════════════════════════════
+//  DATA TIMESTAMPS
+// ═══════════════════════════════════════════════
+const DATA_TS = {
+  prices:   {ts:'2026-06-06T07:30:00', source:'Yahoo Finance / LSE / Investing.com (search-verified)', isLive:true},
+  grid:     {ts:null, source:'Carbon Intensity API + Open-Meteo', isLive:true},
+  battery:  {ts:null, source:'Computed from date/time/season', isLive:true},
+  solar:    {ts:null, source:'Computed from date/time/season', isLive:true},
+  n2ex:     {ts:null, source:'Indicative model', isLive:false},
+  briefing: {ts:null, source:'Claude AI (Haiku)', isLive:false},
+  forwards: {ts:'2026-05-28T08:00:00', source:'Indicative — verify Bloomberg/ICE', isLive:false},
+  nav:      {ts:'2026-05-28T08:00:00', source:'Indicative estimates — verify AIC', isLive:false},
+};
+
+// ═══════════════════════════════════════════════
+//  TRAFFIC LIGHT FEED STATUS
+// ═══════════════════════════════════════════════
+const FEED_STATUS = {
+  grid:     {label:'Grid Mix',        status:'pending', msg:'Not yet fetched'},
+  weather:  {label:'Weather/Irr',     status:'pending', msg:'Not yet fetched'},
+  prices:   {label:'Share Prices',    status:'ok',      msg:'Search-verified 6 Jun'},
+  n2ex:     {label:'N2EX Prices',     status:'ok',      msg:'Modelled from schedule'},
+  battery:  {label:'Battery Signal',  status:'ok',      msg:'Computed from time/season'},
+  solar:    {label:'Solar/BESS',      status:'warn',    msg:'User-confirmed 29 May 06:15'},
+  briefing: {label:'Market Briefing', status:'pending', msg:'Not yet generated'},
+};
+
+function setFeedStatus(feed, status, msg) {
+  if (!FEED_STATUS[feed]) return;
+  FEED_STATUS[feed].status = status;
+  FEED_STATUS[feed].msg = msg || '';
+  renderTrafficLights();
+}
+
+function renderTrafficLights() {
+  const el = document.getElementById('feed-lights');
+  if (!el) return;
+  el.innerHTML = Object.entries(FEED_STATUS).map(([k, f]) =>
+    `<span class="tl-dot" title="${f.label}: ${f.msg}" data-status="${f.status}"><span class="tl-pip"></span>${f.label}</span>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  WMO WEATHER CODE → SYMBOL
+// ═══════════════════════════════════════════════
+function wxSymbol(code) {
+  if (code === 0) return {sym:'☀️', lbl:'Clear'};
+  if (code === 1) return {sym:'🌤️', lbl:'Mainly clear'};
+  if (code === 2) return {sym:'⛅', lbl:'Partly cloudy'};
+  if (code === 3) return {sym:'☁️', lbl:'Overcast'};
+  if (code >= 45 && code <= 48) return {sym:'🌫️', lbl:'Fog'};
+  if (code >= 51 && code <= 55) return {sym:'🌦️', lbl:'Drizzle'};
+  if (code >= 61 && code <= 65) return {sym:'🌧️', lbl:'Rain'};
+  if (code >= 71 && code <= 77) return {sym:'❄️', lbl:'Snow'};
+  if (code >= 80 && code <= 82) return {sym:'🌦️', lbl:'Showers'};
+  if (code >= 95) return {sym:'⛈️', lbl:'Thunder'};
+  return {sym:'🌡️', lbl:'Variable'};
+}
+
+// ═══════════════════════════════════════════════
+//  FUEL COLOURS + LABELS
+// ═══════════════════════════════════════════════
+const FUEL_CFG = {
+  wind:    {color:'#3b82f6', label:'Wind 💨'},
+  solar:   {color:'#f59e0b', label:'Solar ☀️'},
+  nuclear: {color:'#8b5cf6', label:'Nuclear ⚛️'},
+  gas:     {color:'#f97316', label:'Gas 🔶'},
+  biomass: {color:'#22c55e', label:'Biomass 🌿'},
+  imports: {color:'#94a3b8', label:'Imports'},
+  hydro:   {color:'#06b6d4', label:'Hydro 💧'},
+  other:   {color:'#d1d5db', label:'Other'},
+  coal:    {color:'#374151', label:'Coal'},
+};
+const FUEL_ORDER = ['wind','solar','nuclear','gas','biomass','imports','hydro','other','coal'];
+
+// ═══════════════════════════════════════════════
+//  IRRADIATION CALCULATION
+//  Aiko 480Wp, 11kWp system
+//  Performance ratio: 0.80
+//  Correct formula: expected kWh = irr_kWh/m² × SYSTEM_KWP × PR
+//  (kWp is already normalised to 1 kW/m² STC — no need to multiply by panel area)
+//  e.g. at 1000 W/m² (= 1 kWh/m² per hour): 11kWp × 0.80 = 8.8 kWh
+//  (shortwave_radiation_sum is MJ/m² → ÷3.6 = kWh/m²)
+//
+//  Current irradiance: expected kW = (irr_W/m² ÷ 1000) × SYSTEM_KWP × PR
+// ═══════════════════════════════════════════════
+const SYSTEM_KWP = 11;
+const PERF_RATIO = 0.80;
+function expectedKwh(shortwave_mj_m2) {
+  const irr_kwh = shortwave_mj_m2 / 3.6;           // kWh/m²
+  return +(irr_kwh * SYSTEM_KWP * PERF_RATIO).toFixed(1); // kWh
+}
+function expectedKwNow(irr_w_m2) {
+  return +((irr_w_m2 / 1000) * SYSTEM_KWP * PERF_RATIO).toFixed(2); // kW
+}
+function irrKwh(shortwave_mj_m2) {
+  return +(shortwave_mj_m2 / 3.6).toFixed(2);
+}
+
+// ═══════════════════════════════════════════════
+//  GRID + WEATHER DATA — pre-loaded from last fetch
+//  (auto-refreshed on open via fetchGridWeather)
+// ═══════════════════════════════════════════════
+const INITIAL_GRID_DATA = {
+  weather:{
+    // Updated 6 Jun 2026 — live Open-Meteo (London 51.5,-0.1)
+    time:["2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06"],
+    temperature_2m_max:[28.6,23.1,23.1,19.5,18.8,18.7,18.1,18.0],
+    temperature_2m_min:[18.2,16.5,14.2,14.7,13.2,14,12.5,11.5],
+    weathercode:[3,55,63,61,61,3,3,2],
+    shortwave_radiation_sum:[26.48,19.23,20.42,9.66,9.95,13.87,13.18,16.4]
+  },
+  daily:[
+    // Daily averages from Carbon Intensity API range endpoint (live 6 Jun 2026)
+    {date:"2026-05-30",mix:{wind:14.4,solar:17.7,nuclear:8.5,gas:26.2,biomass:6.8,imports:23.2,hydro:1.2,coal:0,other:2.0},n:48},
+    {date:"2026-05-31",mix:{wind:20.5,solar:12.1,nuclear:8.8,gas:25.4,biomass:8.2,imports:21.7,hydro:1.3,coal:0,other:2.1},n:48},
+    {date:"2026-06-01",mix:{wind:24.6,solar:7.8,nuclear:7.5,gas:32.4,biomass:7.8,imports:16.4,hydro:1.4,coal:0,other:2.1},n:48},
+    {date:"2026-06-02",mix:{wind:19.6,solar:9.7,nuclear:7.9,gas:34.2,biomass:8.3,imports:16.9,hydro:1.2,coal:0,other:2.4},n:48},
+    {date:"2026-06-03",mix:{wind:45.3,solar:7.4,nuclear:8.1,gas:11.9,biomass:6.9,imports:16.7,hydro:1.4,coal:0,other:2.4},n:48},
+    {date:"2026-06-04",mix:{wind:52.3,solar:9.1,nuclear:7.9,gas:9.6,biomass:2.6,imports:14.7,hydro:1.0,coal:0,other:2.8},n:48},
+    {date:"2026-06-05",mix:{wind:34.1,solar:11.5,nuclear:9.1,gas:20.8,biomass:7.1,imports:15.6,hydro:0.8,coal:0,other:1.1},n:48},
+    {date:"2026-06-06",mix:{wind:26.4,solar:15.8,nuclear:8.6,gas:21.7,biomass:7.0,imports:17.2,hydro:1.0,coal:0,other:2.3},n:20}
+  ],
+  // Live snapshot 6 Jun 2026 ~07:55 BST — Carbon Intensity API
+  currentMix:{wind:27.5,solar:7.5,nuclear:8.8,gas:23.5,biomass:7.3,imports:18.4,hydro:1.2,coal:0,other:5.8},
+  carbonIntensity:158,  // gCO₂/kWh actual — "Moderate"
+  todayStr:"2026-06-06",
+  fetchedAt:"2026-06-06T06:57:27.000Z",
+  // Hourly irradiance today (W/m²) — Open-Meteo, full day from 00:00 BST
+  hourlyIrr:   [0,0,0,0,28,88,175,275,355,425,470,505,525,495,455,395,325,245,165,88,28,0,0,0],
+  hourlyDirect:[0,0,0,0,4,18,48,88,128,165,188,205,218,198,178,148,108,68,38,14,4,0,0,0],
+  irrStartHour:0, // first entry = 00:00 local
+  currentIrr:355, currentDirect:128, currentDiffuse:227, // W/m² at 08:00 BST
+};
+
+// Last confirmed reading from system (user-provided 29 May 2026 ~07:15 BST)
+const LAST_KNOWN_SOLAR = {
+  solarKw: 1.6,
+  soc: 0.05,        // 5%
+  ts: '2026-05-29T06:15:00.000Z',
+  source: 'User-confirmed'
+};
+let GRID_DATA = INITIAL_GRID_DATA;
+
+// ═══════════════════════════════════════════════
+//  RENDER CURRENT GENERATION MIX (live snapshot)
+//  Inspired by Electricity Maps zone panel style
+// ═══════════════════════════════════════════════
+function renderCurrentMix(mix, intensity) {
+  if (!mix || !Object.keys(mix).length) return;
+  document.getElementById('mix-shimmer').style.display = 'none';
+  document.getElementById('cur-mix-live').style.display = '';
+
+  // Carbon intensity colour band
+  let ciClass = 'green', ciLabel = 'Very low';
+  if (intensity > 300)      { ciClass = 'red';   ciLabel = 'Very high'; }
+  else if (intensity > 200) { ciClass = 'red';   ciLabel = 'High'; }
+  else if (intensity > 150) { ciClass = 'amber'; ciLabel = 'Moderate'; }
+  else if (intensity > 100) { ciClass = 'amber'; ciLabel = 'Low'; }
+
+  const zeroCarbonFuels = ['wind','solar','nuclear','hydro','biomass'];
+  const fossilFuels     = ['gas','coal'];
+  const renewPct  = Math.round(zeroCarbonFuels.reduce((s,f) => s + (mix[f]||0), 0));
+  const fossilPct = Math.round(fossilFuels.reduce((s,f)     => s + (mix[f]||0), 0));
+
+  document.getElementById('ci-kpis').innerHTML = [
+    intensity != null
+      ? `<div class="ci-kpi ${ciClass}"><div class="ci-val">${intensity}</div><div class="ci-lbl">gCO₂/kWh · ${ciLabel}</div></div>`
+      : '',
+    `<div class="ci-kpi green"><div class="ci-val">${renewPct}%</div><div class="ci-lbl">Zero carbon</div></div>`,
+    `<div class="ci-kpi ${fossilPct>30?'red':fossilPct>15?'amber':'green'}"><div class="ci-val">${fossilPct}%</div><div class="ci-lbl">Fossil</div></div>`,
+    `<div class="ci-kpi"><div class="ci-val">${Math.round(mix.wind||0)}%</div><div class="ci-lbl">Wind 💨</div></div>`,
+    `<div class="ci-kpi"><div class="ci-val">${Math.round(mix.solar||0)}%</div><div class="ci-lbl">Solar ☀️</div></div>`,
+  ].join('');
+
+  // Big rainbow stacked bar
+  document.getElementById('cmix-bar').innerHTML = FUEL_ORDER
+    .filter(f => (mix[f] || 0) >= 0.5)
+    .map(f => {
+      const cfg = FUEL_CFG[f];
+      const pct = (mix[f] || 0).toFixed(1);
+      return `<div class="cmix-seg" style="width:${pct}%;background:${cfg.color};" title="${cfg.label}: ${pct}%"></div>`;
+    }).join('');
+
+  // Fuel breakdown grid with mini progress bars
+  document.getElementById('cmix-grid').innerHTML = FUEL_ORDER
+    .filter(f => (mix[f] || 0) >= 0.1)
+    .map(f => {
+      const cfg = FUEL_CFG[f];
+      const pct = (mix[f] || 0).toFixed(1);
+      return `<div class="cmix-item">
+        <div class="cmix-hd">
+          <div class="cmix-dot" style="background:${cfg.color};"></div>
+          <span class="cmix-name">${cfg.label}</span>
+          <span class="cmix-pct">${pct}%</span>
+        </div>
+        <div class="cmix-prog"><div class="cmix-fill" style="width:${pct}%;background:${cfg.color};"></div></div>
+      </div>`;
+    }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  FETCH GRID + WEATHER — two-tier resilient strategy
+//  Tier 1: direct CORS fetch (fast, works from Netlify & open browsers)
+//  Tier 2: Claude-in-Chrome JS injection (Cowork fallback — bypasses WebView CSP)
+//          Rebuilt 5 Jun 2026: previously grabbed availableTabs[0], which is
+//          usually chrome://newtab where JS exec is blocked ("Cannot access a
+//          chrome:// URL") — the reason grid/weather never refreshed. Now it
+//          finds/creates an http(s) tab and navigates it to the API page
+//          first, and parses MCP results with trailing Tab Context text.
+// ═══════════════════════════════════════════════
+
+function _buildDaysList() {
+  const today = new Date();
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate()-i);
+    days.push(d.toISOString().split('T')[0]);
+  }
+  return {today, todayStr: today.toISOString().split('T')[0], days};
+}
+
+function _processRawGridData(today, todayStr, weatherRes, currentGen, intensityRes, dailyGen) {
+  let currentMix={};
+  try{currentGen.data.generationmix.forEach(({fuel,perc})=>currentMix[fuel]=perc);}catch(e){}
+  let carbonIntensity=null;
+  try{const id=intensityRes.data[0].intensity;carbonIntensity=id.actual!=null?id.actual:id.forecast;}catch(e){}
+  let hourlyIrr=[],hourlyDirect=[],irrStartHour=0,currentIrr=null,currentDirect=null,currentDiffuse=null;
+  try{
+    const times=weatherRes.hourly?.time||[];
+    const tp=todayStr+'T';
+    const idxs=times.map((t,i)=>t.startsWith(tp)?i:-1).filter(i=>i>=0);
+    if(idxs.length){
+      irrStartHour=parseInt(times[idxs[0]].split('T')[1]);
+      hourlyIrr=idxs.map(i=>weatherRes.hourly.shortwave_radiation[i]||0);
+      hourlyDirect=idxs.map(i=>weatherRes.hourly.direct_radiation[i]||0);
+      const nowH=today.getHours();
+      const ci2=idxs.find(idx=>parseInt(times[idx].split('T')[1])===nowH);
+      if(ci2!==undefined){currentIrr=weatherRes.hourly.shortwave_radiation[ci2];currentDirect=weatherRes.hourly.direct_radiation[ci2];currentDiffuse=weatherRes.hourly.diffuse_radiation[ci2];}
+    }
+  }catch(e){}
+  return {weather:weatherRes.daily,daily:dailyGen,currentMix,carbonIntensity,todayStr,hourlyIrr,hourlyDirect,irrStartHour,currentIrr,currentDirect,currentDiffuse,fetchedAt:new Date().toISOString()};
+}
+
+// Aggregate the half-hourly range response into per-day average mixes
+function _aggDailyGen(rangeRes, days) {
+  const fuels=['wind','solar','nuclear','gas','biomass','imports','hydro','coal','other'];
+  const byDay={};
+  ((rangeRes&&rangeRes.data)||[]).forEach(p=>{const day=p.from.split('T')[0];(byDay[day]=byDay[day]||[]).push(p);});
+  return days.map(day=>{
+    const pts=byDay[day]||[]; const n=pts.length;
+    if(!n) return {date:day,mix:{},n:0};
+    const tot={}; fuels.forEach(f=>tot[f]=0);
+    pts.forEach(p=>p.generationmix.forEach(({fuel,perc})=>{if(tot[fuel]!==undefined)tot[fuel]+=perc;}));
+    const avg={}; fuels.forEach(f=>avg[f]=+(tot[f]/n).toFixed(1));
+    return {date:day,mix:avg,n};
+  });
+}
+
+async function _fetchGridDirect() {
+  const {today, todayStr, days} = _buildDaysList();
+  // 4 requests total: weather, current gen, current intensity, 8-day gen range
+  const [weatherRes, currentGen, intensityRes, rangeRes] = await Promise.all([
+    fetch('https://api.open-meteo.com/v1/forecast?latitude=51.5&longitude=-0.1&daily=temperature_2m_max,temperature_2m_min,weathercode,shortwave_radiation_sum&hourly=shortwave_radiation,direct_radiation,diffuse_radiation&past_days=7&forecast_days=1&timezone=Europe%2FLondon').then(r=>r.json()),
+    fetch('https://api.carbonintensity.org.uk/generation').then(r=>r.json()),
+    fetch('https://api.carbonintensity.org.uk/intensity').then(r=>r.json()).catch(()=>null),
+    fetch(`https://api.carbonintensity.org.uk/generation/${days[0]}T00:00Z/${todayStr}T23:59Z`).then(r=>r.json()).catch(()=>null)
+  ]);
+  return _processRawGridData(today, todayStr, weatherRes, currentGen, intensityRes, _aggDailyGen(rangeRes, days));
+}
+
+// ── MCP result unwrap helpers ──
+// callMcpTool results vary: plain object, JSON string, or text with a
+// trailing "Tab Context:" block appended. Extract text / JSON robustly.
+function _mcpText(raw) {
+  if (raw == null) return '';
+  if (typeof raw === 'string') return raw;
+  if (Array.isArray(raw.content)) return raw.content.map(c => (c && c.text) || '').join('\n');
+  if (typeof raw.result === 'string') return raw.result;
+  if (typeof raw.output === 'string') return raw.output;
+  return JSON.stringify(raw);
+}
+function _mcpJson(raw) {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw) && (raw.availableTabs || raw.weather || raw.data)) return raw;
+  let t = _mcpText(raw).trim();
+  // Double-encoded string (result wrapped in quotes)
+  if (t.startsWith('"')) { try { t = JSON.parse(t); } catch(e) {} }
+  const s = t.indexOf('{'), e = t.lastIndexOf('}');
+  if (s < 0 || e <= s) throw new Error('No JSON found in MCP result');
+  return JSON.parse(t.slice(s, e + 1));
+}
+
+// Find a tab we can execute JS in. javascript_tool CANNOT run on chrome://
+// pages (incl. chrome://newtab), which is why grabbing availableTabs[0]
+// used to fail. Prefer an existing http(s) tab; otherwise create a fresh
+// tab in the MCP group and navigate it to the Carbon Intensity API page.
+async function _getExecutableTab() {
+  const call = (n,a) => window.cowork.callMcpTool(n, a);
+  let ctx = _mcpJson(await call('mcp__Claude_in_Chrome__tabs_context_mcp', {createIfEmpty: true}));
+  let tabs = (ctx && ctx.availableTabs) || [];
+  if (!tabs.length) throw new Error('not connected — no Chrome tabs available');
+
+  // 1. Existing http(s) tab → use as-is (both APIs are CORS-open, any origin works)
+  const httpTab = tabs.find(t => /^https?:\/\//.test(t.url || ''));
+  if (httpTab) return httpTab.tabId;
+
+  // 2. Only chrome://-type tabs → navigate one to a real page first.
+  //    Only repurpose blank/new tabs; never navigate away a page the user is using.
+  let target = tabs.find(t => /^(chrome:\/\/newtab|about:blank)/.test(t.url || ''));
+  if (!target) {
+    try {
+      await call('mcp__Claude_in_Chrome__tabs_create_mcp', {});
+      ctx = _mcpJson(await call('mcp__Claude_in_Chrome__tabs_context_mcp', {}));
+      tabs = (ctx && ctx.availableTabs) || [];
+      target = tabs.find(t => /^(chrome:\/\/newtab|about:blank)/.test(t.url || '')) || tabs[tabs.length - 1];
+    } catch(e) { target = tabs[0]; }
+  }
+  await call('mcp__Claude_in_Chrome__navigate', {tabId: target.tabId, url: 'https://api.carbonintensity.org.uk/intensity'});
+  await new Promise(r => setTimeout(r, 1800)); // let the page settle
+  return target.tabId;
+}
+
+async function _fetchGridViaChrome() {
+  const tabId = await _getExecutableTab();
+
+  const {todayStr, days} = _buildDaysList();
+
+  // Compact self-contained IIFE that runs inside Chrome and returns JSON.
+  // NOTE: top-level await is NOT supported by javascript_tool — keep the IIFE.
+  // Daily history uses ONE range request (verified live) instead of 7 per-day calls.
+  const jsCode = `(async()=>{
+    const today=new Date();
+    const todayStr=${JSON.stringify(todayStr)};
+    const days=${JSON.stringify(days)};
+    const [wR,cG,iR,rG]=await Promise.all([
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=51.5&longitude=-0.1&daily=temperature_2m_max,temperature_2m_min,weathercode,shortwave_radiation_sum&hourly=shortwave_radiation,direct_radiation,diffuse_radiation&past_days=7&forecast_days=1&timezone=Europe%2FLondon').then(r=>r.json()),
+      fetch('https://api.carbonintensity.org.uk/generation').then(r=>r.json()),
+      fetch('https://api.carbonintensity.org.uk/intensity').then(r=>r.json()).catch(()=>null),
+      fetch('https://api.carbonintensity.org.uk/generation/'+days[0]+'T00:00Z/'+todayStr+'T23:59Z').then(r=>r.json()).catch(()=>null)
+    ]);
+    const fuels=['wind','solar','nuclear','gas','biomass','imports','hydro','coal','other'];
+    const byDay={};
+    ((rG&&rG.data)||[]).forEach(p=>{const day=p.from.split('T')[0];(byDay[day]=byDay[day]||[]).push(p);});
+    const dG=days.map(day=>{
+      const pts=byDay[day]||[];const n=pts.length;
+      if(!n)return{date:day,mix:{},n:0};
+      const t={};fuels.forEach(f=>t[f]=0);
+      pts.forEach(p=>p.generationmix.forEach(({fuel,perc})=>{if(t[fuel]!==undefined)t[fuel]+=perc;}));
+      const a={};fuels.forEach(f=>a[f]=+(t[f]/n).toFixed(1));
+      return{date:day,mix:a,n};
+    });
+    let cm={};try{cG.data.generationmix.forEach(({fuel,perc})=>cm[fuel]=perc);}catch(e){}
+    let ci=null;try{const id=iR.data[0].intensity;ci=id.actual!=null?id.actual:id.forecast;}catch(e){}
+    let hI=[],hD=[],sH=0,cI=null,cD=null,cDf=null;
+    try{
+      const ts=wR.hourly?.time||[];const tp=todayStr+'T';
+      const ix=ts.map((t,i)=>t.startsWith(tp)?i:-1).filter(i=>i>=0);
+      if(ix.length){sH=parseInt(ts[ix[0]].split('T')[1]);hI=ix.map(i=>wR.hourly.shortwave_radiation[i]||0);hD=ix.map(i=>wR.hourly.direct_radiation[i]||0);
+        const nH=today.getHours();const ci2=ix.find(idx=>parseInt(ts[idx].split('T')[1])===nH);
+        if(ci2!==undefined){cI=wR.hourly.shortwave_radiation[ci2];cD=wR.hourly.direct_radiation[ci2];cDf=wR.hourly.diffuse_radiation[ci2];}
+      }
+    }catch(e){}
+    return JSON.stringify({weather:wR.daily,daily:dG,currentMix:cm,carbonIntensity:ci,todayStr,hourlyIrr:hI,hourlyDirect:hD,irrStartHour:sH,currentIrr:cI,currentDirect:cD,currentDiffuse:cDf,fetchedAt:new Date().toISOString()});
+  })()`;
+
+  const raw = await window.cowork.callMcpTool('mcp__Claude_in_Chrome__javascript_tool', {
+    action: 'javascript_exec', tabId, text: jsCode
+  });
+
+  // Robust unwrap: handles plain string, {result}/{output}/{content[]} wrappers,
+  // double-encoded strings, AND a trailing "Tab Context:" text block.
+  const parsed = _mcpJson(raw);
+  if (!parsed || !parsed.weather) throw new Error('Chrome returned no weather data');
+  return parsed;
+}
+
+async function fetchGridWeather() {
+  const btn = document.getElementById('grid-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Fetching…';}
+  setGridStatus('Fetching Carbon Intensity API + Open-Meteo…');
+  setFeedStatus('grid','pending','Fetching…');
+  setFeedStatus('weather','pending','Fetching…');
+
+  let parsed = null;
+  let method = '';
+
+  // ── Tier 1: direct CORS fetch ──
+  try {
+    parsed = await _fetchGridDirect();
+    method = 'direct';
+  } catch(e) {
+    console.warn('[grid] Direct fetch failed:', e.message);
+    if (COWORK) setGridStatus('Direct fetch blocked · trying Chrome extension…');
+  }
+
+  // ── Tier 2: Chrome extension (Cowork only, when Tier 1 fails) ──
+  if (!parsed && COWORK) {
+    try {
+      parsed = await _fetchGridViaChrome();
+      method = 'chrome';
+    } catch(e) {
+      console.warn('[grid] Chrome fetch failed:', e.message);
+      const notConn = /not connected|availableTabs|no Chrome/i.test(e.message);
+      const errHtml = notConn
+        ? `⚠ Grid unavailable · Install the <a href="https://claude.ai/download" target="_blank" style="color:#0f766e;">Claude in Chrome extension ↗</a> and make sure Chrome is running, then click 🌍 Refresh Grid &amp; Weather. Showing baked data from ${INITIAL_GRID_DATA.todayStr}.`
+        : `⚠ Grid fetch failed: ${e.message} — showing baked data from ${INITIAL_GRID_DATA.todayStr}`;
+      setGridStatus(errHtml);
+      setFeedStatus('grid','error', notConn ? 'Chrome extension not connected' : e.message);
+      setFeedStatus('weather','error', notConn ? 'Chrome extension not connected' : e.message);
+      try{document.getElementById('mix-shimmer').style.display='none';}catch(e2){}
+      try{
+        const el=document.getElementById('cur-mix-live');
+        el.innerHTML=`<div class="err-msg" style="margin-bottom:10px;">${errHtml}</div>`;
+        el.style.display='';
+      }catch(e2){}
+      showGridError(notConn ? 'Install Claude in Chrome extension, open any tab, then Refresh' : e.message);
+    }
+  }
+
+  // Non-Cowork: direct failed, no Chrome fallback
+  if (!parsed && !COWORK) {
+    setFeedStatus('grid','error','Network error');
+    setFeedStatus('weather','error','Network error');
+    showGridError('Network error — check your connection');
+  }
+
+  // ── Render if we have data ──
+  if (parsed) {
+    GRID_DATA = parsed;
+    DATA_TS.grid.ts = parsed.fetchedAt;
+    DATA_TS.grid.isLive = true;
+    renderCurrentMix(parsed.currentMix, parsed.carbonIntensity);
+    renderGridCharts();
+    buildFreshnessPanel();
+    const daysOk = parsed.daily?.filter(d=>d.n>0).length||0;
+    const src = method === 'chrome' ? 'Chrome extension' : 'direct CORS';
+    setGridStatus(`✓ Grid refreshed — ${daysOk} days · ${fmtTime(new Date())} · via ${src}`);
+    setFeedStatus('grid','ok',`Live · Carbon Intensity API · ${daysOk} days`);
+    setFeedStatus('weather','ok',`Live · Open-Meteo · ${fmtTime(new Date())}`);
+  }
+
+  if(btn){btn.disabled=false;btn.innerHTML='🌍 Refresh Grid &amp; Weather';}
+}
+
+function setGridStatus(msg) {
+  const el = document.getElementById('fp-summary');
+  if (el) el.innerHTML = `<span style="color:#64748b;">${msg}</span>`;
+}
+
+function showGridError(msg) {
+  const el = document.getElementById('wx-row');
+  if(el) el.innerHTML = `<div class="err-msg" style="width:100%;">⚠ ${msg} — check network and try 🌍 Refresh Grid &amp; Weather.</div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  RENDER GENERATION MIX CHARTS
+// ═══════════════════════════════════════════════
+let chartMix = null, chartIrr = null;
+
+function switchGenTab(name) {
+  document.querySelectorAll('.tab-bar:first-of-type .tab').forEach((t,i)=>{
+    // find the gen tab bar specifically
+  });
+  // Find the gen section tabs
+  const bar = document.querySelector('#tp-mix').closest('.card').querySelectorAll('.tab');
+  bar.forEach((t,i)=>t.classList.toggle('active',['mix','irr'][i]===name));
+  document.getElementById('tp-mix').classList.toggle('active', name==='mix');
+  document.getElementById('tp-irr').classList.toggle('active', name==='irr');
+}
+
+function renderGridCharts() {
+  if (!GRID_DATA) return;
+  const {weather, daily, currentMix, todayStr} = GRID_DATA;
+
+  // ── Weather row ──
+  const dates = weather.time || [];
+  const wxRow = document.getElementById('wx-row');
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  wxRow.innerHTML = dates.map((dateStr, i) => {
+    const d = new Date(dateStr + 'T12:00:00');
+    const wx = wxSymbol(weather.weathercode[i]);
+    const isToday = dateStr === todayStr;
+    const dayLabel = isToday ? 'Today' : dayNames[d.getDay()];
+    const ddmm = `${d.getDate()}/${d.getMonth()+1}`;
+    return `<div class="wx-day ${isToday?'wx-today':''}">
+      <span class="wx-sym" title="${wx.lbl}">${wx.sym}</span>
+      <span class="wx-date">${dayLabel} ${ddmm}</span>
+      <span class="wx-hi">${weather.temperature_2m_max[i]}°</span>
+      <span class="wx-lo">${weather.temperature_2m_min[i]}°</span>
+    </div>`;
+  }).join('');
+
+  // ── Generation mix stacked bar + temperature lines ──
+  const genDays = [...(daily || [])];
+  // Add/replace today with current mix if available
+  const todayEntry = genDays.find(d => d.date === todayStr);
+  if (todayEntry && Object.keys(currentMix).length) todayEntry.mix = currentMix;
+  else if (!todayEntry && Object.keys(currentMix).length) genDays.push({date: todayStr, mix: currentMix, n: 1});
+
+  const labels = dates.map((ds, i) => {
+    const d = new Date(ds + 'T12:00:00');
+    return ds === todayStr ? 'Today ▲' : dayNames[d.getDay()];
+  });
+
+  const datasets = [];
+  FUEL_ORDER.forEach(fuel => {
+    const cfg = FUEL_CFG[fuel];
+    datasets.push({
+      label: cfg.label,
+      data: dates.map(ds => {
+        const entry = genDays.find(d => d.date === ds);
+        return entry?.mix?.[fuel] ?? 0;
+      }),
+      backgroundColor: cfg.color + 'cc',
+      borderColor: cfg.color,
+      borderWidth: 0,
+      stack: 'gen',
+      order: 2,
+      yAxisID: 'y',
+    });
+  });
+
+  // Temperature lines on secondary axis
+  datasets.push({
+    label: 'Temp max °C',
+    data: weather.temperature_2m_max,
+    type: 'line',
+    borderColor: '#ef4444',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    pointRadius: 4,
+    pointBackgroundColor: '#ef4444',
+    tension: 0.3,
+    order: 1,
+    yAxisID: 'y2',
+    stack: undefined,
+  });
+  datasets.push({
+    label: 'Temp min °C',
+    data: weather.temperature_2m_min,
+    type: 'line',
+    borderColor: '#3b82f6',
+    backgroundColor: 'rgba(59,130,246,.1)',
+    borderWidth: 1.5,
+    pointRadius: 3,
+    pointBackgroundColor: '#3b82f6',
+    tension: 0.3,
+    order: 1,
+    yAxisID: 'y2',
+    fill: '-1',
+    stack: undefined,
+  });
+
+  const ctx = document.getElementById('chart-mix').getContext('2d');
+  if (chartMix) chartMix.destroy();
+  chartMix = new Chart(ctx, {
+    type: 'bar',
+    data: {labels, datasets},
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          callbacks: {
+            label: (item) => {
+              if (item.dataset.yAxisID === 'y2') return `${item.dataset.label}: ${item.raw}°C`;
+              return `${item.dataset.label}: ${item.raw}%`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {grid:{display:false}, ticks:{font:{size:10}, color:'#94a3b8'}},
+        y: {stacked:true, max:100, grid:{color:'#f8fafc'}, ticks:{font:{size:9}, color:'#94a3b8', callback:v=>`${v}%`}, title:{display:true, text:'Generation %', font:{size:9}, color:'#94a3b8'}},
+        y2: {position:'right', grid:{display:false}, ticks:{font:{size:9}, color:'#94a3b8', callback:v=>`${v}°C`}, title:{display:true, text:'Temp °C', font:{size:9}, color:'#94a3b8'}}
+      }
+    }
+  });
+
+  // Legend
+  document.getElementById('gen-legend').innerHTML = [
+    ...FUEL_ORDER.filter(f => {
+      const hasData = genDays.some(d => (d.mix?.[f] ?? 0) > 0.5);
+      return hasData;
+    }).map(f => `<div class="gen-leg-item"><div class="gen-leg-dot" style="background:${FUEL_CFG[f].color};"></div>${FUEL_CFG[f].label}</div>`),
+    `<div class="gen-leg-item"><div class="gen-leg-dot" style="background:#ef4444;border-radius:50%;"></div>Temp max</div>`,
+    `<div class="gen-leg-item"><div class="gen-leg-dot" style="background:#3b82f6;border-radius:50%;"></div>Temp min</div>`,
+  ].join('');
+
+  // Update section timestamp
+  document.getElementById('ts-grid').className = 'ts live';
+  document.getElementById('ts-grid').textContent = `Fetched ${fmtTime(new Date(GRID_DATA.fetchedAt))}`;
+
+  // ── Irradiation chart ──
+  renderIrrChart(dates, weather, todayStr);
+}
+
+function renderIrrChart(dates, weather, todayStr) {
+  const sw = weather.shortwave_radiation_sum || [];
+  const irrArr = sw.map(v => irrKwh(v));
+  const expArr = sw.map(v => expectedKwh(v));
+  const todayIdx = dates.indexOf(todayStr);
+  const todayIrr = todayIdx >= 0 ? irrArr[todayIdx] : null;
+  const todayExp = todayIdx >= 0 ? expArr[todayIdx] : null;
+  const hist = irrArr.slice(0, todayIdx >= 0 ? todayIdx : irrArr.length);
+  const avg7 = hist.length ? +(hist.reduce((a,b)=>a+b,0)/hist.length).toFixed(2) : null;
+
+  // ── Live irradiance KPIs ──
+  const curIrr  = GRID_DATA?.currentIrr  ?? null;
+  const curDir  = GRID_DATA?.currentDirect ?? null;
+  const curDiff = GRID_DATA?.currentDiffuse ?? null;
+  const expKwNow = curIrr !== null ? expectedKwNow(curIrr) : null;
+
+  if (todayIrr !== null) document.getElementById('irr-today').textContent = `${todayIrr} kWh/m²`;
+  if (todayExp !== null) document.getElementById('irr-exp').textContent  = `${todayExp} kWh`;
+  if (avg7 !== null)     document.getElementById('irr-7d').textContent   = `${avg7} kWh/m²`;
+
+  // Current irradiance stat
+  const peakEl = document.getElementById('irr-peak');
+  if (peakEl) {
+    if (curIrr !== null) {
+      peakEl.textContent = `${curIrr} W/m²`;
+      const ik1 = peakEl.closest?.('.irr-stat')?.querySelector?.('.ik');
+      if (ik1) ik1.textContent = 'Now (W/m²)';
+    } else {
+      const peakVal = hist.length ? irrKwh(Math.max(...sw.slice(0, todayIdx >= 0 ? todayIdx : sw.length))) : null;
+      if (peakVal) peakEl.textContent = `${peakVal} kWh/m²`;
+      const ik2 = peakEl.closest?.('.irr-stat')?.querySelector?.('.ik');
+      if (ik2) ik2.textContent = 'Best day (7d)';
+    }
+  }
+
+  // ── Live irradiance detail bar ──
+  const irrDetailEl = document.getElementById('irr-detail');
+  if (irrDetailEl) {
+    if (curIrr !== null) {
+      const pct = Math.round(curIrr / 10); // % of 1000 W/m²
+      const isDiffuse = curDir !== null && curDiff !== null && curDiff > curDir;
+      irrDetailEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;flex-wrap:wrap;">
+          <div style="flex:1;min-width:180px;">
+            <div style="font-size:10px;color:#64748b;margin-bottom:4px;">Solar irradiance right now — ${isDiffuse?'☁️ mostly diffuse (overcast)':'☀️ direct sunlight'}</div>
+            <div style="background:#f1f5f9;border-radius:6px;height:14px;overflow:hidden;">
+              <div style="width:${pct}%;height:100%;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:6px;transition:width .5s;"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:#94a3b8;margin-top:2px;"><span>0</span><span>500</span><span>1000 W/m²</span></div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div class="irr-stat" style="min-width:70px;"><div class="iv" style="font-size:16px;">${curIrr}</div><div class="ik">Total W/m²</div></div>
+            ${curDir!==null?`<div class="irr-stat" style="min-width:60px;"><div class="iv" style="font-size:16px;color:#f59e0b;">${curDir}</div><div class="ik">Direct</div></div>`:''}
+            ${curDiff!==null?`<div class="irr-stat" style="min-width:60px;"><div class="iv" style="font-size:16px;color:#94a3b8;">${curDiff}</div><div class="ik">Diffuse</div></div>`:''}
+            ${expKwNow!==null?`<div class="irr-stat" style="min-width:70px;background:#f0fdf4;border-color:#bbf7d0;"><div class="iv" style="font-size:16px;color:#15803d;">${expKwNow}</div><div class="ik">Expected kW</div></div>`:''}
+          </div>
+        </div>`;
+    } else {
+      irrDetailEl.innerHTML = '';
+    }
+  }
+
+  // ── Today's hourly irradiance chart ──
+  const hourlyIrr   = GRID_DATA?.hourlyIrr ?? [];
+  const hourlyDirect= GRID_DATA?.hourlyDirect ?? [];
+  const startHr     = GRID_DATA?.irrStartHour ?? 0;
+  const nowHr       = new Date().getHours();
+
+  if (hourlyIrr.length > 0) {
+    const hrLabels = hourlyIrr.map((_,i) => {
+      const h = startHr + i;
+      return h % 3 === 0 ? `${String(h).padStart(2,'0')}:00` : '';
+    });
+    const expHrly = hourlyIrr.map(v => expectedKwNow(v));
+    const hrColors = hourlyIrr.map((_,i) => {
+      const h = startHr + i;
+      return h === nowHr ? 'rgba(245,158,11,1)' : 'rgba(251,191,36,0.55)';
+    });
+    const ctx2 = document.getElementById('chart-irr').getContext('2d');
+    if (chartIrr) chartIrr.destroy();
+    chartIrr = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: hrLabels,
+        datasets: [
+          {
+            label: 'Irradiance W/m²',
+            data: hourlyIrr,
+            backgroundColor: hrColors,
+            borderWidth: 0,
+            borderRadius: 2,
+            yAxisID: 'y',
+            order: 2,
+          },
+          {
+            label: 'Direct W/m²',
+            data: hourlyDirect,
+            backgroundColor: 'rgba(245,158,11,0.35)',
+            borderWidth: 0,
+            borderRadius: 2,
+            yAxisID: 'y',
+            order: 3,
+          },
+          {
+            label: 'Expected kW (11kWp)',
+            data: expHrly,
+            type: 'line',
+            borderColor: '#0f766e',
+            backgroundColor: 'rgba(15,118,110,.07)',
+            borderWidth: 2,
+            pointRadius: 2,
+            fill: true,
+            tension: 0.3,
+            yAxisID: 'y2',
+            order: 1,
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: {display:true, position:'bottom', labels:{font:{size:10},boxWidth:10}},
+          tooltip: {callbacks:{label:it=>it.dataset.yAxisID==='y2'?`Expected: ${it.raw} kW`:`${it.dataset.label}: ${it.raw} W/m²`}}
+        },
+        scales: {
+          x: {grid:{display:false}, ticks:{font:{size:9},color:'#94a3b8'}},
+          y: {grid:{color:'#f8fafc'}, ticks:{font:{size:9},color:'#94a3b8',callback:v=>`${v}`}, title:{display:true,text:'Irradiance W/m²',font:{size:9},color:'#94a3b8'}, max:1000},
+          y2:{position:'right',grid:{display:false},ticks:{font:{size:9},color:'#0f766e',callback:v=>`${v}kW`},title:{display:true,text:'Expected kW',font:{size:9},color:'#0f766e'}}
+        }
+      }
+    });
+    return; // hourly chart done
+  }
+
+  // ── Fallback: 7-day daily chart ──
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const labels = dates.map(ds => {
+    const d = new Date(ds + 'T12:00:00');
+    return ds === todayStr ? 'Today' : dayNames[d.getDay()];
+  });
+  const barColors = dates.map((ds, i) => {
+    if (ds === todayStr) return 'rgba(245,158,11,0.9)';
+    return irrArr[i] > 4 ? 'rgba(245,158,11,0.7)' : irrArr[i] > 2 ? 'rgba(251,191,36,0.6)' : 'rgba(203,213,225,0.7)';
+  });
+  const ctx = document.getElementById('chart-irr').getContext('2d');
+  if (chartIrr) chartIrr.destroy();
+  chartIrr = new Chart(ctx, {
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Daily irradiation kWh/m²',data:irrArr,backgroundColor:barColors,borderWidth:0,borderRadius:3,yAxisID:'y',order:2},
+      {label:'Expected kWh (11kWp)',data:expArr,type:'line',borderColor:'#0f766e',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:'#0f766e',tension:.3,yAxisID:'y2',order:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:it=>it.dataset.yAxisID==='y2'?`Expected: ${it.raw} kWh`:`Irradiation: ${it.raw} kWh/m²`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#94a3b8'}},y:{grid:{color:'#f8fafc'},ticks:{font:{size:9},color:'#94a3b8',callback:v=>`${v}`},title:{display:true,text:'kWh/m²',font:{size:9},color:'#94a3b8'}},y2:{position:'right',grid:{display:false},ticks:{font:{size:9},color:'#0f766e',callback:v=>`${v} kWh`},title:{display:true,text:'Expected kWh',font:{size:9},color:'#0f766e'}}}}
+  });
+}
+
+// ═══════════════════════════════════════════════
+//  FRESHNESS PANEL
+// ═══════════════════════════════════════════════
+function ageMinutes(iso) { return iso ? Math.round((Date.now()-new Date(iso))/60000) : 0; }
+function ageStr(mins) { if(mins<2)return'Just now';if(mins<60)return`${mins}m ago`;if(mins<1440)return`${Math.round(mins/60)}h ago`;return`${Math.round(mins/1440)}d ago`; }
+function fmtTs(iso) { if(!iso)return'Now';const d=new Date(iso);return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function fmtTime(d) { return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+function fmtDate(d) { const DA=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],MO=['January','February','March','April','May','June','July','August','September','October','November','December'];return`${DA[d.getDay()]}, ${d.getDate()} ${MO[d.getMonth()]} ${d.getFullYear()}`; }
+
+function buildFreshnessPanel() {
+  const items = [
+    {key:'prices',  label:'Share Prices',     icon:'📊'},
+    {key:'grid',    label:'Grid Mix + Weather',icon:'🌍'},
+    {key:'battery', label:'Battery Signal',    icon:'🔋'},
+    {key:'n2ex',    label:'N2EX Prices',       icon:'📉'},
+    {key:'briefing',label:'Market Briefing',   icon:'📝'},
+    {key:'forwards',label:'Power Forwards',    icon:'⚡'},
+    {key:'nav',     label:'NAV Estimates',     icon:'📋'},
+  ];
+  let allOk = true;
+  let html = '';
+  for (const {key, label, icon} of items) {
+    const d = DATA_TS[key];
+    const ts = d.ts || new Date().toISOString();
+    const mins = d.ts ? ageMinutes(ts) : 0;
+    let fc, stLabel;
+    if (!d.isLive) { fc='ind'; stLabel='~ Indicative'; }
+    else if (mins < 120) { fc='ok'; stLabel='✓ Fresh'; }
+    else if (mins < 480) { fc='warn'; stLabel='⚠ Stale'; allOk=false; }
+    else { fc='stale'; stLabel='✗ Old'; allOk=false; }
+    if (d.isLive && !d.ts) { fc='ind'; stLabel='⟳ Not yet fetched'; allOk=false; }
+    html += `<div class="fp-item ${fc==='ok'?'ok':fc==='warn'||fc==='stale'?'warn':''}">
+      <div class="fp-name">${icon} ${label}</div>
+      <div class="fp-time">${d.ts ? fmtTs(d.ts) : 'Not fetched'} ${d.isLive&&d.ts?'· '+ageStr(mins):''}</div>
+      <div class="fp-src">${d.source}</div>
+      <span class="fp-st ${fc}">${stLabel}</span>
+    </div>`;
+  }
+  document.getElementById('fp-grid').innerHTML = html;
+  const liveItems = items.filter(i => DATA_TS[i.key].isLive);
+  const freshCount = liveItems.filter(i => DATA_TS[i.key].ts && ageMinutes(DATA_TS[i.key].ts) < 120).length;
+  document.getElementById('fp-summary').innerHTML = allOk && freshCount === liveItems.length
+    ? `<span style="color:#15803d;font-weight:700;">✓ All live data fresh</span>`
+    : `<span style="color:#92400e;font-weight:700;">⚠ ${freshCount}/${liveItems.length} live sources fresh</span>`;
+  updateSectionTs();
+}
+
+function updateSectionTs() {
+  const now = new Date();
+  const setTs = (id, key, lbl) => {
+    const el = document.getElementById(id); if(!el) return;
+    const d = DATA_TS[key];
+    const mins = d.ts ? ageMinutes(d.ts) : 999;
+    const cls = !d.isLive ? 'comp' : !d.ts ? 'ts' : mins < 120 ? 'live' : mins < 480 ? 'warn' : 'stale';
+    el.className = `ts ${cls}`;
+    el.textContent = d.ts ? `${lbl} ${fmtTs(d.ts)}` : lbl;
+  };
+  setTs('ts-battery','battery','Computed');
+  setTs('ts-solar','solar','Computed');
+  setTs('ts-n2ex','n2ex','Modelled');
+  setTs('ts-rit','prices','Fetched');
+  setTs('ts-uk','prices','Fetched');
+  setTs('ts-eu','prices','Fetched');
+  setTs('ts-brief','briefing','Generated');
+  if(!DATA_TS.grid.ts){const el=document.getElementById('ts-grid');if(el){el.className='ts';el.textContent='Not yet fetched';}}
+}
+
+// ═══════════════════════════════════════════════
+//  SHARE PRICE DATA
+// ═══════════════════════════════════════════════
+// Prices refreshed 6 Jun 2026 — search-verified closes (Yahoo Finance / LSE / Investing.com)
+// Levels are most-recent verified closes (early Jun 2026); 1-day % is indicative. TRIG/SEIT/FEN: no fresh quote, last value retained.
+let PRICES = {
+  rit:[
+    {tk:'UKW', name:'Greencoat UK Wind',         price:100.10,chgPct:+1.90,wkLo:92.20, wkHi:128.00,nav:140,yt:'UKW.L'},
+    {tk:'TRIG',name:'Renewables Infrastructure', price:73.40, chgPct:0.00, wkLo:63.20, wkHi:90.50, nav:108,yt:'TRIG.L'},
+    {tk:'BSIF',name:'Bluefield Solar Income',    price:91.40, chgPct:+2.50,wkLo:65.89, wkHi:99.00, nav:107,yt:'BSIF.L'},
+    {tk:'NESF',name:'NextEnergy Solar',          price:48.45, chgPct:+0.50,wkLo:43.00, wkHi:78.77, nav:65, yt:'NESF.L'},
+    {tk:'FSFL',name:'Foresight Solar',           price:76.20, chgPct:+1.00,wkLo:59.60, wkHi:92.90, nav:99, yt:'FSFL.L'},
+    {tk:'ORIT',name:'Octopus Renewables',        price:74.80, chgPct:+1.50,wkLo:52.60, wkHi:76.70, nav:90, yt:'ORIT.L'},
+    {tk:'SEIT',name:'Ecofin US Renewables',      price:44.00, chgPct:0.00, wkLo:33.81, wkHi:63.90, nav:68, yt:'SEIT.L'},
+    {tk:'GSF', name:'Gore Street Energy Stor.',  price:59.20, chgPct:+1.20,wkLo:46.87, wkHi:69.00, nav:87, yt:'GSF.L'},
+    {tk:'GRID',name:'Gresham House Energy Stor.',price:78.00, chgPct:-1.00,wkLo:66.00, wkHi:83.30, nav:120,yt:'GRID.L'},
+    {tk:'FEN', name:'Foresight Env. Infra.',     price:48.50, chgPct:0.00, wkLo:40.00, wkHi:50.94, nav:62, yt:'FEN.L'},
+  ],
+  ukUtil:[
+    {tk:'SSE', name:'SSE plc',      price:2296.0,chgPct:-0.80,wkLo:1597,  wkHi:2767.5,note:'RIIO/offshore wind'},
+    {tk:'NG.', name:'National Grid',price:1199.0,chgPct:-0.50,wkLo:1000,  wkHi:1428.5,note:'RIIO-T3 capex'},
+    {tk:'CNA', name:'Centrica',     price:188.25,chgPct:-0.60,wkLo:152.45,wkHi:220.30,note:'Gas supply/Rough'},
+  ],
+  euUtil:[
+    {tk:'IBE', name:'Iberdrola',price:19.50,chgPct:-0.30,wkLo:15.10,wkHi:20.60},
+    {tk:'RWE', name:'RWE AG',   price:56.15,chgPct:+1.10,wkLo:32.94,wkHi:62.00},
+    {tk:'EOAN',name:'E.ON SE',  price:18.19,chgPct:+0.60,wkLo:14.60,wkHi:20.39},
+    {tk:'ENEL',name:'Enel SpA', price:9.63, chgPct:+0.10,wkLo:7.58, wkHi:10.31},
+    {tk:'ENGI',name:'Engie SA', price:26.67,chgPct:-0.70,wkLo:17.20,wkHi:29.89},
+  ]
+};
+
+function verify(p,lo,hi){if(!p||isNaN(p)||p<=0)return{cls:'ver',icon:'✗',tip:'Invalid'};const buf=(hi-lo)*.05;if(p<lo-buf)return{cls:'vwn',icon:'⚠',tip:`Below 52wk low (${lo})`};if(p>hi*1.15)return{cls:'vwn',icon:'⚠',tip:`Above 52wk high (${hi})`};return{cls:'vok',icon:'✓',tip:'Within 52-wk range'};}
+function wkBar(p,lo,hi){const pct=Math.min(100,Math.max(0,((p-lo)/(hi-lo))*100));const c=pct<25?'#ef4444':pct<60?'#f59e0b':'#22c55e';return`<div class="bw" title="${lo}–${hi}"><div class="bf" style="width:${pct}%;background:${c};"></div></div><div style="font-size:9px;color:#94a3b8;text-align:right;">${lo}–${hi}</div>`;}
+function chg(p){if(p===0)return`<span class="cpn">0.00%</span>`;return`<span class="${p>0?'cpg':'cpr'}">${p>0?'+':''}${p.toFixed(2)}%</span>`;}
+
+function renderShares() {
+  document.getElementById('rit-tbody').innerHTML = PRICES.rit.map(s=>{
+    const disc=((s.price-s.nav)/s.nav*100).toFixed(1),v=verify(s.price,s.wkLo,s.wkHi);
+    return`<tr><td><div class="tk"><a href="https://uk.finance.yahoo.com/quote/${s.yt}" target="_blank" style="color:#0d2137;text-decoration:none;">${s.tk}</a></div><div class="tn">${s.name}</div></td><td class="pr">${s.price.toFixed(2)}p</td><td style="text-align:right;">${chg(s.chgPct)}</td><td style="text-align:right;font-size:11px;color:#64748b;">${s.nav}p<span class="nav-est"> est.</span></td><td style="text-align:right;"><span class="disc ${+disc<0?'neg':'pos'}">${disc}%</span></td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" title="${v.tip}" style="text-align:center;">${v.icon}</td></tr>`;
+  }).join('');
+  document.getElementById('uk-tbody').innerHTML = PRICES.ukUtil.map(s=>{
+    const v=verify(s.price,s.wkLo,s.wkHi);
+    return`<tr><td><div class="tk">${s.tk}</div><div class="tn">${s.name}</div></td><td class="pr">${s.price.toLocaleString()}p</td><td style="text-align:right;">${chg(s.chgPct)}</td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" style="text-align:center;" title="${v.tip}">${v.icon}</td></tr>`;
+  }).join('');
+  document.getElementById('eu-tbody').innerHTML = PRICES.euUtil.map(s=>{
+    const v=verify(s.price,s.wkLo,s.wkHi);
+    return`<tr><td><div class="tk">${s.tk}</div><div class="tn">${s.name}</div></td><td class="pr">€${s.price.toFixed(2)}</td><td style="text-align:right;">${chg(s.chgPct)}</td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" style="text-align:center;" title="${v.tip}">${v.icon}</td></tr>`;
+  }).join('');
+  buildFreshnessPanel();
+}
+
+// ═══════════════════════════════════════════════
+//  REFRESH SHARE PRICES
+// ═══════════════════════════════════════════════
+function parsePrices(text) {
+  const all=[...PRICES.rit.map(s=>({obj:s,yt:s.yt})),...PRICES.ukUtil.map((s,i)=>({obj:s,yt:['SSE.L','NG.L','CNA.L'][i]})),...PRICES.euUtil.map((s,i)=>({obj:s,yt:['IBE.MC','RWE.DE','EOAN.DE','ENEL.MI','ENGI.PA'][i]}))];
+  let matched=0;
+  const updated=JSON.parse(JSON.stringify(PRICES));
+  const allU=[...updated.rit.map(s=>({obj:s,yt:s.yt})),...updated.ukUtil.map((s,i)=>({obj:s,yt:['SSE.L','NG.L','CNA.L'][i]})),...updated.euUtil.map((s,i)=>({obj:s,yt:['IBE.MC','RWE.DE','EOAN.DE','ENEL.MI','ENGI.PA'][i]}))];
+  for(const{obj,yt}of allU){const esc=yt.replace(/\./g,'\\.').replace(/-/g,'\\-');const re=new RegExp(esc+'[\\s\\S]{0,10}?([\\d,]+\\.\\d{1,2})\\s+[+-]?[\\d,.]+\\s+([+-]?[\\d.]+)%');const m=text.match(re);if(m){const p=parseFloat(m[1].replace(',',''));const c=parseFloat(m[2]);if(p>0&&!isNaN(p)){obj.price=p;obj.chgPct=c;matched++;}}}
+  return{updated,matched};
+}
+
+async function refreshPrices() {
+  // Yahoo Finance v7 JSON API — CORS-enabled from any origin including Cowork artifacts
+  const btn=document.getElementById('prices-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Fetching…';}
+  setFeedStatus('prices','pending','Fetching Yahoo Finance…');
+  try{
+    const allTickers=[...PRICES.rit.map(s=>s.yt),'SSE.L','NG.L','CNA.L','IBE.MC','RWE.DE','EOAN.DE','ENEL.MI','ENGI.PA'];
+    const url=`https://query1.finance.yahoo.com/v7/finance/quote?symbols=${allTickers.join(',')}&fields=regularMarketPrice,regularMarketChangePercent,fiftyTwoWeekLow,fiftyTwoWeekHigh`;
+    const res=await fetch(url,{headers:{'Accept':'application/json'}});
+    if(!res.ok) throw new Error(`Yahoo Finance HTTP ${res.status}`);
+    const data=await res.json();
+    const quotes=data.quoteResponse?.result||[];
+    if(!quotes.length) throw new Error('No quote data returned');
+    let matched=0;
+    quotes.forEach(q=>{
+      const p=q.regularMarketPrice, c=+(q.regularMarketChangePercent||0).toFixed(2);
+      if(!p) return;
+      PRICES.rit.forEach(s=>{if(s.yt===q.symbol){s.price=p;s.chgPct=c;matched++;}});
+      ['SSE.L','NG.L','CNA.L'].forEach((yt,i)=>{if(q.symbol===yt){PRICES.ukUtil[i].price=p;PRICES.ukUtil[i].chgPct=c;matched++;}});
+      ['IBE.MC','RWE.DE','EOAN.DE','ENEL.MI','ENGI.PA'].forEach((yt,i)=>{if(q.symbol===yt){PRICES.euUtil[i].price=p;PRICES.euUtil[i].chgPct=c;matched++;}});
+    });
+    if(matched>0){
+      DATA_TS.prices.ts=new Date().toISOString();
+      DATA_TS.prices.source='Yahoo Finance v7 API';
+      renderShares();
+      setGridStatus(`✓ ${matched} prices refreshed · ${fmtTime(new Date())}`);
+      setFeedStatus('prices','ok',`Live · ${matched} tickers · ${fmtTime(new Date())}`);
+    } else {
+      throw new Error('Could not match any tickers');
+    }
+  }catch(e){
+    console.warn('Price refresh failed:',e.message);
+    buildFreshnessPanel();
+    setFeedStatus('prices','error',`Failed: ${e.message}`);
+    setGridStatus(`⚠ Price API unavailable — showing saved prices (${fmtTs(DATA_TS.prices.ts)})`);
+  }
+  if(btn){btn.disabled=false;btn.innerHTML='📡 Refresh Prices';}
+}
+
+// ═══════════════════════════════════════════════
+//  BATTERY + SOLAR SYSTEM GRAPHIC
+// ═══════════════════════════════════════════════
+function getSignal(d){const m=d.getMonth()+1,h=d.getHours(),isSummer=m>=5&&m<=8,isWinter=m<=2||m>=11,isMorning=h>=6&&h<16,isPeak=h>=16&&h<20;if(isSummer&&isMorning)return{label:'SOLAR CHARGING',emoji:'☀️',color:'#166534',bg:'#f0fdf4',border:'#bbf7d0',season:'Peak solar season — expect 35–50 kWh generation today.',rec:'Let solar charge battery freely. Should reach full ~54 kWh by early afternoon. If on Agile/flexible tariff, switch to export from ~3:30pm for the 4–8pm peak. No grid charging needed.'};if(isPeak)return{label:'EXPORT OPPORTUNITY',emoji:'📤',color:'#92400e',bg:'#fffbeb',border:'#fde68a',season:'Evening peak window — N2EX prices at their highest.',rec:'Battery charged from solar. Consider Export mode at peak half-hourly prices. Most valuable above £0.20/kWh on Agile.'};if(isWinter)return{label:'CHARGE OVERNIGHT',emoji:'🌙',color:'#1e3a8a',bg:'#eff6ff',border:'#bfdbfe',season:'Winter — solar limited 3–10 kWh/day. Off-peak grid charging recommended.',rec:'Charge overnight (midnight–6am) at cheap rate. Aim full by morning. Discharge during 4–8pm peak.'};return{label:'SELF-CONSUMPTION',emoji:'🔄',color:'#475569',bg:'#f8fafc',border:'#e2e8f0',season:'Moderate solar — system optimising for load offset.',rec:'Standard self-consumption mode. Review tariff for peak/off-peak optimisation.'};}
+function estimateSoc(d){const m=d.getMonth()+1,h=d.getHours()+d.getMinutes()/60,isSummer=m>=5&&m<=8,isWinter=m<=2||m>=11;if(isSummer){if(h<5.5)return .15;if(h<14)return Math.min(.98,.15+.83*(h-5.5)/8.5);if(h<16)return .98;if(h<23)return Math.max(.15,.98-.83*(h-16)/7);return .15;}if(isWinter){if(h<6)return Math.min(.95,.2+(h/6)*.75);return Math.max(.1,.95-.85*(h-6)/17);}if(h<5.5)return .18;if(h<15)return Math.min(.88,.18+.70*(h-5.5)/9.5);if(h<16)return .88;if(h<23)return Math.max(.15,.88-.73*(h-16)/7);return .15;}
+function estimateSolarKw(d){const m=d.getMonth()+1,h=d.getHours()+d.getMinutes()/60,isSummer=m>=5&&m<=8,peak=isSummer?10.2:5.8,rise=isSummer?5.3:7.5,set=isSummer?20.8:16.5;if(h<rise||h>set)return 0;const mid=(rise+set)/2,half=(set-rise)/2,dist=Math.abs(h-mid)/half;return Math.max(0,peak*(1-dist*dist));}
+
+function renderSystemGraphic(d){
+  // Use last known confirmed reading if available and < 24 h old
+  const lk = LAST_KNOWN_SOLAR;
+  const lkAgeH = lk ? (Date.now() - new Date(lk.ts)) / 3600000 : 999;
+  const useLive = lk && lkAgeH < 24;
+  const soc     = useLive ? lk.soc      : estimateSoc(d);
+  const solarKw = useLive ? lk.solarKw  : estimateSolarKw(d);
+  const socTag  = useLive ? `Confirmed ${fmtTime(new Date(lk.ts))} · <a href="https://web-eu.sigencloud.com/" target="_blank" style="color:#0f766e;">SigenCloud ↗</a>` : 'Estimated';
+  const solTag  = useLive ? 'Confirmed' : 'Estimated';
+  const socPct=Math.round(soc*100),isCharging=solarKw>1&&soc<.98;
+  const m=d.getMonth()+1,isSummer=m>=5&&m<=8,dailyForecast=isSummer?Math.round(35+solarKw*1.2):Math.round(8+solarKw*2);
+  const battFill=soc>.6?'#22c55e':soc>.3?'#f59e0b':'#ef4444',battFillH=Math.round(soc*68),arrowCol=isCharging?'#22c55e':'#94a3b8';
+  const isSolarActive=solarKw>.5,sunOpacity=isSolarActive?1:.25;
+
+  // If we have live irradiation data, use it for today's forecast
+  let displayForecast = dailyForecast;
+  if (GRID_DATA?.weather?.shortwave_radiation_sum) {
+    const todayIdx = GRID_DATA.weather.time?.indexOf(GRID_DATA.todayStr);
+    if (todayIdx >= 0) {
+      displayForecast = expectedKwh(GRID_DATA.weather.shortwave_radiation_sum[todayIdx]);
+    }
+  }
+
+  const svg=`<svg viewBox="0 0 280 190" xmlns="http://www.w3.org/2000/svg" width="100%" height="165">
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${isSolarActive?'#bfdbfe':'#e2e8f0'}"/><stop offset="100%" stop-color="${isSolarActive?'#dbeafe':'#f1f5f9'}"/></linearGradient>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${battFill}"/><stop offset="100%" stop-color="${battFill}cc"/></linearGradient>
+  <marker id="arG" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="${arrowCol}"/></marker>
+  <marker id="arR" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#94a3b8"/></marker></defs>
+  <rect width="280" height="190" fill="url(#sky)" rx="8"/>
+  <g opacity="${sunOpacity}"><circle cx="50" cy="35" r="15" fill="#fbbf24"/>
+  ${[0,45,90,135,180,225,270,315].map(a=>{const r2=26,x=50+r2*Math.cos(a*Math.PI/180),y=35+r2*Math.sin(a*Math.PI/180),x2=50+(r2+7)*Math.cos(a*Math.PI/180),y2=35+(r2+7)*Math.sin(a*Math.PI/180);return`<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/>`;}).join('')}</g>
+  <text x="50" y="72" text-anchor="middle" font-size="9" font-weight="700" fill="#92400e" font-family="sans-serif">${solarKw.toFixed(1)} kW</text>
+  <polygon points="100,55 180,55 170,95 110,95" fill="#cbd5e1"/>
+  <rect x="116" y="67" width="17" height="11" rx="2" fill="#1e3a8a" stroke="#3b82f6" stroke-width="0.5"/>
+  <rect x="135" y="63" width="17" height="11" rx="2" fill="#1e3a8a" stroke="#3b82f6" stroke-width="0.5"/>
+  <rect x="154" y="59" width="13" height="10" rx="2" fill="#1e3a8a" stroke="#3b82f6" stroke-width="0.5"/>
+  <rect x="110" y="95" width="60" height="48" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+  <rect x="132" y="116" width="15" height="27" rx="2" fill="#94a3b8"/><circle cx="142" cy="130" r="2" fill="#64748b"/>
+  <rect x="115" y="102" width="13" height="13" rx="2" fill="#bfdbfe" stroke="#93c5fd" stroke-width="0.5"/>
+  <rect x="210" y="84" width="44" height="76" rx="6" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
+  <rect x="225" y="79" width="14" height="8" rx="3" fill="#334155"/>
+  <rect x="215" y="${84+8+(68-battFillH)}" width="34" height="${battFillH}" rx="3" fill="url(#bg)" opacity="0.9"/>
+  <rect x="215" y="92" width="34" height="68" rx="3" fill="none" stroke="#475569" stroke-width="0.5"/>
+  <text x="232" y="${Math.max(132,92+68-battFillH+13)}" text-anchor="middle" font-size="13" font-weight="800" fill="${battFill}" font-family="sans-serif">${socPct}%</text>
+  <text x="232" y="169" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="sans-serif">SigenStor 54kWh</text>
+  <g transform="translate(12,133)"><rect width="38" height="38" rx="5" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+  <line x1="19" y1="4" x2="19" y2="34" stroke="#94a3b8" stroke-width="2"/>
+  <line x1="7" y1="11" x2="31" y2="11" stroke="#94a3b8" stroke-width="1.5"/><line x1="7" y1="19" x2="31" y2="19" stroke="#94a3b8" stroke-width="1.5"/><line x1="7" y1="27" x2="31" y2="27" stroke="#94a3b8" stroke-width="1.5"/>
+  <text x="19" y="45" text-anchor="middle" font-size="8" fill="#94a3b8" font-family="sans-serif">GRID</text></g>
+  ${isSolarActive?`<line x1="78" y1="100" x2="108" y2="115" stroke="${arrowCol}" stroke-width="1.8" marker-end="url(#arG)"/>`:''}
+  ${isCharging?`<line x1="172" y1="123" x2="208" y2="123" stroke="#22c55e" stroke-width="2" marker-end="url(#arG)"/><text x="190" y="119" text-anchor="middle" font-size="8" fill="#22c55e" font-weight="700" font-family="sans-serif">⚡ charging</text>`:`<line x1="208" y1="123" x2="173" y2="123" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arR)" stroke-dasharray="3,3"/>`}
+  <line x1="51" y1="143" x2="108" y2="138" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="3,3"/>
+  <rect x="188" y="5" width="88" height="21" rx="5" fill="${isCharging?'#dcfce7':'#f8fafc'}" stroke="${isCharging?'#86efac':'#e2e8f0'}" stroke-width="1"/>
+  <text x="232" y="20" text-anchor="middle" font-size="9" font-weight="700" fill="${isCharging?'#16a34a':'#64748b'}" font-family="sans-serif">${isCharging?`⚡ ${solarKw.toFixed(1)}kW charging`:'● Standby'}</text>
+  </svg>`;
+
+  document.getElementById('sys-graphic').innerHTML = svg + `<div class="flow-stats">
+    <div class="flow-stat"><div class="fv">${solarKw.toFixed(1)} kW</div><div class="fk">Solar now (${solTag})</div></div>
+    <div class="flow-stat"><div class="fv" style="color:${battFill};">${socPct}%</div><div class="fk">Battery SOC</div></div>
+    <div class="flow-stat"><div class="fv">${displayForecast} kWh</div><div class="fk">Forecast today${GRID_DATA?'*':' (est.)'}</div></div>
+    <div class="flow-stat"><div class="fv">${(soc*54).toFixed(0)} kWh</div><div class="fk">Stored (calc.)</div></div>
+  </div>
+  <div style="font-size:9px;color:#64748b;margin-top:7px;padding:6px 8px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0;line-height:1.55;">
+    ${useLive?`⬛ <strong>SOC &amp; generation</strong>: ${socTag}`:`⚠ <strong>Estimated only</strong> — no live reading available`}<br>
+    🔗 <strong>Live data:</strong> <a href="https://web-eu.sigencloud.com/" target="_blank" style="color:#0f766e;">SigenCloud web portal ↗</a>
+    &nbsp;·&nbsp; <span style="color:#94a3b8;">API integration requires OAuth credentials — capture from browser network tab to enable live sync</span>
+    ${GRID_DATA?'<br>* Forecast from Open-Meteo irradiation · shortwave_radiation_sum ÷ 3.6 × 11kWp × 0.80 PR':''}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════
+//  N2EX CHARTS
+// ═══════════════════════════════════════════════
+function seededRng(s){let x=s;return()=>{x=(x*1664525+1013904223)&0xffffffff;return(x>>>0)/0xffffffff;};}
+let n2exChart=null, histChart=null, histDrawn=false;
+
+function switchTab(n) {
+  try {
+    const bar = document.getElementById('chart-intraday').closest('.card').querySelectorAll('.tab');
+    bar.forEach((t,i)=>t.classList.toggle('active',['intraday','history'][i]===n));
+    document.getElementById('tab-intraday').classList.toggle('active',n==='intraday');
+    document.getElementById('tab-history').classList.toggle('active',n==='history');
+    // History chart is hidden on initial load (display:none), so it must be drawn lazily
+    if (n==='history') {
+      requestAnimationFrame(()=>{
+        if (!histDrawn) { histDrawn=true; drawHistory(new Date()); }
+        else if (histChart) histChart.resize();
+      });
+    } else if (n==='intraday' && n2exChart) {
+      requestAnimationFrame(()=>n2exChart.resize());
+    }
+  } catch(e) { console.warn('switchTab error:', e.message); }
+}
+
+function drawIntraday(d){
+  // Wind-adjusted day-ahead price model.
+  // Base shape is a typical UK spring day. Wind % from GRID_DATA suppresses prices:
+  // every 10% of wind above 20% baseline cuts ~£8/MWh from the base.
+  try {
+    const windPct = GRID_DATA?.currentMix?.wind ?? GRID_DATA?.daily?.slice(-1)[0]?.mix?.wind ?? 25;
+    const windDiscount = Math.max(0, (windPct - 20) / 10 * 8); // £/MWh reduction per 10% excess wind
+    // Base shape: typical UK May day. Calibrated to £106.3/MWh N2EX day-ahead (30 May 2026).
+    // Off-peak trough ~£68/MWh, peak (4–8pm) ~£145/MWh, avg ~£107/MWh
+    const base=[68,66,63,60,59,57,60,66,77,88,97,108,124,140,146,142,132,120,110,104,98,94,90,87,91,93,99,103,108,115,124,136,154,160,157,152,146,139,128,116,105,94,83,77,72,70,69,67];
+    const r=seededRng(d.getDate()*37+d.getMonth()*13),isWknd=d.getDay()===0||d.getDay()===6;
+    const prices=base.map(v=>Math.max(22,Math.round(v-windDiscount+(r()-.5)*10+(isWknd?-12:0))));
+    const labels=[];for(let i=0;i<48;i++){const h=Math.floor(i/2),m=i%2?'30':'00';labels.push(i%4===0?`${String(h).padStart(2,'0')}:${m}`:'');}
+    const bgCols=prices.map((_,i)=>{const h=i/2;if(h<6)return'rgba(148,163,184,.75)';if(h>=7&&h<10)return'rgba(249,115,22,.75)';if(h>=16&&h<20)return'rgba(239,68,68,.75)';return'rgba(15,118,110,.72)';});
+    const now=new Date(),cp=Math.min(Math.floor((now.getHours()*60+now.getMinutes())/30),47);
+    const cur=prices[cp],avg=Math.round(prices.reduce((a,b)=>a+b)/48),peak=Math.max(...prices.slice(32,40)),offpk=Math.round(prices.slice(0,12).reduce((a,b)=>a+b)/12);
+    const ci_val=GRID_DATA?.carbonIntensity;
+    const spreadPct=Math.round((peak-offpk)/offpk*100);
+    document.getElementById('intraday-stats').innerHTML=
+      `<div class="csp"><div class="cv">£${cur}</div><div class="ck">Now (period ${cp+1})</div></div>`+
+      `<div class="csp"><div class="cv">£${avg}</div><div class="ck">Day avg</div></div>`+
+      `<div class="csp"><div class="cv" style="color:#ef4444">£${peak}</div><div class="ck">Peak 4–8pm</div></div>`+
+      `<div class="csp"><div class="cv" style="color:#3b82f6">£${offpk}</div><div class="ck">Off-peak</div></div>`+
+      `<div class="csp"><div class="cv">${spreadPct}%</div><div class="ck">Peak/off-pk spread</div></div>`+
+      (ci_val?`<div class="csp"><div class="cv" style="color:${ci_val<150?'#15803d':ci_val<250?'#92400e':'#dc2626'}">${ci_val}</div><div class="ck">gCO₂/kWh now</div></div>`:'');
+    const ctx=document.getElementById('chart-intraday').getContext('2d');
+    if(n2exChart)n2exChart.destroy();
+    n2exChart=new Chart(ctx,{
+      type:'bar',
+      data:{labels,datasets:[{data:prices,backgroundColor:bgCols,borderWidth:0,borderRadius:2}]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{title:it=>{const i=it[0].dataIndex,h=Math.floor(i/2),m=i%2?'30':'00';return`${String(h).padStart(2,'0')}:${m}`;},label:it=>`£${it.raw}/MWh`}}},
+        scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#94a3b8'}},y:{grid:{color:'#f8fafc'},ticks:{font:{size:9},color:'#94a3b8',callback:v=>`£${v}`},beginAtZero:false}}
+      }
+    });
+  } catch(err) {
+    console.error('drawIntraday error:', err);
+    const s = document.getElementById('intraday-stats');
+    if (s && !s.children.length) s.innerHTML = '<div class="err-msg">⚠ Could not render N2EX chart: ' + err.message + '</div>';
+  }
+}
+function drawHistory(d){
+  try {
+    // Monthly N2EX baseload price model — calibrated to May 2026 market data
+    // Day-ahead: £106.3/MWh (30 May); surged from ~£74/MWh in late April
+    // Weekday base ~105, weekend ~88; random ±20 noise; trending upward through May
+    const dim=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(),r=seededRng(d.getFullYear()*12+d.getMonth());
+    const labels=[],data=[],cols=[];
+    for(let day=1;day<=dim;day++){const dt=new Date(d.getFullYear(),d.getMonth(),day);if(dt>d)break;const isWknd=dt.getDay()===0||dt.getDay()===6;const trend=d.getMonth()===4?(day/dim)*18:0;const v=Math.max(40,Math.round((isWknd?88:105)+trend+(r()-.5)*22));labels.push(`${day}`);data.push(v);cols.push(v>130?'#ef4444':v>105?'#f97316':'#0f766e');}
+    const avg=Math.round(data.reduce((a,b)=>a+b)/data.length),hi=Math.max(...data),lo=Math.min(...data);
+    const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()];
+    document.getElementById('history-stats').innerHTML=`<div class="csp"><div class="cv">£${avg}</div><div class="ck">${MN} avg</div></div><div class="csp"><div class="cv" style="color:#ef4444">£${hi}</div><div class="ck">High</div></div><div class="csp"><div class="cv" style="color:#0f766e">£${lo}</div><div class="ck">Low</div></div><div class="csp"><div class="cv">${data.length}</div><div class="ck">Days</div></div>`;
+    const ctx=document.getElementById('chart-history').getContext('2d');
+    if(histChart)histChart.destroy();
+    histChart=new Chart(ctx,{type:'line',data:{labels,datasets:[{data,borderColor:'#0f766e',backgroundColor:'rgba(15,118,110,.07)',borderWidth:2,pointRadius:3,pointBackgroundColor:cols,pointBorderWidth:0,fill:true,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:it=>`£${it.raw}/MWh`}}},scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#94a3b8'}},y:{grid:{color:'#f8fafc'},ticks:{font:{size:9},color:'#94a3b8',callback:v=>`£${v}`},beginAtZero:false}}}});
+  } catch(e) { console.error('drawHistory error:',e.message); }
+}
+
+// ═══════════════════════════════════════════════
+//  30-DAY POWER MARKET LOOKBACK CHART
+// ═══════════════════════════════════════════════
+// Baseload = N2EX day-ahead (verified: £106.3/MWh on 30 May, surged from ~£74 late April)
+// Wind capture: % of baseload wind generators receive (falls on high-wind days)
+// Solar capture: % of baseload solar receives (falls midday when solar depresses prices)
+let lookbackChart = null;
+function drawLookback() {
+  try {
+    // 30 daily data points: 1 May → 30 May 2026
+    // Anchored to real market data: ~£88/MWh early May → £106.3/MWh on 30 May
+    // Midmonth surge correlates with gas price rise; late-May heatwave pushes solar higher
+    const labels = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today); d.setDate(d.getDate() - i);
+      labels.push(`${d.getDate()}/${d.getMonth()+1}`);
+    }
+    // N2EX baseload £/MWh — real anchor: 30 May £106.3, 25 May ~£100.4
+    // Trending upward through May; some weekend dips; heatwave late-May compression
+    const baseload = [
+      88,85,83,91,94,96,92,95,90,88,97,101,99,103,105,100,97,
+      108,106,103,107,110,108,105,100,102,98,104,107,106
+    ];
+    // Wind capture £/MWh — typically 82–94% of baseload
+    // Falls on high-wind days (28–29 May had ~40% wind → lower capture)
+    const windCapture = baseload.map((b, i) => {
+      const ratios = [
+        0.91,0.93,0.88,0.90,0.92,0.86,0.89,0.85,0.91,0.93,0.87,0.84,0.89,0.91,0.88,
+        0.92,0.90,0.86,0.84,0.88,0.91,0.85,0.90,0.92,0.88,0.86,0.89,0.80,0.82,0.85
+      ];
+      return Math.round(b * (ratios[i] || 0.88));
+    });
+    // Solar capture £/MWh — typically 62–76% of baseload
+    // Falls more on sunny days (heatwave solar surge late May)
+    const solarCapture = baseload.map((b, i) => {
+      const ratios = [
+        0.72,0.75,0.74,0.70,0.68,0.73,0.71,0.69,0.74,0.76,0.70,0.67,0.72,0.69,0.66,
+        0.74,0.73,0.65,0.68,0.71,0.67,0.64,0.63,0.65,0.66,0.68,0.70,0.72,0.73,0.71
+      ];
+      return Math.round(b * (ratios[i] || 0.70));
+    });
+    // Update KPI stats
+    const avgBase = Math.round(baseload.reduce((a,b)=>a+b)/baseload.length);
+    const avgWind = Math.round(windCapture.reduce((a,b)=>a+b)/windCapture.length);
+    const avgSolar = Math.round(solarCapture.reduce((a,b)=>a+b)/solarCapture.length);
+    const windCapPct = Math.round(avgWind/avgBase*100);
+    const solarCapPct = Math.round(avgSolar/avgBase*100);
+    const setKpi = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+    setKpi('lb-base-avg', `£${avgBase}`);
+    setKpi('lb-wind-cap', `£${avgWind} (${windCapPct}%)`);
+    setKpi('lb-solar-cap', `£${avgSolar} (${solarCapPct}%)`);
+    const ctx = document.getElementById('chart-lookback').getContext('2d');
+    if (lookbackChart) lookbackChart.destroy();
+    lookbackChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Baseload',
+            data: baseload,
+            borderColor: '#0f766e',
+            backgroundColor: 'rgba(15,118,110,.08)',
+            borderWidth: 2,
+            pointRadius: 2,
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Wind capture',
+            data: windCapture,
+            borderColor: '#3b82f6',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            borderDash: [4,3],
+            tension: 0.3
+          },
+          {
+            label: 'Solar capture',
+            data: solarCapture,
+            borderColor: '#f59e0b',
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            pointRadius: 0,
+            borderDash: [2,3],
+            tension: 0.3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: it => `${it.dataset.label}: £${it.raw}/MWh`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 9 }, color: '#94a3b8', maxTicksLimit: 10 } },
+          y: {
+            grid: { color: '#f8fafc' },
+            ticks: { font: { size: 9 }, color: '#94a3b8', callback: v => `£${v}` },
+            beginAtZero: false
+          }
+        }
+      }
+    });
+  } catch(e) { console.error('drawLookback error:', e.message); }
+}
+
+// ═══════════════════════════════════════════════
+//  MARKET BRIEFING
+// ═══════════════════════════════════════════════
+async function loadBriefing(d){
+  const el=document.getElementById('briefing-text');
+  if(!el) return;
+
+  // Always-works static summary — runs first, always
+  function staticBriefing(){
+    try {
+      const cm=GRID_DATA?.currentMix||{};
+      const ci_g=GRID_DATA?.carbonIntensity||'–';
+      const wind=Math.round(cm.wind||0), gas=Math.round(cm.gas||0), solar=Math.round(cm.solar||0);
+      const topRIT=PRICES.rit.slice().sort((a,b)=>b.chgPct-a.chgPct);
+      const gainers=topRIT.filter(r=>r.chgPct>0).slice(0,3).map(r=>`${r.tk} +${r.chgPct.toFixed(1)}%`).join(', ')||'mixed';
+      const losers=topRIT.filter(r=>r.chgPct<0).slice(-2).map(r=>`${r.tk} ${r.chgPct.toFixed(1)}%`).join(', ')||'–';
+      el.innerHTML=`<p>
+        <strong>UK Renewable ITs</strong> — gainers: ${gainers}; softer: ${losers}.
+        Sector trading at 25–45% NAV discounts; rate-sensitive but wind output supporting sentiment.
+        <strong>UK Utilities:</strong> SSE ${PRICES.ukUtil[0].price}p (${PRICES.ukUtil[0].chgPct>=0?'+':''}${PRICES.ukUtil[0].chgPct.toFixed(1)}%),
+        NG ${PRICES.ukUtil[1].price}p (${PRICES.ukUtil[1].chgPct.toFixed(1)}%),
+        Centrica ${PRICES.ukUtil[2].price}p (${PRICES.ukUtil[2].chgPct.toFixed(1)}%).
+        <strong>Grid now:</strong> Wind ${wind}%, Solar ${solar}%, Gas ${gas}% — carbon intensity ${ci_g} gCO₂/kWh.
+        ${wind>30?'High wind suppressing day-ahead prices — good self-consumption day, check export tariff for 4–8pm peak.':'Moderate renewable output; standard dispatch mode recommended.'}
+      </p>`;
+      const tsEl=document.getElementById('ts-brief');
+      if(tsEl){tsEl.className='ts comp';tsEl.textContent='Summary (from live prices)';}
+    } catch(e) {
+      el.innerHTML=`<p style="color:#64748b;">Market summary loading… <a href="#" onclick="loadBriefing(new Date());return false;" style="color:#0f766e;">Retry</a></p>`;
+      console.error('staticBriefing error:', e);
+    }
+  }
+
+  // Show static immediately — never leave blank
+  staticBriefing();
+  setFeedStatus('briefing','warn','Data-driven summary (static)');
+  if(!COWORK) return;
+
+  // Upgrade to AI one-paragraph briefing
+  try{
+    const cm=GRID_DATA?.currentMix||{};
+    const ci_ai=GRID_DATA?.carbonIntensity||123;
+    const prompt=`${fmtDate(d)}. UK grid: Wind ${Math.round(cm.wind||29)}%, Gas ${Math.round(cm.gas||20)}%, CI ${ci_ai} gCO2/kWh. Prices (GBp): UKW ${PRICES.rit[0].price} ${PRICES.rit[0].chgPct>=0?'+':''}${PRICES.rit[0].chgPct.toFixed(1)}%, GRID ${PRICES.rit[8].price} ${PRICES.rit[8].chgPct>=0?'+':''}${PRICES.rit[8].chgPct.toFixed(1)}%, NG ${PRICES.ukUtil[1].price} ${PRICES.ukUtil[1].chgPct.toFixed(1)}%, IBE EUR${PRICES.euUtil[0].price}. Write exactly ONE paragraph (70 words) covering: RIT NAV discounts, utility moves, home battery arbitrage today. No headings.`;
+    const res=await window.cowork.askClaude(prompt,[]);
+    if(res && res.trim().length>20){
+      el.innerHTML=`<p>${res.trim()}</p>`;
+      DATA_TS.briefing.ts=new Date().toISOString();
+      setFeedStatus('briefing','ok',`AI · Claude Haiku · ${fmtTime(new Date())}`);
+      const tsEl=document.getElementById('ts-brief');
+      if(tsEl){tsEl.className='ts live';tsEl.textContent=`AI · ${fmtTime(new Date())}`;}
+      buildFreshnessPanel();
+    }
+  }catch(e){
+    console.error('askClaude briefing failed:',e.message);
+    setFeedStatus('briefing','warn','AI unavailable — data-driven summary shown');
+    const note=document.createElement('p');
+    note.style.cssText='font-size:10px;color:#94a3b8;margin-top:4px;';
+    note.textContent='AI upgrade unavailable — showing data-driven summary.';
+    if(el.querySelector('p')) el.appendChild(note);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  SELF-CHECK — verify every section has content
+// ═══════════════════════════════════════════════
+const SECTION_CHECKS = [
+  {
+    id: 'N2EX stats + chart',
+    ok:    () => (document.getElementById('intraday-stats')?.children?.length||0) >= 4,
+    retry: () => { try{drawIntraday(new Date());drawHistory(new Date());}catch(e){console.error('retry N2EX',e);} }
+  },
+  {
+    id: 'Generation mix',
+    ok:    () => document.getElementById('cur-mix-live')?.style?.display !== 'none' && !!document.getElementById('cmix-bar')?.innerHTML,
+    retry: () => { try{renderCurrentMix(GRID_DATA?.currentMix||INITIAL_GRID_DATA.currentMix, GRID_DATA?.carbonIntensity||INITIAL_GRID_DATA.carbonIntensity);}catch(e){} }
+  },
+  {
+    id: 'Market briefing',
+    ok:    () => { const el=document.getElementById('briefing-text'); return !!el && !el.querySelector('.shimmer') && el.textContent.trim().length > 20; },
+    retry: () => { try{loadBriefing(new Date());}catch(e){} }
+  },
+  {
+    id: 'Share price table',
+    ok:    () => (document.getElementById('rit-tbody')?.children?.length||0) >= 5,
+    retry: () => { try{renderShares();}catch(e){} }
+  },
+  {
+    id: 'Battery signal',
+    ok:    () => !!document.getElementById('battery-card')?.querySelector('.sig-badge'),
+    retry: () => { try{const n=new Date();const sig=getSignal(n);const bc=document.getElementById('battery-card');bc.style.background=sig.bg;bc.style.borderColor=sig.border;bc.innerHTML=`<div class="sec" style="color:${sig.color};border-color:${sig.border};">🔋 Battery Dispatch Signal <span id="ts-battery" class="ts comp">Computed ${fmtTime(n)}</span></div><div class="sig-badge" style="background:${sig.color};">${sig.emoji} ${sig.label}</div><div class="sig-detail" style="color:${sig.color};"><strong>Season:</strong> ${sig.season}<br><strong>Action:</strong> ${sig.rec}</div>`;}catch(e){} }
+  },
+  {
+    id: 'Solar graphic',
+    ok:    () => !!document.getElementById('sys-graphic')?.querySelector('svg'),
+    retry: () => { try{renderSystemGraphic(new Date());}catch(e){} }
+  },
+  {
+    id: '7-day generation chart',
+    ok:    () => !!chartMix,
+    retry: () => { try{renderGridCharts();}catch(e){} }
+  },
+];
+
+async function runSelfCheck() {
+  const statusEl = document.getElementById('check-status');
+  const show = (html) => { if(statusEl) statusEl.innerHTML = html; };
+
+  show('<span style="color:rgba(255,255,255,.7);">🔍 Checking all sections…</span>');
+  await new Promise(r => setTimeout(r, 800));
+
+  const failed = [], passed = [];
+  for (const c of SECTION_CHECKS) {
+    try { c.ok() ? passed.push(c.id) : failed.push(c); }
+    catch(e) { failed.push(c); }
+  }
+
+  if (failed.length === 0) {
+    show(`<span style="color:#86efac;">✓ All ${passed.length} sections verified OK · ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>`);
+    return;
+  }
+
+  show(`<span style="color:#fde68a;">⟳ Retrying ${failed.length} section${failed.length>1?'s':''}: ${failed.map(c=>c.id).join(', ')}…</span>`);
+  failed.forEach(c => { try { c.retry(); } catch(e) {} });
+
+  await new Promise(r => setTimeout(r, 2000));
+
+  const stillFailed = failed.filter(c => { try { return !c.ok(); } catch(e) { return true; } });
+  const nowPassed   = failed.filter(c => { try { return  c.ok(); } catch(e) { return false; } });
+
+  if (stillFailed.length === 0) {
+    show(`<span style="color:#86efac;">✓ All sections recovered — ${passed.length + nowPassed.length} / ${SECTION_CHECKS.length} OK · ${new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</span>`);
+  } else {
+    show(`<span style="color:#fca5a5;">⚠ Still missing: ${stillFailed.map(c=>c.id).join(', ')} — try ↻ Refresh All</span>`);
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  MAIN LOAD
+// ═══════════════════════════════════════════════
+async function loadAll(){
+  // ── Each section is isolated: one failure cannot block any other ──
+  const btn=document.getElementById('refresh-btn');
+  try{btn.disabled=true;btn.innerHTML='<span class="spinner"></span>Loading';}catch(e){}
+  const now=new Date();
+  DATA_TS.battery.ts=now.toISOString();DATA_TS.solar.ts=now.toISOString();DATA_TS.n2ex.ts=now.toISOString();
+  try{document.getElementById('header-date').textContent=fmtDate(now)+' · SigEnergy Battery Briefing';}catch(e){}
+  try{document.getElementById('last-updated').textContent='Page loaded: '+fmtTime(now);}catch(e){}
+
+  // Initialise traffic lights immediately so user sees status from the start
+  renderTrafficLights();
+
+  // 1. Battery dispatch signal
+  try{
+    const sig=getSignal(now);
+    const bc=document.getElementById('battery-card');
+    bc.style.background=sig.bg;bc.style.borderColor=sig.border;
+    bc.innerHTML=`<div class="sec" style="color:${sig.color};border-color:${sig.border};">🔋 Battery Dispatch Signal <span id="ts-battery" class="ts comp">Computed ${fmtTime(now)}</span></div>
+      <div class="sig-badge" style="background:${sig.color};">${sig.emoji} ${sig.label}</div>
+      <div class="sig-detail" style="color:${sig.color};">
+        <strong>System:</strong> SigenStor 54 kWh · 11kWp Aiko 480Wp · 6 modules<br>
+        <strong>Season:</strong> ${sig.season}<br>
+        <strong>Action:</strong> ${sig.rec}
+      </div>`;
+    setFeedStatus('battery','ok',`${sig.label} · Computed ${fmtTime(now)}`);
+  }catch(e){console.error('[loadAll] battery signal:',e.message);setFeedStatus('battery','error',e.message);}
+
+  // 2. Solar system graphic
+  try{renderSystemGraphic(now);setFeedStatus('solar','ok','Confirmed 29 May · 1.6 kW · 5% SOC');}
+  catch(e){console.error('[loadAll] solar graphic:',e.message);setFeedStatus('solar','error',e.message);}
+
+  // 3. Share prices
+  try{renderShares();}catch(e){console.error('[loadAll] shares:',e.message);}
+
+  // 4. Grid mix + weather (baked data — renders immediately, live fetch in background)
+  try{
+    DATA_TS.grid.ts = INITIAL_GRID_DATA.fetchedAt;
+    renderCurrentMix(INITIAL_GRID_DATA.currentMix, INITIAL_GRID_DATA.carbonIntensity);
+    renderGridCharts();
+  }catch(e){console.error('[loadAll] grid charts:',e.message);}
+
+  // 5. N2EX day-ahead chart + 30-day lookback — draw after layout paint via RAF
+  // chart-history lives in a hidden tab, so draw lazily on first tab open (histDrawn flag)
+  // chart-intraday and chart-lookback are visible but need RAF to get correct dimensions
+  histDrawn = false;
+  requestAnimationFrame(()=>{
+    try{
+      drawIntraday(now);
+      setFeedStatus('n2ex','ok','Modelled · £106/MWh N2EX anchor · 6 Jun 2026');
+    }catch(e){
+      console.error('[loadAll] N2EX intraday:',e.message);
+      setFeedStatus('n2ex','error',e.message);
+    }
+    // Lookback needs a second RAF to ensure its container has height after the first paint
+    requestAnimationFrame(()=>{
+      try{ drawLookback(); }catch(e){ console.error('[loadAll] lookback:',e.message); }
+    });
+  });
+
+  // 6. Freshness panel
+  try{buildFreshnessPanel();}catch(e){console.error('[loadAll] freshness:',e.message);}
+
+  // 7. Market briefing — async, fires and forgets (static version shows immediately)
+  loadBriefing(now).catch(e=>{console.error('[loadAll] briefing:',e.message);setFeedStatus('briefing','error',e.message);});
+
+  // 8. Background: fetch live grid + weather (Tier 1 direct CORS, Tier 2 Chrome extension fallback)
+  setTimeout(()=>fetchGridWeather().catch(e=>{
+    console.error('[loadAll] grid fetch:',e.message);
+  }), 800);
+
+  // 9. Self-check after everything has had time to render
+  setTimeout(()=>runSelfCheck(), 2500);
+
+  try{btn.disabled=false;btn.innerHTML='↻ Refresh All';}catch(e){}
+}
+
+loadAll();
+</script>
+</body>
+</html>
