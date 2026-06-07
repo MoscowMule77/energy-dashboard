@@ -405,7 +405,7 @@ table.sh tr:hover td{background:#fafbfc;}
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
       <span>🌍 European Power Markets — 30-Day Day-Ahead Lookback</span>
-      <div class="sec-r"><span class="badge est">Indicative</span><a href="https://energy-charts.info/charts/price_spot_market/chart.htm?l=en&c=DE" target="_blank">energy-charts ↗</a><a href="https://www.omie.es/en/market-results/daily/daily-market/day-ahead-price" target="_blank">OMIE ↗</a><a href="https://data.nordpoolgroup.com/auction/n2ex/prices?currency=GBP&deliveryAreas=UK" target="_blank">N2EX ↗</a></div>
+      <div class="sec-r"><span id="ts-pm" class="ts comp">Modelled</span><a href="#" onclick="fetchPowerMarkets();return false;">↻ Refresh markets</a><a href="https://energy-charts.info/charts/price_spot_market/chart.htm?l=en&c=DE" target="_blank">energy-charts ↗</a><a href="https://www.omie.es/en/market-results/daily/daily-market/day-ahead-price" target="_blank">OMIE ↗</a><a href="https://data.nordpoolgroup.com/auction/n2ex/prices?currency=GBP&deliveryAreas=UK" target="_blank">N2EX ↗</a></div>
     </div>
     <table class="sh" style="margin-bottom:12px;">
       <thead><tr><th style="text-align:left;">30-day summary</th><th>🇬🇧 GB (£/MWh)</th><th>🇩🇪 DE (€/MWh)</th><th>🇪🇸 ES (€/MWh)</th></tr></thead>
@@ -424,7 +424,7 @@ table.sh tr:hover td{background:#fafbfc;}
     <div class="chart-wrap sm" style="height:170px;"><canvas id="chart-pm-de"></canvas></div>
     <div style="font-size:11px;font-weight:700;color:#0d2137;margin:10px 0 3px;">🇪🇸 Spain — OMIE (€/MWh)</div>
     <div class="chart-wrap sm" style="height:170px;"><canvas id="chart-pm-es"></canvas></div>
-    <div class="tfoot">Daily averages of hourly day-ahead auction prices. Capture prices = generation-weighted estimates (indicative, KYOS/S&amp;P methodology). BESS line = 2h battery, 1 cycle/day: avg of 2 dearest hours − avg of 2 cheapest, × 85% round-trip efficiency, per MWh discharged. Negative hours = hourly prices &lt; 0. Zero line emphasised — solar capture can go negative on bright low-demand days. Refreshed by the daily 7am task.</div>
+    <div class="tfoot">GB: LIVE Elexon market-index (EPEX GB) half-hourly prices, fetched in your browser. DE/ES: SMARD/OMIE-anchored, refreshed daily (and live inside the Claude app). Capture prices = generation-weighted estimates (indicative, KYOS/S&amp;P methodology). BESS line = 2h battery, 1 cycle/day: avg of 2 dearest hours − avg of 2 cheapest, × 85% round-trip efficiency, per MWh discharged. Negative hours = hourly prices &lt; 0. Zero line emphasised — solar capture can go negative on bright low-demand days. Refreshed by the daily 7am task.</div>
   </div>
 </div>
 
@@ -1490,6 +1490,82 @@ function renderPowerMarkets(){
 }
 
 // ═══════════════════════════════════════════════
+//  LIVE POWER MARKETS FETCH
+//  GB: Elexon Insights API (CORS-open, no key) — real half-hourly prices.
+//  DE/ES: api.energy-charts.info blocks CORS → fetched same-origin via
+//  Chrome tab navigation (Cowork only); otherwise baked daily values stand.
+//  Wind/solar capture stay indicative: live base minus the modelled discount.
+// ═══════════════════════════════════════════════
+let PM_BAKED_DISC=null;
+function _pmProcessDay(arr){
+  const pph=Math.max(1,Math.round(arr.length/24));
+  const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
+  const s=[...arr].sort((a,b)=>a-b), k=2*pph;
+  return {base:+avg(arr).toFixed(1), neg:Math.round(arr.filter(p=>p<0).length/pph),
+          bess:+((avg(s.slice(-k))-avg(s.slice(0,k)))*0.85).toFixed(1)};
+}
+async function _fetchGBElexon(){
+  const dates=PM_DATA.dates, byDay={};
+  let cur=new Date(dates[0]+'T00:00:00Z');
+  const endT=new Date(dates[dates.length-1]+'T00:00:00Z'); endT.setUTCDate(endT.getUTCDate()+1);
+  while(cur<endT){
+    const to=new Date(cur); to.setUTCDate(to.getUTCDate()+10); if(to>endT)to.setTime(endT.getTime());
+    const url='https://data.elexon.co.uk/bmrs/api/v1/balancing/pricing/market-index?from='+cur.toISOString().slice(0,16)+'Z&to='+to.toISOString().slice(0,16)+'Z';
+    const j=await fetch(url).then(r=>r.json());
+    (j.data||[]).forEach(d=>{ if(d.dataProvider==='APXMIDP'&&d.volume>0)(byDay[d.settlementDate]=byDay[d.settlementDate]||[]).push(d.price); });
+    cur=to;
+  }
+  return byDay;
+}
+async function _fetchECviaChrome(bzn){
+  const call=(n,a)=>window.cowork.callMcpTool(n,a);
+  const ctx=_mcpJson(await call('mcp__Claude_in_Chrome__tabs_context_mcp',{createIfEmpty:true}));
+  let tabs=(ctx&&ctx.availableTabs)||[];
+  if(!tabs.length) throw new Error('no Chrome tabs');
+  let target=tabs.find(t=>/^(chrome:\/\/newtab|about:blank)/.test(t.url||''))||tabs.find(t=>/energy-charts/.test(t.url||''));
+  if(!target){ try{ await call('mcp__Claude_in_Chrome__tabs_create_mcp',{}); const c2=_mcpJson(await call('mcp__Claude_in_Chrome__tabs_context_mcp',{})); const t2=(c2&&c2.availableTabs)||[]; target=t2[t2.length-1]; }catch(e){ target=tabs[0]; } }
+  await call('mcp__Claude_in_Chrome__navigate',{tabId:target.tabId,url:'https://api.energy-charts.info/price?bzn='+bzn+'&start='+PM_DATA.dates[0]+'&end='+PM_DATA.dates[PM_DATA.dates.length-1]});
+  await new Promise(r=>setTimeout(r,1600));
+  const raw=await call('mcp__Claude_in_Chrome__javascript_tool',{action:'javascript_exec',tabId:target.tabId,text:'document.body.innerText'});
+  const j=_mcpJson(raw);
+  if(!j||!j.price) throw new Error(bzn+': no price data');
+  return j;
+}
+function _pmApply(c,i,r){
+  PM_DATA[c].base[i]=r.base; PM_DATA[c].neg[i]=r.neg; PM_DATA[c].bess[i]=r.bess;
+  PM_DATA[c].wind[i]=+(r.base-PM_BAKED_DISC[c].wind[i]).toFixed(1);
+  PM_DATA[c].solar[i]=+(r.base-PM_BAKED_DISC[c].solar[i]).toFixed(1);
+}
+async function fetchPowerMarkets(){
+  if(!PM_BAKED_DISC){ PM_BAKED_DISC={}; ['gb','de','es'].forEach(c=>{ PM_BAKED_DISC[c]={
+    wind:PM_DATA[c].base.map((b,i)=>+(b-PM_DATA[c].wind[i]).toFixed(1)),
+    solar:PM_DATA[c].base.map((b,i)=>+(b-PM_DATA[c].solar[i]).toFixed(1))}; }); }
+  const st=document.getElementById('ts-pm'); if(st){st.className='ts';st.textContent='Fetching…';}
+  const ok=[];
+  try{
+    const byDay=await _fetchGBElexon(); let u=0;
+    PM_DATA.dates.forEach((d,i)=>{ const a=byDay[d]; if(a&&a.length>=40){ _pmApply('gb',i,_pmProcessDay(a)); u++; } });
+    if(u>15) ok.push('GB live · Elexon ('+u+'d)');
+  }catch(e){ console.warn('[pm] GB:',e.message); }
+  if(COWORK){
+    for(const cfg of [['de','DE-LU','Europe/Berlin'],['es','ES','Europe/Madrid']]){
+      try{
+        const j=await _fetchECviaChrome(cfg[1]); const byDay={};
+        j.unix_seconds.forEach((u2,k)=>{ const p=j.price[k]; if(p==null)return;
+          const d=new Date(u2*1000).toLocaleDateString('sv-SE',{timeZone:cfg[2]});
+          (byDay[d]=byDay[d]||[]).push(p); });
+        let u=0;
+        PM_DATA.dates.forEach((d,i)=>{ const a=byDay[d]; if(a&&a.length>=20){ _pmApply(cfg[0],i,_pmProcessDay(a)); u++; } });
+        if(u>15) ok.push(cfg[1]+' live ('+u+'d)');
+      }catch(e){ console.warn('[pm] '+cfg[1]+':',e.message); }
+    }
+  }
+  renderPowerMarkets();
+  if(st){ if(ok.length){ st.className='ts live'; st.textContent=ok.join(' · '); }
+          else { st.className='ts comp'; st.textContent='Modelled — live fetch unavailable'; } }
+}
+
+// ═══════════════════════════════════════════════
 //  SHARE PRICE DATA
 // ═══════════════════════════════════════════════
 // Prices refreshed 6 Jun 2026 — search-verified closes (Yahoo Finance / LSE / Investing.com)
@@ -2077,6 +2153,9 @@ async function loadAll(){
   setTimeout(()=>fetchGridWeather().catch(e=>{
     console.error('[loadAll] grid fetch:',e.message);
   }), 800);
+
+  // 8b. Background: live power markets (GB via Elexon everywhere; DE/ES in Cowork)
+  setTimeout(()=>fetchPowerMarkets().catch(e=>console.error('[loadAll] power markets:',e.message)), 1600);
 
   // 9. Self-check after everything has had time to render
   setTimeout(()=>runSelfCheck(), 2500);
