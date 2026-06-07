@@ -1505,16 +1505,17 @@ function _pmProcessDay(arr){
           bess:+((avg(s.slice(-k))-avg(s.slice(0,k)))*0.85).toFixed(1)};
 }
 async function _fetchGBElexon(){
-  const dates=PM_DATA.dates, byDay={};
+  // market-index endpoint caps the request window → parallel 3-day chunks
+  const dates=PM_DATA.dates, byDay={}, urls=[];
   let cur=new Date(dates[0]+'T00:00:00Z');
   const endT=new Date(dates[dates.length-1]+'T00:00:00Z'); endT.setUTCDate(endT.getUTCDate()+1);
   while(cur<endT){
-    const to=new Date(cur); to.setUTCDate(to.getUTCDate()+10); if(to>endT)to.setTime(endT.getTime());
-    const url='https://data.elexon.co.uk/bmrs/api/v1/balancing/pricing/market-index?from='+cur.toISOString().slice(0,16)+'Z&to='+to.toISOString().slice(0,16)+'Z';
-    const j=await fetch(url).then(r=>r.json());
-    (j.data||[]).forEach(d=>{ if(d.dataProvider==='APXMIDP'&&d.volume>0)(byDay[d.settlementDate]=byDay[d.settlementDate]||[]).push(d.price); });
+    const to=new Date(cur); to.setUTCDate(to.getUTCDate()+3); if(to>endT)to.setTime(endT.getTime());
+    urls.push('https://data.elexon.co.uk/bmrs/api/v1/balancing/pricing/market-index?from='+cur.toISOString().slice(0,16)+'Z&to='+to.toISOString().slice(0,16)+'Z');
     cur=to;
   }
+  const results=await Promise.all(urls.map(u=>fetch(u).then(r=>r.ok?r.json():null).catch(()=>null)));
+  results.forEach(j=>{ ((j&&j.data)||[]).forEach(d=>{ if(d.dataProvider==='APXMIDP'&&d.volume>0)(byDay[d.settlementDate]=byDay[d.settlementDate]||[]).push(d.price); }); });
   return byDay;
 }
 async function _fetchECviaChrome(bzn){
