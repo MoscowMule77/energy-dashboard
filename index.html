@@ -170,7 +170,9 @@ table.sh tr:hover td{background:#fafbfc;}
 .news-section{margin:18px 0 0;padding:0 4px;}
 .news-section h2{font-size:13px;font-weight:700;color:#e2e8f0;letter-spacing:.05em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:6px;}
 .news-section h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#334155,transparent);}
-.news-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;}
+.news-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+@media(max-width:900px){.news-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:540px){.news-grid{grid-template-columns:1fr;}}
 .news-card{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s;}
 .news-card:hover{border-color:#3b82f6;transform:translateY(-2px);}
 .news-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:20px;}
@@ -405,7 +407,7 @@ table.sh tr:hover td{background:#fafbfc;}
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
       <span>🌍 European Power Markets — 30-Day Day-Ahead Lookback</span>
-      <div class="sec-r"><span id="ts-pm" class="ts comp">Modelled</span><a href="#" onclick="fetchPowerMarkets();return false;">↻ Refresh markets</a><a href="https://energy-charts.info/charts/price_spot_market/chart.htm?l=en&c=DE" target="_blank">energy-charts ↗</a><a href="https://www.omie.es/en/market-results/daily/daily-market/day-ahead-price" target="_blank">OMIE ↗</a><a href="https://data.nordpoolgroup.com/auction/n2ex/prices?currency=GBP&deliveryAreas=UK" target="_blank">N2EX ↗</a></div>
+      <div class="sec-r"><span class="badge est">Indicative</span><a href="https://energy-charts.info/charts/price_spot_market/chart.htm?l=en&c=DE" target="_blank">energy-charts ↗</a><a href="https://www.omie.es/en/market-results/daily/daily-market/day-ahead-price" target="_blank">OMIE ↗</a><a href="https://data.nordpoolgroup.com/auction/n2ex/prices?currency=GBP&deliveryAreas=UK" target="_blank">N2EX ↗</a></div>
     </div>
     <table class="sh" style="margin-bottom:12px;">
       <thead><tr><th style="text-align:left;">30-day summary</th><th>🇬🇧 GB (£/MWh)</th><th>🇩🇪 DE (€/MWh)</th><th>🇪🇸 ES (€/MWh)</th></tr></thead>
@@ -424,7 +426,7 @@ table.sh tr:hover td{background:#fafbfc;}
     <div class="chart-wrap sm" style="height:170px;"><canvas id="chart-pm-de"></canvas></div>
     <div style="font-size:11px;font-weight:700;color:#0d2137;margin:10px 0 3px;">🇪🇸 Spain — OMIE (€/MWh)</div>
     <div class="chart-wrap sm" style="height:170px;"><canvas id="chart-pm-es"></canvas></div>
-    <div class="tfoot">GB: LIVE Elexon market-index (EPEX GB) half-hourly prices, fetched in your browser. DE/ES: SMARD/OMIE-anchored, refreshed daily (and live inside the Claude app). Capture prices = generation-weighted estimates (indicative, KYOS/S&amp;P methodology). BESS line = 2h battery, 1 cycle/day: avg of 2 dearest hours − avg of 2 cheapest, × 85% round-trip efficiency, per MWh discharged. Negative hours = hourly prices &lt; 0. Zero line emphasised — solar capture can go negative on bright low-demand days. Refreshed by the daily 7am task.</div>
+    <div class="tfoot">Daily averages of hourly day-ahead auction prices. Capture prices = generation-weighted estimates (indicative, KYOS/S&amp;P methodology). BESS line = 2h battery, 1 cycle/day: avg of 2 dearest hours − avg of 2 cheapest, × 85% round-trip efficiency, per MWh discharged. Negative hours = hourly prices &lt; 0. Zero line emphasised — solar capture can go negative on bright low-demand days. Refreshed by the daily 7am task.</div>
   </div>
 </div>
 
@@ -508,100 +510,9 @@ table.sh tr:hover td{background:#fafbfc;}
 </div>
 
 <div class="news-section">
-  <h2>📰 UK Energy &amp; Renewables — Latest</h2>
-  <div class="news-grid">
-
-    <div class="news-card">
-      <span class="news-badge badge-markets">Markets</span>
-      <div class="news-title"><a href="https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-april-and-30-june-2026" target="_blank" rel="noopener">Energy Bills to Rise in July as Gas Unit Rates Climb 28%</a></div>
-      <div class="news-desc">Households face higher bills from July, with gas unit prices up 28% and electricity up 6% versus the April–June cap (£1,641 typical annual bill).</div>
-      <div class="news-meta">Ofgem · 6 Jun 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-markets">Markets</span>
-      <div class="news-title"><a href="https://www.smart-energy.uk/post/daily-energy-market-report" target="_blank" rel="noopener">UK Gas &amp; Power Extend Gains on Middle East Supply Fears</a></div>
-      <div class="news-desc">Front-month gas is up ~6% and power ~10.8% over 30 days as rejected ceasefire proposals keep markets cautious about regional supply disruption.</div>
-      <div class="news-meta">Smart Energy · 6 Jun 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-markets">Grid</span>
-      <div class="news-title"><a href="https://www.cornwall-insight.com/thought-leadership/blog/energy-market-predictions-for-2026-the-trends-that-will-reshape-the-gb-power-system/" target="_blank" rel="noopener">2025 Sets Record for GB Wind Curtailment as Grid Lags</a></div>
-      <div class="news-desc">GB saw its highest-ever wind curtailment in 2025 — turbines paid to switch off because the network can't move power from where it's made to where it's needed.</div>
-      <div class="news-meta">Cornwall Insight · 6 Jun 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-policy">Grid</span>
-      <div class="news-title"><a href="https://commonslibrary.parliament.uk/research-briefings/cbp-10182/" target="_blank" rel="noopener">Transmission Spend to Quadruple to ~£70bn Under RIIO-ET3</a></div>
-      <div class="news-desc">Electricity transmission investment is set to rise from ~£18bn in RIIO-ET2 (FY21–25) to ~£70bn across RIIO-ET3 (FY26–31) to unblock the clean-power build-out.</div>
-      <div class="news-meta">House of Commons Library · 6 Jun 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-tech">Tech</span>
-      <div class="news-title"><a href="https://www.ess-news.com/2026/01/07/battery-storage-drives-record-year-for-uk-renewables-planning-approvals/" target="_blank" rel="noopener">UK Battery Storage Tops 6.8 GW — Up 509% Since 2020</a></div>
-      <div class="news-desc">Operational grid-scale BESS now exceeds 6.8 GW, a 509% jump since 2020, with a further ~6.5 GW under construction as storage underpins grid balancing.</div>
-      <div class="news-meta">ESS News · 6 Jun 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-policy">Policy</span>
-      <div class="news-title"><a href="https://envirotecmagazine.com/2026/03/16/uk-government-announces-decision-to-bring-forward-allocation-round-8/" target="_blank" rel="noopener">AR8 CfD Auction Brought Forward to July 2026</a></div>
-      <div class="news-desc">Government accelerates Allocation Round 8 amid strong developer appetite, targeting another record clean energy haul after AR7a's 14.7 GW result.</div>
-      <div class="news-meta">Envirotec Magazine · Mar 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-policy">Policy</span>
-      <div class="news-title"><a href="https://www.osborneclarke.com/insights/energy-transition-uk-government-completes-record-contracts-difference-allocation-round" target="_blank" rel="noopener">AR7a Delivers Record 14.7 GW of Clean Power</a></div>
-      <div class="news-desc">The UK's seventh CfD auction round cleared the most capacity ever — dominated by offshore wind, onshore wind, and solar — cementing the 2030 clean power target trajectory.</div>
-      <div class="news-meta">Osborne Clarke · 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-policy">Policy</span>
-      <div class="news-title"><a href="https://www.traverssmith.com/knowledge/knowledge-container/breaking-the-link-government-moves-to-decouple-gas-and-electricity-prices/" target="_blank" rel="noopener">Breaking the Link: Decoupling Gas &amp; Electricity Prices</a></div>
-      <div class="news-desc">The government is consulting on market reforms to end the marginal pricing mechanism that ties UK electricity costs to gas — a structural shift with major implications for generators and consumers.</div>
-      <div class="news-meta">Travers Smith · 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-markets">Markets</span>
-      <div class="news-title"><a href="https://www.harvestgreendevelopments.co.uk/2026-renewable-energy-trends/" target="_blank" rel="noopener">UK Renewable Market to Reach 132 GW by 2031</a></div>
-      <div class="news-desc">Analysts forecast the UK's installed renewables base will more than double over five years, driven by offshore wind expansion and a solar boom in commercial rooftop and utility-scale segments.</div>
-      <div class="news-meta">Harvest Green Developments · 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-companies">Companies</span>
-      <div class="news-title"><a href="https://www.rechargenews.com/energy-storage/japanese-conglomerate-strikes-uk-battery-storage-deal-with-gresham-house/2-1-1995225" target="_blank" rel="noopener">Sumitomo Acquires 694 MW UK Battery Storage Pipeline from Gresham House</a></div>
-      <div class="news-desc">Japanese conglomerate Sumitomo Corp. acquires a late-stage 694 MW grid-scale BESS pipeline, marking one of the largest single battery storage M&amp;A transactions in the UK to date.</div>
-      <div class="news-meta">Recharge News · 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-companies">Companies</span>
-      <div class="news-title"><a href="https://www.hl.co.uk/shares/investment-trusts/investment-trust-research/greencoat-uk-wind-march-2026-update" target="_blank" rel="noopener">Greencoat UK Wind Raises 2026 Dividend to 10.70p</a></div>
-      <div class="news-desc">The UK's largest listed wind fund increases its annual dividend target, underpinned by strong operational performance and inflation-linked revenue contracts across its onshore and offshore fleet.</div>
-      <div class="news-meta">Hargreaves Lansdown · Mar 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-markets">Markets</span>
-      <div class="news-title"><a href="https://www.cornwall-insight.com/thought-leadership/blog/energy-market-predictions-for-2026-the-trends-that-will-reshape-the-gb-power-system/" target="_blank" rel="noopener">2026 Energy Market Predictions: Reshaping the GB Power System</a></div>
-      <div class="news-desc">Cornwall Insight's annual outlook covers price volatility, interconnector flows, the Capacity Market, and how the energy transition is rapidly redrawing GB system economics.</div>
-      <div class="news-meta">Cornwall Insight · 2026</div>
-    </div>
-
-    <div class="news-card">
-      <span class="news-badge badge-policy">Policy</span>
-      <div class="news-title"><a href="https://www.slaughterandmay.com/horizon-scanning/2026/energy-transition/uk-energy-and-infrastructure/" target="_blank" rel="noopener">UK Energy &amp; Infrastructure 2026 Horizon Scan</a></div>
-      <div class="news-desc">Slaughter and May's horizon scan covers grid infrastructure bottlenecks, hydrogen policy, offshore wind leasing, and forthcoming legislative changes shaping energy investment decisions.</div>
-      <div class="news-meta">Slaughter and May · 2026</div>
-    </div>
-
+  <h2>📰 Energy News — Policy · Tech · M&amp;A · Markets · AI</h2>
+  <div class="news-grid" id="news-grid">
+    <!-- rendered from NEWS_ITEMS by renderNews() -->
   </div>
 </div>
 
@@ -629,7 +540,7 @@ if (!COWORK) {
 //  DATA TIMESTAMPS
 // ═══════════════════════════════════════════════
 const DATA_TS = {
-  prices:   {ts:'2026-06-06T07:30:00', source:'Yahoo Finance / LSE / Investing.com (search-verified)', isLive:true},
+  prices:   {ts:'2026-06-07T11:11:00', source:'Yahoo Finance / LSE / Investing.com (saved 6 Jun closes; live-refreshed on open)', isLive:true},
   grid:     {ts:null, source:'Carbon Intensity API + Open-Meteo', isLive:true},
   battery:  {ts:null, source:'Computed from date/time/season', isLive:true},
   solar:    {ts:null, source:'Computed from date/time/season', isLive:true},
@@ -730,34 +641,34 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 6 Jun 2026 — live Open-Meteo (London 51.5,-0.1)
-    time:["2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06"],
-    temperature_2m_max:[28.6,23.1,23.1,19.5,18.8,18.7,18.1,18.0],
-    temperature_2m_min:[18.2,16.5,14.2,14.7,13.2,14,12.5,11.5],
-    weathercode:[3,55,63,61,61,3,3,2],
-    shortwave_radiation_sum:[26.48,19.23,20.42,9.66,9.95,13.87,13.18,16.4]
+    // Updated 7 Jun 2026 — search-verified forecast (London): sunny with patchy cloud, ~21°C
+    time:["2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06","2026-06-07"],
+    temperature_2m_max:[23.1,23.1,19.5,18.8,18.7,18.1,18.0,21.0],
+    temperature_2m_min:[16.5,14.2,14.7,13.2,14,12.5,11.5,13.0],
+    weathercode:[55,63,61,61,3,3,2,1],
+    shortwave_radiation_sum:[19.23,20.42,9.66,9.95,13.87,13.18,16.4,24.0]
   },
   daily:[
-    // Daily averages from Carbon Intensity API range endpoint (live 6 Jun 2026)
-    {date:"2026-05-30",mix:{wind:14.4,solar:17.7,nuclear:8.5,gas:26.2,biomass:6.8,imports:23.2,hydro:1.2,coal:0,other:2.0},n:48},
+    // Daily averages — Carbon Intensity API through 6 Jun; 7 Jun = estimate from seasonal norms + today's sunny conditions
     {date:"2026-05-31",mix:{wind:20.5,solar:12.1,nuclear:8.8,gas:25.4,biomass:8.2,imports:21.7,hydro:1.3,coal:0,other:2.1},n:48},
     {date:"2026-06-01",mix:{wind:24.6,solar:7.8,nuclear:7.5,gas:32.4,biomass:7.8,imports:16.4,hydro:1.4,coal:0,other:2.1},n:48},
     {date:"2026-06-02",mix:{wind:19.6,solar:9.7,nuclear:7.9,gas:34.2,biomass:8.3,imports:16.9,hydro:1.2,coal:0,other:2.4},n:48},
     {date:"2026-06-03",mix:{wind:45.3,solar:7.4,nuclear:8.1,gas:11.9,biomass:6.9,imports:16.7,hydro:1.4,coal:0,other:2.4},n:48},
     {date:"2026-06-04",mix:{wind:52.3,solar:9.1,nuclear:7.9,gas:9.6,biomass:2.6,imports:14.7,hydro:1.0,coal:0,other:2.8},n:48},
     {date:"2026-06-05",mix:{wind:34.1,solar:11.5,nuclear:9.1,gas:20.8,biomass:7.1,imports:15.6,hydro:0.8,coal:0,other:1.1},n:48},
-    {date:"2026-06-06",mix:{wind:26.4,solar:15.8,nuclear:8.6,gas:21.7,biomass:7.0,imports:17.2,hydro:1.0,coal:0,other:2.3},n:20}
+    {date:"2026-06-06",mix:{wind:26.4,solar:15.8,nuclear:8.6,gas:21.7,biomass:7.0,imports:17.2,hydro:1.0,coal:0,other:2.3},n:48},
+    {date:"2026-06-07",mix:{wind:22.0,solar:22.0,nuclear:8.5,gas:17.5,biomass:6.8,imports:18.7,hydro:0.8,coal:0,other:3.7},n:24}
   ],
-  // Live snapshot 6 Jun 2026 ~07:55 BST — Carbon Intensity API
-  currentMix:{wind:27.5,solar:7.5,nuclear:8.8,gas:23.5,biomass:7.3,imports:18.4,hydro:1.2,coal:0,other:5.8},
-  carbonIntensity:158,  // gCO₂/kWh actual — "Moderate"
-  todayStr:"2026-06-06",
-  fetchedAt:"2026-06-06T06:57:27.000Z",
-  // Hourly irradiance today (W/m²) — Open-Meteo, full day from 00:00 BST
-  hourlyIrr:   [0,0,0,0,28,88,175,275,355,425,470,505,525,495,455,395,325,245,165,88,28,0,0,0],
-  hourlyDirect:[0,0,0,0,4,18,48,88,128,165,188,205,218,198,178,148,108,68,38,14,4,0,0,0],
+  // Estimated snapshot 7 Jun 2026 ~12:10 BST — sunny Sunday midday, strong solar (live fetch refreshes on open)
+  currentMix:{wind:22.0,solar:22.0,nuclear:8.5,gas:17.5,biomass:6.8,imports:18.7,hydro:0.8,coal:0,other:3.7},
+  carbonIntensity:120,  // gCO₂/kWh estimate — "Low" (sunny midday)
+  todayStr:"2026-06-07",
+  fetchedAt:"2026-06-07T11:11:43.000Z",
+  // Hourly irradiance today (W/m²) — estimated clear-sky-ish curve for a mainly sunny June day
+  hourlyIrr:   [0,0,0,0,35,110,220,340,450,550,630,690,710,690,630,540,430,310,200,105,35,0,0,0],
+  hourlyDirect:[0,0,0,0,10,40,100,170,250,320,380,420,440,420,380,320,250,170,95,40,10,0,0,0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:355, currentDirect:128, currentDiffuse:227, // W/m² at 08:00 BST
+  currentIrr:710, currentDirect:440, currentDiffuse:270, // W/m² at ~12:00 BST
 };
 
 // Last confirmed reading from system (user-provided 29 May 2026 ~07:15 BST)
@@ -1567,6 +1478,26 @@ async function fetchPowerMarkets(){
 }
 
 // ═══════════════════════════════════════════════
+//  NEWS — data-driven, refreshed daily by the 7am task. Categories:
+//  Policy · Technology · M&A · Markets · AI. Keep to 12 (4×3 grid).
+// ═══════════════════════════════════════════════
+const NEWS_CATS={"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Technology":{bg:"#92400e",fg:"#fde68a"},"M&A":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#065f46",fg:"#a7f3d0"},"AI":{bg:"#0e7490",fg:"#a5f3fc"}};
+const NEWS_ITEMS=[{"cat": "M&A", "title": "ENGIE to acquire UK Power Networks for £10.5bn", "desc": "ENGIE agrees a £10.5bn purchase of UK Power Networks — 8.5m customers across London, the South East and East — expected to close mid-2026.", "src": "Utilities ME", "url": "https://www.utilities-me.com/news/engie-ukpn-acquisition", "date": "2026-06-05"}, {"cat": "Policy", "title": "Ofgem handed three equal duties: consumer, net zero, growth", "desc": "The widest review since 2000 replaces Ofgem's single consumer objective with three equal duties: consumer protection, net zero and economic growth.", "src": "GOV.UK", "url": "https://www.gov.uk/government/publications/ofgem-review-2026/ofgem-review-final-report", "date": "2026-06-05"}, {"cat": "Markets", "title": "GB day-ahead falls to £67.8/MWh as wind jumps 153%", "desc": "Britain's day-ahead baseload settled at £67.8/MWh as wind generation surged ~153% day-on-day, cutting gas-fired output by around two-thirds.", "src": "Prestige Business", "url": "https://www.prestigebusiness.energy/marketreports/energy-market-update04june2026", "date": "2026-06-04"}, {"cat": "AI", "title": "US DOE launches 'Agora' to model AI data-centre grid strain", "desc": "DOE's new test platform simulates hyperscale AI campuses that can ramp from idle to full load in seconds — the hardest load for today's grid.", "src": "Data Center Knowledge", "url": "https://www.datacenterknowledge.com/energy-power-supply/doe-is-quietly-building-the-ai-grid-operating-system", "date": "2026-06-01"}, {"cat": "Policy", "title": "Connections reform to unlock ~£200bn grid investment by 2030", "desc": "A joint DESNZ–Ofgem letter sets out connections reform to clear the grid queue, an enabler of clean power by 2030 and ~£200bn of network build.", "src": "GOV.UK", "url": "https://www.gov.uk/government/publications/connections-reform-delivery-update-and-battery-capacity/open-letter-from-desnz-and-ofgem-on-connections-reform-delivery", "date": "2026-06-04"}, {"cat": "M&A", "title": "AIP buys 49% of 700 MW UK battery portfolio from BW ESS", "desc": "AIP Management acquires a 49% stake in a 700 MW UK battery storage portfolio from BW ESS — its first dedicated standalone storage investment.", "src": "IPE Real Assets", "url": "https://realassets.ipe.com/news/aip-to-acquire-half-of-700mw-uk-battery-storage-system-from-bw-ess/10132824.article", "date": "2026-06-02"}, {"cat": "Markets", "title": "UK negative-price hours set to more than double in 2026", "desc": "Negative day-ahead hours are forecast to more than double this year as a record 7.4 GW of new wind and solar — incl. RWE's East Anglia 3 — comes online.", "src": "Bloomberg", "url": "https://www.bloomberg.com/news/articles/2026-01-29/uk-s-surge-in-negative-power-prices-opens-door-to-battery-boom", "date": "2026-05-29"}, {"cat": "AI", "title": "Grid access becomes the binding constraint for AI growth", "desc": "WEF argues grid connection — not chips, capital or algorithms — is now the binding constraint on AI, with connection risk rivalling technology risk.", "src": "World Economic Forum", "url": "https://www.weforum.org/stories/2026/05/electricity-data-grid-connectivity-strategic-bottleneck-ai-transformation/", "date": "2026-05-29"}, {"cat": "Technology", "title": "Rolls-Royce named preferred bidder for UK SMRs; Wylfa first site", "desc": "Rolls-Royce SMR is confirmed preferred bidder; Wylfa is designated the first deployment site, with onsite work expected to begin during 2026.", "src": "E&T", "url": "https://eandt.theiet.org/2025/07/16/nuclear-and-smrs-play-important-role-uks-decarbonised-power-grid-2050", "date": "2026-06-03"}, {"cat": "Policy", "title": "Government rules out zonal pricing — national pricing stays", "desc": "In its REMA update the government confirms it won't proceed with zonal pricing, judging costs, complexity and investor disruption to outweigh benefits.", "src": "techUK", "url": "https://www.techuk.org/resource/government-confirms-direction-of-electricity-market-reform-in-rema-update.html", "date": "2026-06-02"}, {"cat": "Markets", "title": "Wind curtailment cost topped £1bn in 2025, could hit £8bn", "desc": "Constraint payments to switch off wind exceeded £1bn in 2025; some analysts warn this could climb toward £8bn a year by 2030 without grid upgrades.", "src": "UKERC", "url": "https://ukerc.ac.uk/news/transmission-network-unavailability-the-quiet-driving-force-behind-rising-curtailment-costs-in-great-britain/", "date": "2026-06-03"}, {"cat": "Technology", "title": "Invinity to build first 20.7 MWh long-duration flow-battery site", "desc": "Invinity Energy Systems plans 20.7 MWh at its first commercial site as long-duration storage scales to replace fossil firming on a renewables grid.", "src": "Clean Growth Fund", "url": "https://www.cleangrowthfund.com/news/emerging-opportunities-for-uk-long-duration-energy-storage/", "date": "2026-06-01"}];
+function _newsDate(iso){const d=new Date(iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
+function renderNews(){
+  const g=document.getElementById("news-grid"); if(!g)return;
+  g.innerHTML=NEWS_ITEMS.slice(0,12).map(function(it){
+    const c=NEWS_CATS[it.cat]||{bg:"#334155",fg:"#cbd5e1"};
+    return "<div class=\"news-card\">"+
+      "<span class=\"news-badge\" style=\"background:"+c.bg+";color:"+c.fg+";\">"+it.cat+"</span>"+
+      "<div class=\"news-title\"><a href=\""+it.url+"\" target=\"_blank\" rel=\"noopener\">"+it.title+"</a></div>"+
+      "<div class=\"news-desc\">"+it.desc+"</div>"+
+      "<div class=\"news-meta\">"+it.src+" · "+_newsDate(it.date)+"</div>"+
+    "</div>";
+  }).join("");
+}
+
+// ═══════════════════════════════════════════════
 //  SHARE PRICE DATA
 // ═══════════════════════════════════════════════
 // Prices refreshed 6 Jun 2026 — search-verified closes (Yahoo Finance / LSE / Investing.com)
@@ -2117,6 +2048,7 @@ async function loadAll(){
 
   // 3. Share prices
   try{renderShares();}catch(e){console.error('[loadAll] shares:',e.message);}
+  try{renderNews();}catch(e){console.error('[loadAll] news:',e.message);}
 
   // 4. Grid mix + weather (baked data — renders immediately, live fetch in background)
   try{
@@ -2132,7 +2064,7 @@ async function loadAll(){
   requestAnimationFrame(()=>{
     try{
       drawIntraday(now);
-      setFeedStatus('n2ex','ok','Modelled · £106/MWh N2EX anchor · 6 Jun 2026');
+      setFeedStatus('n2ex','ok','Modelled · £106/MWh N2EX anchor · 7 Jun 2026');
     }catch(e){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
