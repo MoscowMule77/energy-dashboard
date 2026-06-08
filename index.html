@@ -2241,6 +2241,9 @@ async function loadAll(){
   // 8b. Background: live power markets (GB via Elexon everywhere; DE/ES in Cowork)
   setTimeout(()=>fetchPowerMarkets().catch(e=>console.error('[loadAll] power markets:',e.message)), 1600);
 
+  // 8c. GB 30-year outlook — guaranteed render, decoupled from the RAF chain
+  setTimeout(()=>{try{renderLongTermForecast();}catch(e){console.error('[loadAll] LTF:',e.message);}}, 700);
+
   // 9. Self-check after everything has had time to render
   setTimeout(()=>runSelfCheck(), 2500);
 
