@@ -970,6 +970,7 @@ async function fetchGridWeather() {
     renderCurrentMix(parsed.currentMix, parsed.carbonIntensity);
     renderGridCharts();
     buildFreshnessPanel();
+    refreshSolarNow();
     const daysOk = parsed.daily?.filter(d=>d.n>0).length||0;
     const src = method === 'chrome' ? 'Chrome extension' : 'direct CORS';
     setGridStatus(`✓ Grid refreshed — ${daysOk} days · ${fmtTime(new Date())} · via ${src}`);
@@ -1607,15 +1608,32 @@ function getSignal(d){const m=d.getMonth()+1,h=d.getHours(),isSummer=m>=5&&m<=8,
 function estimateSoc(d){const m=d.getMonth()+1,h=d.getHours()+d.getMinutes()/60,isSummer=m>=5&&m<=8,isWinter=m<=2||m>=11;if(isSummer){if(h<5.5)return .15;if(h<14)return Math.min(.98,.15+.83*(h-5.5)/8.5);if(h<16)return .98;if(h<23)return Math.max(.15,.98-.83*(h-16)/7);return .15;}if(isWinter){if(h<6)return Math.min(.95,.2+(h/6)*.75);return Math.max(.1,.95-.85*(h-6)/17);}if(h<5.5)return .18;if(h<15)return Math.min(.88,.18+.70*(h-5.5)/9.5);if(h<16)return .88;if(h<23)return Math.max(.15,.88-.73*(h-16)/7);return .15;}
 function estimateSolarKw(d){const m=d.getMonth()+1,h=d.getHours()+d.getMinutes()/60,isSummer=m>=5&&m<=8,peak=isSummer?10.2:5.8,rise=isSummer?5.3:7.5,set=isSummer?20.8:16.5;if(h<rise||h>set)return 0;const mid=(rise+set)/2,half=(set-rise)/2,dist=Math.abs(h-mid)/half;return Math.max(0,peak*(1-dist*dist));}
 
+let LIVE_SOLAR=null;
+// Live "solar now" from Open-Meteo current irradiance (reflects cloud/rain).
+// Independent of the grid pipeline so it works on the hosted page too.
+async function refreshSolarNow(){
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=51.5&longitude=-0.1&current=shortwave_radiation,cloud_cover,precipitation,temperature_2m&daily=shortwave_radiation_sum&forecast_days=1&timezone=Europe%2FLondon');
+    const j=await r.json();
+    LIVE_SOLAR={irr:j.current.shortwave_radiation, cloud:j.current.cloud_cover, precip:j.current.precipitation,
+      swSumToday:(j.daily&&j.daily.shortwave_radiation_sum)?j.daily.shortwave_radiation_sum[0]:null, ts:j.current.time};
+    renderSystemGraphic(new Date());
+    const kw=expectedKwNow(LIVE_SOLAR.irr);
+    setFeedStatus('solar','ok','Live '+kw.toFixed(1)+'kW · '+LIVE_SOLAR.cloud+'% cloud · '+fmtTime(new Date(LIVE_SOLAR.ts)));
+  }catch(e){ console.warn('[solar] live fetch failed:',e.message); }
+}
 function renderSystemGraphic(d){
   // Use last known confirmed reading if available and < 24 h old
   const lk = LAST_KNOWN_SOLAR;
   const lkAgeH = lk ? (Date.now() - new Date(lk.ts)) / 3600000 : 999;
   const useLive = lk && lkAgeH < 24;
   const soc     = useLive ? lk.soc      : estimateSoc(d);
-  const solarKw = useLive ? lk.solarKw  : estimateSolarKw(d);
+  // Solar now: prefer LIVE irradiance (reflects cloud/rain), then a confirmed meter reading, else clear-sky model
+  let solarKw, solTag;
+  if (LIVE_SOLAR && LIVE_SOLAR.irr != null) { solarKw = expectedKwNow(LIVE_SOLAR.irr); solTag = 'Live ' + fmtTime(new Date(LIVE_SOLAR.ts)); }
+  else if (useLive) { solarKw = lk.solarKw; solTag = 'Confirmed'; }
+  else { solarKw = estimateSolarKw(d); solTag = 'Clear-sky est.'; }
   const socTag  = useLive ? `Confirmed ${fmtTime(new Date(lk.ts))} · <a href="https://web-eu.sigencloud.com/" target="_blank" style="color:#0f766e;">SigenCloud ↗</a>` : 'Estimated';
-  const solTag  = useLive ? 'Confirmed' : 'Estimated';
   const socPct=Math.round(soc*100),isCharging=solarKw>1&&soc<.98;
   const m=d.getMonth()+1,isSummer=m>=5&&m<=8,dailyForecast=isSummer?Math.round(35+solarKw*1.2):Math.round(8+solarKw*2);
   const battFill=soc>.6?'#22c55e':soc>.3?'#f59e0b':'#ef4444',battFillH=Math.round(soc*68),arrowCol=isCharging?'#22c55e':'#94a3b8';
@@ -1623,7 +1641,9 @@ function renderSystemGraphic(d){
 
   // If we have live irradiation data, use it for today's forecast
   let displayForecast = dailyForecast;
-  if (GRID_DATA?.weather?.shortwave_radiation_sum) {
+  if (LIVE_SOLAR && LIVE_SOLAR.swSumToday != null) {
+    displayForecast = expectedKwh(LIVE_SOLAR.swSumToday);
+  } else if (GRID_DATA?.weather?.shortwave_radiation_sum) {
     const todayIdx = GRID_DATA.weather.time?.indexOf(GRID_DATA.todayStr);
     if (todayIdx >= 0) {
       displayForecast = expectedKwh(GRID_DATA.weather.shortwave_radiation_sum[todayIdx]);
@@ -2045,6 +2065,7 @@ async function loadAll(){
   // 2. Solar system graphic
   try{renderSystemGraphic(now);setFeedStatus('solar','ok','Confirmed 29 May · 1.6 kW · 5% SOC');}
   catch(e){console.error('[loadAll] solar graphic:',e.message);setFeedStatus('solar','error',e.message);}
+  refreshSolarNow();
 
   // 3. Share prices
   try{renderShares();}catch(e){console.error('[loadAll] shares:',e.message);}
