@@ -208,6 +208,13 @@ table.sh tr:hover td{background:#fafbfc;}
 .cmix-prog{height:3px;background:#f1f5f9;border-radius:2px;}
 .cmix-fill{height:100%;border-radius:2px;transition:width .5s;}
 .mix-placeholder{display:flex;flex-direction:column;gap:8px;padding:4px 0 12px;}
+
+/* ── Power-markets day close-up modal ── */
+.pm-modal{position:fixed;inset:0;z-index:9000;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;padding:16px;}
+.pm-modal-box{background:#fff;border-radius:12px;padding:16px 18px;width:min(700px,96vw);max-height:92vh;overflow:auto;box-shadow:0 12px 40px rgba(0,0,0,.3);}
+.pm-modal-hd{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;color:#0d2137;margin-bottom:4px;}
+.pm-modal-x{border:none;background:#f1f5f9;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:13px;color:#475569;}
+.pm-modal-x:hover{background:#e2e8f0;}
 </style>
 </head>
 <body>
@@ -426,7 +433,7 @@ table.sh tr:hover td{background:#fafbfc;}
     <div class="chart-wrap sm" style="height:170px;"><canvas id="chart-pm-de"></canvas></div>
     <div style="font-size:11px;font-weight:700;color:#0d2137;margin:10px 0 3px;">🇪🇸 Spain — OMIE (€/MWh)</div>
     <div class="chart-wrap sm" style="height:170px;"><canvas id="chart-pm-es"></canvas></div>
-    <div class="tfoot">Daily averages of hourly day-ahead auction prices. Capture prices = generation-weighted estimates (indicative, KYOS/S&amp;P methodology). BESS line = 2h battery, 1 cycle/day: avg of 2 dearest hours − avg of 2 cheapest, × 85% round-trip efficiency, per MWh discharged. Negative hours = hourly prices &lt; 0. Zero line emphasised — solar capture can go negative on bright low-demand days. Refreshed by the daily 7am task.</div>
+    <div class="tfoot"><strong>Click any day for its 24-hour close-up.</strong> Daily averages of hourly day-ahead auction prices. Capture prices = generation-weighted estimates (indicative, KYOS/S&amp;P methodology). BESS line = 2h battery, 1 cycle/day: avg of 2 dearest hours − avg of 2 cheapest, × 85% round-trip efficiency, per MWh discharged. Negative hours = hourly prices &lt; 0. Zero line emphasised — solar capture can go negative on bright low-demand days. Refreshed by the daily 7am task.</div>
   </div>
 </div>
 
@@ -1391,7 +1398,7 @@ function renderPowerMarkets(){
         {label:'BESS 2h arb',data:D.bess,borderColor:'#16a34a',borderDash:[5,3],tension:.35,pointRadius:0,borderWidth:1.5,yAxisID:'y'},
         {type:'bar',label:'Negative hrs',data:D.neg,backgroundColor:'rgba(239,68,68,.28)',borderWidth:0,yAxisID:'y2',barPercentage:.55}
       ]},
-      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},onClick:(e,els)=>{if(els&&els.length)openPMDay(c,els[0].index);},onHover:(e,els)=>{if(e&&e.native)e.native.target.style.cursor=(els&&els.length)?'pointer':'default';},
         plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+(ctx.dataset.yAxisID==='y2'?ctx.parsed.y+' h':cur+ctx.parsed.y.toFixed(1)+'/MWh')}}},
         scales:{
           y:{position:'left',ticks:{font:{size:9},callback:v=>cur+v},grid:{color:c2=>c2.tick.value===0?'#64748b':'#f1f5f9',lineWidth:c2=>c2.tick.value===0?1.5:1}},
@@ -1476,6 +1483,65 @@ async function fetchPowerMarkets(){
   renderPowerMarkets();
   if(st){ if(ok.length){ st.className='ts live'; st.textContent=ok.join(' · '); }
           else { st.className='ts comp'; st.textContent='Modelled — live fetch unavailable'; } }
+}
+
+// ═══════════════════════════════════════════════
+//  POWER MARKETS — CLICK A DAY → 24H CLOSE-UP
+// ═══════════════════════════════════════════════
+let pmModalChart=null, _pmEsc=false;
+function ensurePMModal(){
+  if(document.getElementById('pm-modal'))return;
+  const d=document.createElement('div'); d.id='pm-modal'; d.className='pm-modal'; d.style.display='none';
+  d.innerHTML='<div class="pm-modal-box">'
+    +'<div class="pm-modal-hd"><span id="pm-modal-title">—</span><button class="pm-modal-x" onclick="closePMDay()">✕</button></div>'
+    +'<div id="pm-modal-stats" class="cs" style="margin:8px 0;"></div>'
+    +'<div style="height:240px;position:relative;"><canvas id="pm-modal-canvas"></canvas></div>'
+    +'<div id="pm-modal-note" class="tfoot"></div></div>';
+  d.addEventListener('click',e=>{if(e.target===d)closePMDay();});
+  document.body.appendChild(d);
+  if(!_pmEsc){ document.addEventListener('keydown',e=>{if(e.key==='Escape')closePMDay();}); _pmEsc=true; }
+}
+function closePMDay(){ const m=document.getElementById('pm-modal'); if(m)m.style.display='none'; if(pmModalChart){pmModalChart.destroy();pmModalChart=null;} }
+async function _hourlyGB(date){
+  const j=await fetch('https://data.elexon.co.uk/bmrs/api/v1/balancing/pricing/market-index?from='+date+'T00:00Z&to='+date+'T23:59Z').then(r=>r.json());
+  const pts=(j.data||[]).filter(x=>x.dataProvider==='APXMIDP'&&x.volume>0).sort((a,b)=>a.settlementPeriod-b.settlementPeriod);
+  if(pts.length<20) throw new Error('no GB hourly');
+  return {labels:pts.map(p=>p.startTime.slice(11,16)), vals:pts.map(p=>p.price), real:true};
+}
+async function _hourlyEC(bzn,date,tz){
+  const j=await fetch('https://api.energy-charts.info/price?bzn='+bzn+'&start='+date+'&end='+date).then(r=>r.json());
+  if(!j||!j.price) throw new Error('no EC hourly');
+  return {labels:j.unix_seconds.map(u=>new Date(u*1000).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:tz})), vals:j.price, real:true};
+}
+function _hourlySynth(c,idx){
+  const base=PM_DATA[c].base[idx], solarCap=PM_DATA[c].solar[idx], neg=PM_DATA[c].neg[idx], dip=Math.max(0,base-solarCap);
+  const v=[];
+  for(let h=0;h<24;h++){ v.push(base+18*Math.sin((h-7)/24*2*Math.PI)-dip*Math.exp(-Math.pow((h-13)/3,2))+22*Math.exp(-Math.pow((h-19)/2,2))-14*Math.exp(-Math.pow((h-4)/2.5,2))); }
+  if(neg>0){ [13,12,14,11,15,10,16,9,17,8].slice(0,neg).forEach(h=>{v[h]=-Math.abs(v[h]%8)-1;}); }
+  return {labels:[...Array(24)].map((_,h)=>String(h).padStart(2,'0')+':00'), vals:v.map(x=>+x.toFixed(1)), real:false};
+}
+async function openPMDay(c,idx){
+  ensurePMModal();
+  const date=PM_DATA.dates[idx], cur=PM_CFG[c].cur, name={gb:'🇬🇧 GB (EPEX/N2EX)',de:'🇩🇪 Germany (EPEX)',es:'🇪🇸 Spain (OMIE)'}[c];
+  const m=document.getElementById('pm-modal'); m.style.display='flex';
+  document.getElementById('pm-modal-title').textContent=name+' — '+new Date(date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('pm-modal-stats').innerHTML='<div class="csp"><div class="cv">…</div><div class="ck">loading</div></div>';
+  document.getElementById('pm-modal-note').textContent='';
+  let data;
+  try{ data = c==='gb' ? await _hourlyGB(date) : await _hourlyEC(c==='de'?'DE-LU':'ES',date,c==='de'?'Europe/Berlin':'Europe/Madrid'); }
+  catch(e){ data=_hourlySynth(c,idx); }
+  const vals=data.vals, mn=Math.min(...vals), mx=Math.max(...vals), av=vals.reduce((s,x)=>s+x,0)/vals.length, perPt=vals.length/24, negh=Math.round(vals.filter(x=>x<0).length/perPt);
+  document.getElementById('pm-modal-stats').innerHTML=[['Min',cur+mn.toFixed(1)],['Avg',cur+av.toFixed(1)],['Max',cur+mx.toFixed(1)],['Spread',cur+(mx-mn).toFixed(1)],['Neg hrs',negh+'h']]
+    .map(s=>'<div class="csp"><div class="cv">'+s[1]+'</div><div class="ck">'+s[0]+'</div></div>').join('');
+  document.getElementById('pm-modal-note').innerHTML = data.real
+    ? '✓ Real half-hourly / hourly day-ahead prices.'
+    : '⚠ Indicative 24-hour shape modelled from this day&rsquo;s daily stats — live DE/ES intraday needs the Claude app (their API blocks browser access).';
+  if(pmModalChart)pmModalChart.destroy();
+  pmModalChart=new Chart(document.getElementById('pm-modal-canvas'),{type:'line',
+    data:{labels:data.labels,datasets:[{data:vals,borderColor:'#0d2137',backgroundColor:'rgba(13,33,55,.08)',fill:true,tension:.3,pointRadius:0,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>cur+ctx.parsed.y.toFixed(1)+'/MWh'}}},
+      scales:{y:{ticks:{callback:v=>cur+v,font:{size:10}},grid:{color:x=>x.tick.value===0?'#64748b':'#f1f5f9',lineWidth:x=>x.tick.value===0?1.5:1}},
+        x:{ticks:{font:{size:8},maxTicksLimit:12},grid:{display:false}}}}});
 }
 
 // ═══════════════════════════════════════════════
