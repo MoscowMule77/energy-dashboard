@@ -2,7 +2,7 @@
 {
   "name": "Energy Markets Dashboard",
   "schemaVersion": 1,
-  "description": "Daily energy markets dashboard for SigenStor 54kWh / 11kWp system. Generates a battery dispatch signal (Solar Charging / Export Opportunity / Charge Overnight / Self-Consumption) based on today's date and season, shows indicative forward power and carbon prices, sector watchlist, and a live AI-generated market briefing covering UK renewable ITs, UK and European utilities, and UK BESS market.",
+  "description": "Daily energy markets dashboard for SigenStor 54kWh / 13.44kWp system (28 × 480Wp, 11 South + 17 West). Generates a battery dispatch signal (Solar Charging / Export Opportunity / Charge Overnight / Self-Consumption) based on today's date and season, shows indicative forward power and carbon prices, sector watchlist, and a live AI-generated market briefing covering UK renewable ITs, UK and European utilities, and UK BESS market.",
   "mcpTools": [
     "mcp__Claude_in_Chrome__tabs_context_mcp",
     "mcp__Claude_in_Chrome__javascript_tool"
@@ -338,7 +338,7 @@ table.sh tr:hover td{background:#fafbfc;}
         <canvas id="chart-irr"></canvas>
       </div>
       <div class="tfoot" style="margin-top:8px;">
-        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Expected production = irradiation × 11kWp × PR(0.80) ÷ 1 sun = irradiation × <strong>8.8 kWh per kWh/m²</strong>. System: Aiko 480Wp · 51.5°N · south-facing estimated. Verify actual output in SigenStor app.
+        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 11 South + 17 West · 35° tilt · 51.5°N · PR 0.80. Verify actual output in SigenStor app.
         <br>Location: London (51.5°N, 0.1°W) — adjust for your actual site if needed.
       </div>
     </div>
@@ -550,7 +550,7 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
-<div class="footer">Not investment advice · SigEnergy 11kWp / 54kWh · CMU110A53B80283
+<div class="footer">Not investment advice · SigEnergy 13.44kWp / 54kWh · CMU110A53B80283
   <div id="last-updated" style="margin-top:3px;color:#94a3b8;font-size:10px;"></div>
 </div>
 
@@ -647,17 +647,58 @@ const FUEL_ORDER = ['wind','solar','nuclear','gas','biomass','imports','hydro','
 
 // ═══════════════════════════════════════════════
 //  IRRADIATION CALCULATION
-//  Aiko 480Wp, 11kWp system
+//  Aiko 480Wp · 28 panels · 13.44 kWp system (was 11 kWp / 23 panels)
 //  Performance ratio: 0.80
-//  Correct formula: expected kWh = irr_kWh/m² × SYSTEM_KWP × PR
+//  Daily/now totals: expected = irr × SYSTEM_KWP × PR (flat-plate approximation)
 //  (kWp is already normalised to 1 kW/m² STC — no need to multiply by panel area)
-//  e.g. at 1000 W/m² (= 1 kWh/m² per hour): 11kWp × 0.80 = 8.8 kWh
+//  Intraday curve uses the orientation-aware model below (expectedKwOrientation),
+//  which splits the array into its South and West faces so the shape reflects the
+//  real two-peak profile rather than a single solar-noon peak.
 //  (shortwave_radiation_sum is MJ/m² → ÷3.6 = kWh/m²)
-//
-//  Current irradiance: expected kW = (irr_W/m² ÷ 1000) × SYSTEM_KWP × PR
 // ═══════════════════════════════════════════════
-const SYSTEM_KWP = 11;
+const SYSTEM_KWP = 13.44;          // 28 × Aiko 480Wp
 const PERF_RATIO = 0.80;
+// ── Array orientation (added Jun 2026) ──
+//   South-facing: 11 × 480Wp = 5.28 kWp   ·   West-facing: 17 × 480Wp = 8.16 kWp
+//   Tilt 35° (assumed UK pitch) · London 51.5°N.
+const ARRAY_LAT = 51.5, ARRAY_TILT = 35;
+const SOLAR_ARRAYS = [
+  {name:'South', kwp:5.28, az:0},   // surface azimuth measured from south, +west
+  {name:'West',  kwp:8.16, az:90}
+];
+const _D2R = Math.PI/180;
+function _solarDecl(date){
+  const y=date.getUTCFullYear();
+  const n=Math.floor((Date.UTC(y,date.getUTCMonth(),date.getUTCDate())-Date.UTC(y,0,0))/86400000);
+  return 23.45*Math.sin(_D2R*(360*(284+n)/365));   // declination, deg
+}
+// Solar noon ≈ 13:00 BST (London; EoT/longitude ignored ⇒ within ~5 min). H=0 at 13:00.
+function _hourAngleBST(localHour){ return 15*(localHour-13); }
+// Orientation-aware expected AC output (kW) across both roof faces at a given local
+// BST hour, transposing measured global (ghi) + beam-on-horizontal (bhi) irradiance
+// onto each tilted plane (Duffie–Beckman AOI + isotropic-sky diffuse).
+function expectedKwOrientation(localHour, ghi, bhi, date){
+  const dt=date||new Date();
+  const decl=_solarDecl(dt)*_D2R, ph=ARRAY_LAT*_D2R, H=_hourAngleBST(localHour)*_D2R;
+  const sinAlt=Math.sin(decl)*Math.sin(ph)+Math.cos(decl)*Math.cos(ph)*Math.cos(H);
+  if(sinAlt<=0||ghi<=0) return 0;                  // sun below horizon / dark
+  const beamH=Math.max(Math.min(bhi||0,ghi),0);    // beam on horizontal
+  const diffH=Math.max(ghi-beamH,0);               // diffuse on horizontal
+  const dni=Math.min(beamH/Math.max(sinAlt,0.05),1000); // beam normal (clamped)
+  let kw=0;
+  for(const a of SOLAR_ARRAYS){
+    const b=ARRAY_TILT*_D2R, g=a.az*_D2R;
+    const cosAOI=
+        Math.sin(decl)*Math.sin(ph)*Math.cos(b)
+      - Math.sin(decl)*Math.cos(ph)*Math.sin(b)*Math.cos(g)
+      + Math.cos(decl)*Math.cos(ph)*Math.cos(b)*Math.cos(H)
+      + Math.cos(decl)*Math.sin(ph)*Math.sin(b)*Math.cos(g)*Math.cos(H)
+      + Math.cos(decl)*Math.sin(b)*Math.sin(g)*Math.sin(H);
+    const poa=dni*Math.max(cosAOI,0) + diffH*(1+Math.cos(b))/2; // plane-of-array W/m²
+    kw += (poa/1000)*a.kwp*PERF_RATIO;
+  }
+  return +kw.toFixed(2);
+}
 function expectedKwh(shortwave_mj_m2) {
   const irr_kwh = shortwave_mj_m2 / 3.6;           // kWh/m²
   return +(irr_kwh * SYSTEM_KWP * PERF_RATIO).toFixed(1); // kWh
@@ -1182,7 +1223,7 @@ function renderIrrChart(dates, weather, todayStr) {
   const curIrr  = GRID_DATA?.currentIrr  ?? null;
   const curDir  = GRID_DATA?.currentDirect ?? null;
   const curDiff = GRID_DATA?.currentDiffuse ?? null;
-  const expKwNow = curIrr !== null ? expectedKwNow(curIrr) : null;
+  const expKwNow = curIrr !== null ? expectedKwOrientation(new Date().getHours(), curIrr, (curDir ?? 0), new Date()) : null;
 
   if (todayIrr !== null) document.getElementById('irr-today').textContent = `${todayIrr} kWh/m²`;
   if (todayExp !== null) document.getElementById('irr-exp').textContent  = `${todayExp} kWh`;
@@ -1241,7 +1282,14 @@ function renderIrrChart(dates, weather, todayStr) {
       const h = startHr + i;
       return h % 3 === 0 ? `${String(h).padStart(2,'0')}:00` : '';
     });
-    const expHrly = hourlyIrr.map(v => expectedKwNow(v));
+    const _gd = new Date((GRID_DATA?.todayStr||'') + 'T12:00:00');
+    const _curveDate = isNaN(_gd) ? new Date() : _gd;
+    // Orientation-aware expected production (South + West arrays), per hour
+    const expHrly = hourlyIrr.map((v,i) => expectedKwOrientation(startHr + i, v, (hourlyDirect[i] ?? 0), _curveDate));
+    // Integrate the curve → today's expected generation (kWh); overrides the flat-plate KPI
+    const _expDayKwh = expHrly.reduce((a,b)=>a+b,0);
+    const _expEl = document.getElementById('irr-exp');
+    if (_expEl && _expDayKwh > 0) _expEl.textContent = `${_expDayKwh.toFixed(1)} kWh`;
     const hrColors = hourlyIrr.map((_,i) => {
       const h = startHr + i;
       return h === nowHr ? 'rgba(245,158,11,1)' : 'rgba(251,191,36,0.55)';
@@ -1272,7 +1320,7 @@ function renderIrrChart(dates, weather, todayStr) {
             order: 3,
           },
           {
-            label: 'Expected kW (11kWp)',
+            label: 'Expected kW · S+W 13.4kWp',
             data: expHrly,
             type: 'line',
             borderColor: '#0f766e',
@@ -1318,7 +1366,7 @@ function renderIrrChart(dates, weather, todayStr) {
     type:'bar',
     data:{labels,datasets:[
       {label:'Daily irradiation kWh/m²',data:irrArr,backgroundColor:barColors,borderWidth:0,borderRadius:3,yAxisID:'y',order:2},
-      {label:'Expected kWh (11kWp)',data:expArr,type:'line',borderColor:'#0f766e',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:'#0f766e',tension:.3,yAxisID:'y2',order:1}
+      {label:'Expected kWh (13.4kWp)',data:expArr,type:'line',borderColor:'#0f766e',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:'#0f766e',tension:.3,yAxisID:'y2',order:1}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'bottom',labels:{font:{size:10},boxWidth:10}},tooltip:{callbacks:{label:it=>it.dataset.yAxisID==='y2'?`Expected: ${it.raw} kWh`:`Irradiation: ${it.raw} kWh/m²`}}},scales:{x:{grid:{display:false},ticks:{font:{size:10},color:'#94a3b8'}},y:{grid:{color:'#f8fafc'},ticks:{font:{size:9},color:'#94a3b8',callback:v=>`${v}`},title:{display:true,text:'kWh/m²',font:{size:9},color:'#94a3b8'}},y2:{position:'right',grid:{display:false},ticks:{font:{size:9},color:'#0f766e',callback:v=>`${v} kWh`},title:{display:true,text:'Expected kWh',font:{size:9},color:'#0f766e'}}}}
   });
@@ -1888,7 +1936,7 @@ function renderSystemGraphic(d){
     ${useLive?`⬛ <strong>SOC &amp; generation</strong>: ${socTag}`:`⚠ <strong>Estimated only</strong> — no live reading available`}<br>
     🔗 <strong>Live data:</strong> <a href="https://web-eu.sigencloud.com/" target="_blank" style="color:#0f766e;">SigenCloud web portal ↗</a>
     &nbsp;·&nbsp; <span style="color:#94a3b8;">API integration requires OAuth credentials — capture from browser network tab to enable live sync</span>
-    ${GRID_DATA?'<br>* Forecast from Open-Meteo irradiation · shortwave_radiation_sum ÷ 3.6 × 11kWp × 0.80 PR':''}
+    ${GRID_DATA?'<br>* Forecast from Open-Meteo irradiation · shortwave_radiation_sum ÷ 3.6 × 13.44kWp × 0.80 PR':''}
   </div>`;
 }
 
@@ -2250,7 +2298,7 @@ async function loadAll(){
     bc.innerHTML=`<div class="sec" style="color:${sig.color};border-color:${sig.border};">🔋 Battery Dispatch Signal <span id="ts-battery" class="ts comp">Computed ${fmtTime(now)}</span></div>
       <div class="sig-badge" style="background:${sig.color};">${sig.emoji} ${sig.label}</div>
       <div class="sig-detail" style="color:${sig.color};">
-        <strong>System:</strong> SigenStor 54 kWh · 11kWp Aiko 480Wp · 23 modules<br>
+        <strong>System:</strong> SigenStor 54 kWh · 13.44kWp Aiko 480Wp · 28 modules (11 S + 17 W)<br>
         <strong>Season:</strong> ${sig.season}<br>
         <strong>Action:</strong> ${sig.rec}
       </div>`;
