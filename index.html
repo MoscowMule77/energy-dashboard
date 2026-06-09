@@ -544,9 +544,9 @@ table.sh tr:hover td{background:#fafbfc;}
 </div>
 
 <div class="news-section">
-  <h2>📰 Energy News — Policy · Tech · M&amp;A · Markets · AI</h2>
+  <h2>📰 Energy News — Policy · Tech · M&amp;A · Markets · AI <span id="news-status" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;">saved headlines</span></h2>
   <div class="news-grid" id="news-grid">
-    <!-- rendered from NEWS_ITEMS by renderNews() -->
+    <!-- rendered from LIVE_NEWS (fetched on open) or baked NEWS_ITEMS fallback -->
   </div>
 </div>
 
@@ -1613,18 +1613,84 @@ async function openPMDay(c,idx){
 // ═══════════════════════════════════════════════
 const NEWS_CATS={"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Technology":{bg:"#92400e",fg:"#fde68a"},"M&A":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#065f46",fg:"#a7f3d0"},"AI":{bg:"#0e7490",fg:"#a5f3fc"}};
 const NEWS_ITEMS=[{"cat": "M&A", "title": "ENGIE to acquire UK Power Networks in £10.5bn landmark deal", "desc": "ENGIE agrees a £10.5bn (£15.8bn EV) purchase of UK Power Networks — 8.5m customers across London, the South East and East — expected to close mid-2026.", "src": "Utilities ME", "url": "https://www.utilities-me.com/news/engie-ukpn-acquisition", "date": "2026-06-05"}, {"cat": "Policy", "title": "Ofgem review hands regulator three equal duties", "desc": "The widest review since 2000 replaces Ofgem's single consumer objective with three equal duties: consumer protection, net zero and economic growth.", "src": "GOV.UK", "url": "https://www.gov.uk/government/publications/ofgem-review-2026/ofgem-review-final-report", "date": "2026-06-05"}, {"cat": "Technology", "title": "Rolls-Royce wins £599m UK SMR deal; three units at Wylfa", "desc": "Rolls-Royce SMR is backed by up to £599m from the National Wealth Fund to build three units (1.4GWe) at Wylfa, Anglesey, creating ~3,000 build jobs.", "src": "Enlit World", "url": "https://www.enlit.world/library/rolls-royce-signs-600m-smr-pact-with-uk-for-wylfa-project", "date": "2026-06-06"}, {"cat": "Markets", "title": "GB day-ahead jumps to £101/MWh as wind fades, nuclear offline", "desc": "Day-ahead baseload settled at £101.42/MWh for 5 Jun as midweek wind eased and several nuclear units stayed offline, lifting reliance on gas.", "src": "Prestige Business", "url": "https://www.prestigebusiness.energy/marketreports/energy-market-update05june2026", "date": "2026-06-05"}, {"cat": "AI", "title": "UK and US data centres now consume ~6% of national electricity", "desc": "Data centres powering the AI surge now draw around 6% of all electricity in both the UK and US, intensifying pressure on grid capacity.", "src": "E&T", "url": "https://eandt.theiet.org/2026/05/15/uk-and-us-data-centres-now-consume-around-6-national-electricity", "date": "2026-05-15"}, {"cat": "Policy", "title": "Great British Nuclear renamed Great British Energy – Nuclear", "desc": "The state body set up to accelerate nuclear projects, including Sizewell C and SMRs, is rebranded Great British Energy – Nuclear in June 2026.", "src": "NewsHub", "url": "https://www.newshub.co.uk/science-technology/2026/05/31/uk-nuclear-strategy-and-capacity-outlook-to-2050/", "date": "2026-06-02"}, {"cat": "M&A", "title": "AIP buys 49% of 700 MW UK battery portfolio from BW ESS", "desc": "AIP Management acquires a 49% stake in a 700 MW UK battery storage portfolio from BW ESS — its first dedicated standalone storage investment.", "src": "IPE Real Assets", "url": "https://realassets.ipe.com/news/aip-to-acquire-half-of-700mw-uk-battery-storage-system-from-bw-ess/10132824.article", "date": "2026-06-02"}, {"cat": "Markets", "title": "Energy price cap rises: electricity hits 26.1p/kWh from July", "desc": "Ofgem confirms the average electricity unit rate climbs to 26.1p/kWh from July, with electricity up ~6% and gas up ~28% on the prior quarter.", "src": "Ofgem", "url": "https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-april-and-30-june-2026", "date": "2026-05-27"}, {"cat": "Technology", "title": "Great British Energy invests £40m in ITM Power electrolysers", "desc": "GB Energy takes a £40m stake in Sheffield-based electrolyser maker ITM Power, backing domestic green-hydrogen manufacturing capacity.", "src": "E&T", "url": "https://eandt.theiet.org/2026/03/02/climate-impact-ai-data-centre-growth-under-scrutiny", "date": "2026-06-01"}, {"cat": "AI", "title": "140 data-centre projects seek 50GW, topping UK peak demand", "desc": "Around 140 proposed GB data-centre projects are seeking ~50GW of grid connections — more than the country's ~45GW peak electricity demand.", "src": "CMS", "url": "https://cms.law/en/gbr/publication/power-hungry-the-uk-s-grid-grapples-with-the-ai-data-centre-surge", "date": "2026-05-20"}, {"cat": "Policy", "title": "Government rules out zonal pricing — national pricing stays", "desc": "In its REMA update the government confirms it won't proceed with zonal pricing, judging costs, complexity and investor disruption to outweigh benefits.", "src": "techUK", "url": "https://www.techuk.org/resource/government-confirms-direction-of-electricity-market-reform-in-rema-update.html", "date": "2026-06-02"}, {"cat": "Markets", "title": "N2EX ties record with 17 straight hours of negative prices", "desc": "Britain's N2EX day-ahead market matched its record of 17 consecutive negative-price hours on 25 May as wind and solar output surged.", "src": "Argus Media", "url": "https://www.argusmedia.com/en/news-and-insights/latest-market-news/2692698-uk-n2ex-hits-record-negative-hour-streak", "date": "2026-05-26"}];
-function _newsDate(iso){const d=new Date(iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
+function _newsDate(iso){const d=new Date((iso||"").length>10?iso:iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
+// LIVE_NEWS is populated by fetchLiveNews() on page open; falls back to baked NEWS_ITEMS.
+let LIVE_NEWS=null;
+function _esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
 function renderNews(){
   const g=document.getElementById("news-grid"); if(!g)return;
-  g.innerHTML=NEWS_ITEMS.slice(0,12).map(function(it){
+  const items=(LIVE_NEWS&&LIVE_NEWS.length)?LIVE_NEWS:NEWS_ITEMS;
+  g.innerHTML=items.slice(0,12).map(function(it){
     const c=NEWS_CATS[it.cat]||{bg:"#334155",fg:"#cbd5e1"};
     return "<div class=\"news-card\">"+
-      "<span class=\"news-badge\" style=\"background:"+c.bg+";color:"+c.fg+";\">"+it.cat+"</span>"+
-      "<div class=\"news-title\"><a href=\""+it.url+"\" target=\"_blank\" rel=\"noopener\">"+it.title+"</a></div>"+
-      "<div class=\"news-desc\">"+it.desc+"</div>"+
-      "<div class=\"news-meta\">"+it.src+" · "+_newsDate(it.date)+"</div>"+
+      "<span class=\"news-badge\" style=\"background:"+c.bg+";color:"+c.fg+";\">"+_esc(it.cat)+"</span>"+
+      "<div class=\"news-title\"><a href=\""+_esc(it.url)+"\" target=\"_blank\" rel=\"noopener\">"+_esc(it.title)+"</a></div>"+
+      (it.desc?"<div class=\"news-desc\">"+_esc(it.desc)+"</div>":"")+
+      "<div class=\"news-meta\">"+_esc(it.src)+" · "+_newsDate(it.date)+"</div>"+
     "</div>";
   }).join("");
+}
+// ── Live news (works on the public share page, which has no Cowork hooks) ──
+// Google News RSS → CORS proxy → parse client-side → keyword-categorise → top 12.
+// Any failure silently keeps the baked NEWS_ITEMS already on screen.
+function _newsCat(title){
+  const t=(title||"").toLowerCase();
+  if(/\b(ai|artificial intelligence|data cent|datacent|hyperscal|gpu)\b/.test(t)) return "AI";
+  if(/\b(acqui|acquisition|merger|takeover|buyout|buys|to buy|stake|deal|divest|sells?|sale of)\b/.test(t)) return "M&A";
+  if(/\b(ofgem|desnz|government|minister|rema|policy|regulat|price cap|subsid|cfd|auction| b6|planning|consult|net zero target)\b/.test(t)) return "Policy";
+  if(/\b(battery|storage|bess|nuclear|smr|hydrogen|electrolys|solar farm|wind farm|offshore|interconnector|grid upgrade|turbine|pylon|long.duration)\b/.test(t)) return "Technology";
+  return "Markets";
+}
+function _cleanTitle(t){return (t||"").replace(/\s+-\s+[^-]+$/,"").trim();}
+async function _proxyFetch(target){
+  const proxies=[
+    u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),
+    u=>"https://corsproxy.io/?url="+encodeURIComponent(u),
+    u=>"https://thingproxy.freeboard.io/fetch/"+u
+  ];
+  for(const p of proxies){
+    try{
+      const r=await fetch(p(target),{cache:"no-store"});
+      if(!r.ok) continue;
+      const txt=await r.text();
+      // only accept a genuine RSS/Atom payload — otherwise try the next proxy
+      if(txt && (txt.indexOf("<item")!==-1 || txt.indexOf("<rss")!==-1 || txt.indexOf("<feed")!==-1)) return txt;
+    }catch(e){/* try next proxy */}
+  }
+  return null;
+}
+async function fetchLiveNews(){
+  const st=document.getElementById("news-status");
+  if(st)st.textContent="updating…";
+  const q="UK energy OR electricity OR Ofgem OR renewables OR \"National Grid\" when:7d";
+  const rss="https://news.google.com/rss/search?q="+encodeURIComponent(q)+"&hl=en-GB&gl=GB&ceid=GB:en";
+  try{
+    const xml=await _proxyFetch(rss);
+    if(!xml) throw new Error("no feed");
+    const doc=new DOMParser().parseFromString(xml,"text/xml");
+    const nodes=[...doc.querySelectorAll("item")];
+    if(!nodes.length) throw new Error("empty feed");
+    const seen={}, out=[];
+    for(const n of nodes){
+      const rawTitle=(n.querySelector("title")||{}).textContent||"";
+      const title=_cleanTitle(rawTitle);
+      if(!title||title.length<8) continue;
+      const key=title.toLowerCase().slice(0,40);
+      if(seen[key]) continue; seen[key]=1;
+      const link=(n.querySelector("link")||{}).textContent||"#";
+      const src=((n.querySelector("source")||{}).textContent||"Google News").trim();
+      const pd=(n.querySelector("pubDate")||{}).textContent||"";
+      const d=pd?new Date(pd):null;
+      out.push({cat:_newsCat(title),title:title.length>96?title.slice(0,93)+"…":title,desc:"",src:src,url:link,date:(d&&!isNaN(d))?d.toISOString():""});
+      if(out.length>=12) break;
+    }
+    if(out.length<4) throw new Error("too few items");
+    LIVE_NEWS=out;
+    renderNews();
+    if(st)st.textContent="live · "+(typeof fmtTime==="function"?fmtTime(new Date()):new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));
+  }catch(e){
+    if(st)st.textContent="saved headlines";
+  }
 }
 
 // ═══════════════════════════════════════════════
@@ -2199,6 +2265,8 @@ async function loadAll(){
   // 3. Share prices
   try{renderShares();}catch(e){console.error('[loadAll] shares:',e.message);}
   try{renderNews();}catch(e){console.error('[loadAll] news:',e.message);}
+  // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
+  try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
 
   // 4. Grid mix + weather (baked data — renders immediately, live fetch in background)
   try{
