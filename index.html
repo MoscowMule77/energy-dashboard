@@ -833,9 +833,9 @@ const INITIAL_GRID_DATA = {
 
 // Last confirmed reading from system (user-provided 29 May 2026 ~07:15 BST)
 const LAST_KNOWN_SOLAR = {
-  solarKw: 1.6,
-  soc: 0.05,        // 5%
-  ts: '2026-05-29T06:15:00.000Z',
+  solarKw: 1.5,     // overcast/light-rain midday — diffuse only
+  soc: 0.15,        // user-confirmed "under 20%" 11 Jun ~11:50 BST
+  ts: '2026-06-11T10:52:00.000Z',
   source: 'User-confirmed'
 };
 let GRID_DATA = INITIAL_GRID_DATA;
@@ -1949,7 +1949,27 @@ async function refreshPrices() {
 //  BATTERY + SOLAR SYSTEM GRAPHIC
 // ═══════════════════════════════════════════════
 function getSignal(d){const m=d.getMonth()+1,h=d.getHours(),isSummer=m>=5&&m<=8,isWinter=m<=2||m>=11,isMorning=h>=6&&h<16,isPeak=h>=16&&h<20;if(isSummer&&isMorning)return{label:'SOLAR CHARGING',emoji:'☀️',color:'#166534',bg:'#f0fdf4',border:'#bbf7d0',season:'Peak solar season — expect 35–50 kWh generation today.',rec:'Let solar charge battery freely. Should reach full ~54 kWh by early afternoon. If on Agile/flexible tariff, switch to export from ~3:30pm for the 4–8pm peak. No grid charging needed.'};if(isPeak)return{label:'EXPORT OPPORTUNITY',emoji:'📤',color:'#92400e',bg:'#fffbeb',border:'#fde68a',season:'Evening peak window — N2EX prices at their highest.',rec:'Battery charged from solar. Consider Export mode at peak half-hourly prices. Most valuable above £0.20/kWh on Agile.'};if(isWinter)return{label:'CHARGE OVERNIGHT',emoji:'🌙',color:'#1e3a8a',bg:'#eff6ff',border:'#bfdbfe',season:'Winter — solar limited 3–10 kWh/day. Off-peak grid charging recommended.',rec:'Charge overnight (midnight–6am) at cheap rate. Aim full by morning. Discharge during 4–8pm peak.'};return{label:'SELF-CONSUMPTION',emoji:'🔄',color:'#475569',bg:'#f8fafc',border:'#e2e8f0',season:'Moderate solar — system optimising for load offset.',rec:'Standard self-consumption mode. Review tariff for peak/off-peak optimisation.'};}
-function estimateSoc(d){const m=d.getMonth()+1,h=d.getHours()+d.getMinutes()/60,isSummer=m>=5&&m<=8,isWinter=m<=2||m>=11;if(isSummer){if(h<5.5)return .15;if(h<14)return Math.min(.98,.15+.83*(h-5.5)/8.5);if(h<16)return .98;if(h<23)return Math.max(.15,.98-.83*(h-16)/7);return .15;}if(isWinter){if(h<6)return Math.min(.95,.2+(h/6)*.75);return Math.max(.1,.95-.85*(h-6)/17);}if(h<5.5)return .18;if(h<15)return Math.min(.88,.18+.70*(h-5.5)/9.5);if(h<16)return .88;if(h<23)return Math.max(.15,.88-.73*(h-16)/7);return .15;}
+// Today's solar energy (MJ/m²) — live Open-Meteo if fetched, else the baked daily value
+function _todaySw(){
+  try{ if(typeof LIVE_SOLAR!=='undefined'&&LIVE_SOLAR&&LIVE_SOLAR.swSumToday!=null)return LIVE_SOLAR.swSumToday; }catch(e){}
+  try{ const G=(typeof GRID_DATA!=='undefined'&&GRID_DATA)?GRID_DATA:INITIAL_GRID_DATA; return G.weather.shortwave_radiation_sum.slice(-1)[0]; }catch(e){ return null; }
+}
+// WEATHER-AWARE SoC estimate (fixed 11 Jun 2026): the old curve assumed a clear
+// summer day and showed ~76-98% on rainy days. Now the charge ceiling scales with
+// today's actual irradiance: peak SoC ≈ 5% + (expected PV kWh × 70%) / 54 kWh.
+function estimateSoc(d){
+  const m=d.getMonth()+1,h=d.getHours()+d.getMinutes()/60,isSummer=m>=5&&m<=8,isWinter=m<=2||m>=11;
+  if(isWinter){if(h<6)return Math.min(.95,.2+(h/6)*.75);return Math.max(.1,.95-.85*(h-6)/17);} // winter = overnight grid charging, unchanged
+  const sw=_todaySw();
+  const pvKwh=sw!=null?13.44*(sw/3.6)*0.8:(isSummer?50:35); // 13.44kWp × kWh/m² × PR0.8
+  const peak=Math.min(isSummer?.98:.88, Math.max(.18,.05+(pvKwh*0.7)/54)); // ~70% of PV reaches battery after house load
+  const base=.12, rise=5.5, full=isSummer?14:15;
+  if(h<rise)return base;
+  if(h<full)return Math.min(peak, base+(peak-base)*(h-rise)/(full-rise));
+  if(h<16)return peak;
+  if(h<23)return Math.max(base, peak-(peak-base)*(h-16)/7);
+  return base;
+}
 function estimateSolarKw(d){const m=d.getMonth()+1,h=d.getHours()+d.getMinutes()/60,isSummer=m>=5&&m<=8,peak=isSummer?10.2:5.8,rise=isSummer?5.3:7.5,set=isSummer?20.8:16.5;if(h<rise||h>set)return 0;const mid=(rise+set)/2,half=(set-rise)/2,dist=Math.abs(h-mid)/half;return Math.max(0,peak*(1-dist*dist));}
 
 let LIVE_SOLAR=null;
@@ -2631,7 +2651,7 @@ async function loadAll(){
   }catch(e){console.error('[loadAll] battery signal:',e.message);setFeedStatus('battery','error',e.message);}
 
   // 2. Solar system graphic
-  try{renderSystemGraphic(now);setFeedStatus('solar','ok','Confirmed 29 May · 1.6 kW · 5% SOC');}
+  try{renderSystemGraphic(now);setFeedStatus('solar','ok','User-confirmed 11 Jun ~11:50 · ~15% SOC (rainy day)');}
   catch(e){console.error('[loadAll] solar graphic:',e.message);setFeedStatus('solar','error',e.message);}
   refreshSolarNow();
 
