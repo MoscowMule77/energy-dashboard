@@ -415,6 +415,32 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
+<!-- ═══ 24H BESS TRADING PLAN ═══ -->
+<style>
+  .bess-strip{display:flex;gap:1px;margin:10px 0 2px;height:34px;border-radius:6px;overflow:hidden;}
+  .bess-cell{flex:1;position:relative;}
+  .bess-hours{display:flex;margin-bottom:10px;}
+  .bess-hours span{flex:1;font-size:8px;color:#94a3b8;text-align:left;}
+  .bess-sched{width:100%;border-collapse:collapse;font-size:11.5px;margin:8px 0 4px;}
+  .bess-sched td{padding:5px 8px;border-bottom:1px solid #f1f5f9;color:#334155;}
+  .bess-sched .act{font-weight:800;border-radius:5px;padding:2px 8px;font-size:10px;display:inline-block;}
+  .bess-kpis{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:4px;}
+</style>
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🔄 24h Battery Trading Plan — Today's Optimal Dispatch</span>
+      <div class="sec-r"><span class="badge est">Modelled</span><a href="https://modoenergy.com/research/en/intraday-day-ahead-power-trading-revenue-spread-churn-battery-energy-storage" target="_blank">Modo methodology ↗</a></div>
+    </div>
+    <div class="bess-kpis" id="bess-kpis"></div>
+    <div class="bess-strip" id="bess-strip"></div>
+    <div class="bess-hours"><span>00</span><span>03</span><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span></div>
+    <table class="bess-sched"><tbody id="bess-sched"></tbody></table>
+    <div class="pm-insight" id="bess-home" style="margin-bottom:6px;"></div>
+    <div class="tfoot">Two-cycle dispatch optimised on today's modelled half-hourly day-ahead curve (same curve as the N2EX chart above — wind-adjusted, re-optimised on live grid refresh). Cycle revenue = (avg discharge − avg charge price) × 85% round-trip efficiency, per MWh discharged — the Modo Energy day-ahead benchmark convention. A second cycle is only recommended when its net spread clears ~£15/MWh degradation cost. Grid-scale figures per MW of a 2h (2MWh) system.</div>
+  </div>
+</div>
+
 <!-- ═══ 1-MONTH POWER MARKET LOOKBACK ═══ -->
 <div class="row">
   <div class="card">
@@ -464,6 +490,32 @@ table.sh tr:hover td{background:#fafbfc;}
     <div style="font-size:11px;font-weight:700;color:#0d2137;margin:10px 0 3px;">🇪🇸 Spain — OMIE (€/MWh)</div>
     <div class="chart-wrap sm" style="height:170px;"><canvas id="chart-pm-es"></canvas></div>
     <div class="tfoot"><strong>Click any day for its 24-hour close-up.</strong> Daily averages of hourly day-ahead auction prices. Capture prices = generation-weighted estimates (indicative, KYOS/S&amp;P methodology). BESS line = 2h battery, 1 cycle/day: avg of 2 dearest hours − avg of 2 cheapest, × 85% round-trip efficiency, per MWh discharged. Negative hours = hourly prices &lt; 0. Zero line emphasised — solar capture can go negative on bright low-demand days. Refreshed by the daily 7am task.</div>
+  </div>
+</div>
+
+<!-- ═══ GB DATA CENTRE TRACKER ═══ -->
+<style>
+  .dc-kpis{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px;}
+  .dc-reg{margin:4px 0 10px;}
+  .dc-reg-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:11px;color:#334155;}
+  .dc-reg-row .rl{width:170px;font-weight:600;}
+  .dc-reg-row .rb{flex:1;height:13px;background:#f1f5f9;border-radius:7px;overflow:hidden;}
+  .dc-reg-row .rf{height:100%;border-radius:7px;background:linear-gradient(90deg,#0e7490,#06b6d4);}
+  .dc-reg-row .rv{width:42px;text-align:right;font-weight:700;color:#0e7490;}
+</style>
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🖥️ GB Data Centre Tracker — Count, Power Demand &amp; Pipeline</span>
+      <div class="sec-r"><span id="dc-updated" class="ts">–</span><a href="https://commonslibrary.parliament.uk/research-briefings/cbp-10315/" target="_blank">Commons briefing ↗</a><a href="https://www.cbre.co.uk/insights/books/uk-real-estate-market-outlook-2026/data-centres" target="_blank">CBRE ↗</a></div>
+    </div>
+    <div class="dc-kpis" id="dc-kpis"></div>
+    <div style="font-size:11px;font-weight:700;color:#0d2137;margin:4px 0 3px;">Electricity demand trajectory — TWh/yr (bars) &amp; % of GB demand (line)</div>
+    <div class="chart-wrap sm" style="height:185px;"><canvas id="chart-dc"></canvas></div>
+    <div style="font-size:11px;font-weight:700;color:#0d2137;margin:12px 0 5px;">Regional share of operational capacity</div>
+    <div class="dc-reg" id="dc-regional"></div>
+    <div class="pm-insight" id="dc-insight"></div>
+    <div class="tfoot">Counts and demand are curated from the latest public reports — no live registry exists, so figures refresh when new data lands (sources: House of Commons Library CBP-10315, Oxford Economics, CBRE UK Outlook 2026, IEA/Uptime via E&amp;T, NESO connections data). The ~6% figure (IEA/Uptime, May 2026) counts wider digital infrastructure; DESNZ's narrower 2024 estimate was ~2.5%. Pipeline = grid-connection applications, not committed builds.</div>
   </div>
 </div>
 
@@ -1074,6 +1126,7 @@ async function fetchGridWeather() {
     DATA_TS.grid.ts = parsed.fetchedAt;
     DATA_TS.grid.isLive = true;
     try{renderFableTake();}catch(e){}
+    try{renderBessPlan(new Date());}catch(e){} // re-optimise dispatch on the fresh wind-adjusted curve
     renderCurrentMix(parsed.currentMix, parsed.carbonIntensity);
     renderGridCharts();
     buildFreshnessPanel();
@@ -2007,18 +2060,21 @@ function switchTab(n) {
   } catch(e) { console.warn('switchTab error:', e.message); }
 }
 
+// ── Shared day-ahead price model: 48 half-hourly £/MWh values for date d ──
+// Wind-adjusted: every 10% of wind above 20% baseline cuts ~£8/MWh from the base.
+// Base shape: typical UK May day calibrated to £106.3/MWh N2EX (30 May 2026).
+// Off-peak trough ~£68/MWh, peak (4–8pm) ~£145/MWh, avg ~£107/MWh.
+// Used by BOTH the intraday chart and the BESS trading plan, so they always agree.
+function modelDayAheadPrices(d){
+  const windPct = GRID_DATA?.currentMix?.wind ?? GRID_DATA?.daily?.slice(-1)[0]?.mix?.wind ?? 25;
+  const windDiscount = Math.max(0, (windPct - 20) / 10 * 8);
+  const base=[68,66,63,60,59,57,60,66,77,88,97,108,124,140,146,142,132,120,110,104,98,94,90,87,91,93,99,103,108,115,124,136,154,160,157,152,146,139,128,116,105,94,83,77,72,70,69,67];
+  const r=seededRng(d.getDate()*37+d.getMonth()*13),isWknd=d.getDay()===0||d.getDay()===6;
+  return base.map(v=>Math.max(22,Math.round(v-windDiscount+(r()-.5)*10+(isWknd?-12:0))));
+}
 function drawIntraday(d){
-  // Wind-adjusted day-ahead price model.
-  // Base shape is a typical UK spring day. Wind % from GRID_DATA suppresses prices:
-  // every 10% of wind above 20% baseline cuts ~£8/MWh from the base.
   try {
-    const windPct = GRID_DATA?.currentMix?.wind ?? GRID_DATA?.daily?.slice(-1)[0]?.mix?.wind ?? 25;
-    const windDiscount = Math.max(0, (windPct - 20) / 10 * 8); // £/MWh reduction per 10% excess wind
-    // Base shape: typical UK May day. Calibrated to £106.3/MWh N2EX day-ahead (30 May 2026).
-    // Off-peak trough ~£68/MWh, peak (4–8pm) ~£145/MWh, avg ~£107/MWh
-    const base=[68,66,63,60,59,57,60,66,77,88,97,108,124,140,146,142,132,120,110,104,98,94,90,87,91,93,99,103,108,115,124,136,154,160,157,152,146,139,128,116,105,94,83,77,72,70,69,67];
-    const r=seededRng(d.getDate()*37+d.getMonth()*13),isWknd=d.getDay()===0||d.getDay()===6;
-    const prices=base.map(v=>Math.max(22,Math.round(v-windDiscount+(r()-.5)*10+(isWknd?-12:0))));
+    const prices=modelDayAheadPrices(d);
     const labels=[];for(let i=0;i<48;i++){const h=Math.floor(i/2),m=i%2?'30':'00';labels.push(i%4===0?`${String(h).padStart(2,'0')}:${m}`:'');}
     const bgCols=prices.map((_,i)=>{const h=i/2;if(h<6)return'rgba(148,163,184,.75)';if(h>=7&&h<10)return'rgba(249,115,22,.75)';if(h>=16&&h<20)return'rgba(239,68,68,.75)';return'rgba(15,118,110,.72)';});
     const now=new Date(),cp=Math.min(Math.floor((now.getHours()*60+now.getMinutes())/30),47);
@@ -2376,6 +2432,131 @@ function renderPMInsight(){
   el.innerHTML='💡 <strong>Capture-rate watch:</strong> 30-day solar capture is running at <strong>'+gbSolar+'%</strong> of base in GB, <strong>'+deSolar+'%</strong> in DE and <strong>'+esSolar+'%</strong> in ES — cannibalisation is deepest in '+worst+' ('+worstV+'%, with '+(worst==='Spain'?negE:negD)+' negative-price hours this month). Wind capture holds up better (GB '+pct('gb','wind')+'%, DE '+pct('de','wind')+'%, ES '+pct('es','wind')+'%). The gap between the two is the strongest argument in this data for co-locating storage with solar rather than wind.';
 }
 
+// ═══════════════════════════════════════════════
+//  24H BESS TRADING PLAN — two-cycle dispatch optimiser
+//  Runs on modelDayAheadPrices(), so it re-optimises whenever
+//  the live grid fetch changes the wind-adjusted curve.
+// ═══════════════════════════════════════════════
+const BESS_RTE=0.85, BESS_DEG_FLOOR=15; // £/MWh a 2nd cycle must clear
+function _bestCycleIn(prices,lo,hi){ // best charge→discharge pair of 4-HH (2h) blocks within [lo,hi)
+  const W=[];for(let s=lo;s+4<=hi;s++){let sum=0;for(let k=0;k<4;k++)sum+=prices[s+k];W.push({s,avg:sum/4});}
+  let best=null;
+  for(let i=0;i<W.length;i++)for(let j=i;j<W.length;j++){
+    if(W[j].s<W[i].s+4)continue; // discharge must start after charge ends
+    const spread=W[j].avg-W[i].avg;
+    if(!best||spread>best.spread)best={c:W[i].s,d:W[j].s,cAvg:W[i].avg,dAvg:W[j].avg,spread};
+  }
+  return best;
+}
+function bessPlan(prices){
+  // Optimal single cycle, then best non-overlapping second cycle via split-point scan
+  const one=_bestCycleIn(prices,0,48);
+  let two=null;
+  for(let s=8;s<=40;s++){
+    const a=_bestCycleIn(prices,0,s),b=_bestCycleIn(prices,s,48);
+    if(a&&b){const tot=a.spread+b.spread;if(!two||tot>two.tot)two={a,b,tot};}
+  }
+  const cycles=[];
+  if(two&&two.tot>one.spread&&Math.min(two.a.spread,two.b.spread)*BESS_RTE>BESS_DEG_FLOOR){
+    cycles.push(two.a,two.b);
+  }else cycles.push(one);
+  cycles.sort((x,y)=>x.c-y.c);
+  const perMWh=cycles.map(cy=>(cy.dAvg-cy.cAvg)*BESS_RTE);
+  return {cycles,perMWh,dayTotal:perMWh.reduce((s,v)=>s+v,0)};
+}
+function _hhTime(i){const h=Math.floor(i/2),m=i%2?'30':'00';return String(h).padStart(2,'0')+':'+m;}
+function renderBessPlan(d){
+  const kp=document.getElementById('bess-kpis'); if(!kp)return;
+  d=d||new Date();
+  const prices=modelDayAheadPrices(d), plan=bessPlan(prices);
+  // 30-day benchmark from PM_DATA (per MWh·cycle)
+  const bessHist=PM_DATA.gb.bess, avg30=bessHist.reduce((s,v)=>s+v,0)/bessHist.length;
+  const perMW=plan.dayTotal*2; // 2MWh discharged per MW of a 2h system, per cycle set
+  const homeKwh=54, homePct=0.9; // usable depth
+  const home=plan.dayTotal*homeKwh*homePct/1000;
+  const vs=plan.perMWh[0]-avg30;
+  kp.innerHTML=
+    '<div class="csp"><div class="cv">'+plan.cycles.length+'</div><div class="ck">Cycles today</div></div>'+
+    '<div class="csp"><div class="cv">£'+plan.dayTotal.toFixed(1)+'</div><div class="ck">Spread captured /MWh·day</div></div>'+
+    '<div class="csp"><div class="cv" style="color:#16a34a;">£'+perMW.toFixed(0)+'</div><div class="ck">Est. £/MW/day (2h BESS)</div></div>'+
+    '<div class="csp"><div class="cv" style="color:'+(vs>=0?'#16a34a':'#ef4444')+';">'+(vs>=0?'+':'')+'£'+vs.toFixed(1)+'</div><div class="ck">Cycle 1 vs 30-day avg (£'+avg30.toFixed(1)+')</div></div>'+
+    '<div class="csp"><div class="cv" style="color:#0e7490;">£'+home.toFixed(2)+'</div><div class="ck">Your SigenStor est/day</div></div>';
+  // 48-cell timeline
+  const state=new Array(48).fill('hold');
+  plan.cycles.forEach(cy=>{for(let k=0;k<4;k++){state[cy.c+k]='chg';state[cy.d+k]='dis';}});
+  const maxP=Math.max(...prices),minP=Math.min(...prices);
+  document.getElementById('bess-strip').innerHTML=state.map((st,i)=>{
+    const h=18+((prices[i]-minP)/(maxP-minP||1))*82;
+    const col=st==='chg'?'#16a34a':st==='dis'?'#ef4444':'#cbd5e1';
+    return '<div class="bess-cell" title="'+_hhTime(i)+' · £'+prices[i]+'/MWh · '+(st==='chg'?'CHARGE':st==='dis'?'DISCHARGE':'hold')+'" style="background:linear-gradient(to top,'+col+' '+h+'%,#f8fafc '+h+'%);"></div>';
+  }).join('');
+  // Schedule table
+  const rows=[];
+  plan.cycles.forEach((cy,n)=>{
+    rows.push('<tr><td><span class="act" style="background:#dcfce7;color:#166534;">▼ CHARGE</span></td><td><strong>'+_hhTime(cy.c)+'–'+_hhTime(cy.c+4)+'</strong></td><td>avg £'+cy.cAvg.toFixed(0)+'/MWh</td><td>Cycle '+(n+1)+'</td></tr>');
+    rows.push('<tr><td><span class="act" style="background:#fee2e2;color:#991b1b;">▲ DISCHARGE</span></td><td><strong>'+_hhTime(cy.d)+'–'+_hhTime(cy.d+4)+'</strong></td><td>avg £'+cy.dAvg.toFixed(0)+'/MWh</td><td>net £'+((cy.dAvg-cy.cAvg)*BESS_RTE).toFixed(1)+'/MWh</td></tr>');
+  });
+  document.getElementById('bess-sched').innerHTML=rows.join('');
+  // SigenStor translation
+  const G=(typeof GRID_DATA!=='undefined'&&GRID_DATA)?GRID_DATA:INITIAL_GRID_DATA;
+  const sunny=(G.weather.shortwave_radiation_sum.slice(-1)[0]||15)>16;
+  const c1=plan.cycles[0];
+  document.getElementById('bess-home').innerHTML='🏠 <strong>SigenStor 54 kWh plan:</strong> '+(sunny
+    ?'Decent solar expected — let the array charge the battery for free through the morning instead of grid-charging at '+_hhTime(c1.c)+'. Then mirror the grid play: hold through the afternoon and discharge/export <strong>'+_hhTime(c1.d)+'–'+_hhTime(c1.d+4)+'</strong> into the evening peak (avg £'+c1.dAvg.toFixed(0)+'/MWh wholesale). Estimated value ≈ <strong>£'+home.toFixed(2)+'</strong> today at wholesale-linked (Agile-style) rates.'
+    :'Poor solar day — grid-charge cheaply <strong>'+_hhTime(c1.c)+'–'+_hhTime(c1.c+4)+'</strong> (avg £'+c1.cAvg.toFixed(0)+'/MWh) and discharge/export <strong>'+_hhTime(c1.d)+'–'+_hhTime(c1.d+4)+'</strong> at the peak (avg £'+c1.dAvg.toFixed(0)+'/MWh). '+(plan.cycles.length>1?'A second top-up '+_hhTime(plan.cycles[1].c)+'–'+_hhTime(plan.cycles[1].c+4)+' is worth it today. ':'')+'Estimated value ≈ <strong>£'+home.toFixed(2)+'</strong> at wholesale-linked (Agile-style) rates.');
+}
+
+// ═══════════════════════════════════════════════
+//  GB DATA CENTRE TRACKER — curated, refreshed by the daily task
+//  when new reports/NESO data land (no live registry exists).
+// ═══════════════════════════════════════════════
+const DC_DATA={
+  updated:"2026-06-11",
+  count:"≈550", countNote:"500–600 operational facilities",
+  capacityGW:4.19,           // 2026F IT load, CBRE
+  pctNow:6,                  // IEA/Uptime via E&T, May 2026 (DESNZ 2024 narrower est: ~2.5%)
+  growth2025:17,             // % YoY demand growth, 2025
+  pipelineGW:50, pipelineProjects:140, // NESO connection applications
+  twh:{years:[2023,2024,2025,2026,2027,2028,2029,2030],
+       vals:[5.0,5.9,6.9,8.5,11.2,14.5,19.6,26.2],     // Oxford Economics / Commons CBP-10315 trajectory
+       pct:[2.0,2.3,2.7,3.3,4.2,5.5,7.1,8.8],
+       estFrom:2026},
+  regional:[
+    {r:"London & M25 / Slough corridor",pct:80},
+    {r:"Newport & Cardiff (S. Wales)",pct:9},
+    {r:"Manchester",pct:2},
+    {r:"Scotland, Midlands & other",pct:9}
+  ]
+};
+let dcChart=null;
+function renderDCTracker(){
+  const kp=document.getElementById('dc-kpis'); if(!kp)return;
+  try{document.getElementById('dc-updated').textContent='Curated '+new Date(DC_DATA.updated+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){}
+  kp.innerHTML=
+    '<div class="csp"><div class="cv">'+DC_DATA.count+'</div><div class="ck">'+DC_DATA.countNote+'</div></div>'+
+    '<div class="csp"><div class="cv">'+DC_DATA.capacityGW.toFixed(1)+' GW</div><div class="ck">IT load capacity 2026F</div></div>'+
+    '<div class="csp"><div class="cv" style="color:#0e7490;">~'+DC_DATA.pctNow+'%</div><div class="ck">of GB electricity (incl. digital infra)</div></div>'+
+    '<div class="csp"><div class="cv" style="color:#16a34a;">+'+DC_DATA.growth2025+'%</div><div class="ck">demand growth 2025</div></div>'+
+    '<div class="csp"><div class="cv" style="color:#ef4444;">'+DC_DATA.pipelineGW+' GW</div><div class="ck">'+DC_DATA.pipelineProjects+' projects seeking connection</div></div>';
+  document.getElementById('dc-regional').innerHTML=DC_DATA.regional.map(x=>
+    '<div class="dc-reg-row"><span class="rl">'+x.r+'</span><div class="rb"><div class="rf" style="width:'+x.pct+'%;"></div></div><span class="rv">'+x.pct+'%</span></div>').join('');
+  const t=DC_DATA.twh;
+  document.getElementById('dc-insight').innerHTML='💡 <strong>Why it matters here:</strong> the '+DC_DATA.pipelineGW+'GW connection pipeline exceeds GB peak demand (~45GW). Even the central path — '+t.vals[0].toFixed(1)+'→'+t.vals[7].toFixed(1)+' TWh by 2030 ('+t.pct[7]+'% of demand) — adds baseload-shaped, price-insensitive load: bullish for the 30-year baseload curve below, supportive of peak spreads, and the strongest structural demand story behind nuclear/SMR contracting.';
+  const ctx=document.getElementById('chart-dc'); if(!ctx||typeof Chart==='undefined')return;
+  if(dcChart)dcChart.destroy();
+  dcChart=new Chart(ctx.getContext('2d'),{
+    data:{labels:t.years.map((y,i)=>y+(y>=t.estFrom?'e':'')),datasets:[
+      {type:'bar',data:t.vals,backgroundColor:t.years.map(y=>y>=t.estFrom?'rgba(14,116,144,.45)':'rgba(14,116,144,.85)'),borderRadius:3,yAxisID:'y',label:'TWh/yr'},
+      {type:'line',data:t.pct,borderColor:'#ef4444',backgroundColor:'#ef4444',borderWidth:2,pointRadius:2.5,yAxisID:'y2',label:'% of GB demand',tension:.3}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{font:{size:9},boxWidth:10}},tooltip:{callbacks:{label:c=>c.datasetIndex===0?c.raw+' TWh':c.raw+'% of demand'}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9},color:'#94a3b8'}},
+        y:{grid:{color:'#f8fafc'},ticks:{font:{size:9},color:'#0e7490',callback:v=>v+' TWh'},beginAtZero:true},
+        y2:{position:'right',grid:{display:false},ticks:{font:{size:9},color:'#ef4444',callback:v=>v+'%'},beginAtZero:true,max:10}}}
+  });
+}
+
 async function loadAll(){
   // ── Each section is isolated: one failure cannot block any other ──
   const btn=document.getElementById('refresh-btn');
@@ -2434,6 +2615,8 @@ async function loadAll(){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
     }
+    try{ renderBessPlan(now); }catch(e){ console.error('[loadAll] bess plan:',e.message); }
+    try{ renderDCTracker(); }catch(e){ console.error('[loadAll] dc tracker:',e.message); }
     // Lookback needs a second RAF to ensure its container has height after the first paint
     requestAnimationFrame(()=>{
       try{ drawLookback(); }catch(e){ console.error('[loadAll] lookback:',e.message); }
