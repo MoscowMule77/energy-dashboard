@@ -583,6 +583,20 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
+<!-- ═══ UK MACRO + GLOBAL COMMODITIES ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🏦 UK Macro Indicators</span><div class="sec-r"><span id="macro-asof" class="ts">–</span><a href="https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate" target="_blank">BoE ↗</a><a href="https://www.ons.gov.uk/economy/inflationandpriceindices" target="_blank">ONS ↗</a></div></div>
+    <div id="macro-body"></div>
+    <div class="fn">FX refreshes live on open (frankfurter.app / ECB rates); other indicators refreshed by the daily 7am task from BoE/ONS/market data.</div>
+  </div>
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🌐 Global Commodities</span><div class="sec-r"><span id="cmdty-asof" class="ts">–</span><a href="https://tradingeconomics.com/commodities" target="_blank">Trading Economics ↗</a></div></div>
+    <div id="cmdty-body"></div>
+    <div class="fn">Refreshed by the daily 7am task from public market sources. Lithium = battery-grade carbonate, China spot (SMM). Verify before trading.</div>
+  </div>
+</div>
+
 <!-- ═══ FORWARDS + CARBON + BESS ═══ -->
 <div class="row col3">
   <div class="card">
@@ -2623,6 +2637,46 @@ function renderDCTracker(){
   });
 }
 
+// ═══════════════════════════════════════════════
+//  UK MACRO + GLOBAL COMMODITIES — baked daily by the 7am task;
+//  FX pairs additionally refresh live on open via frankfurter.app (ECB rates, CORS-open, no key).
+// ═══════════════════════════════════════════════
+const MACRO_DATA={asOf:"2026-06-11",rows:[
+  {l:"BoE base rate",v:"3.75%",sub:"held Mar · MPC 18 Jun, hold expected; mkt prices Sep hike",dir:0},
+  {l:"CPI inflation (Apr)",v:"2.8%",sub:"prev 3.3% — energy cap cut softened Iran-war fuel costs",dir:-1},
+  {l:"RPI inflation (Apr)",v:"3.0%",sub:"prev 4.1%",dir:-1},
+  {l:"10-yr gilt yield",v:"4.93%",sub:"near 3-wk high — Iran-war inflation risk repricing",dir:1},
+  {l:"Unemployment",v:"5.1%",sub:"pandemic-era high · wage growth 4.5%, weakest since 2022",dir:1},
+  {l:"GBP/USD",v:"1.341",sub:"range 1.339–1.344",dir:0,fx:"USD"},
+  {l:"GBP/EUR",v:"1.160",sub:"week range 1.155–1.160",dir:0,fx:"EUR"}
+]};
+const CMDTY_DATA={asOf:"2026-06-11",rows:[
+  {l:"Brent crude",v:"$94/bbl",sub:"pared gains after latest US strikes on Iran",dir:1},
+  {l:"TTF gas (front-month)",v:"€50.3/MWh",sub:"+0.5% d/d — war risk premium holding",dir:1},
+  {l:"UK NBP gas",v:"≈122p/th",sub:"tracking TTF + transport basis",dir:1},
+  {l:"Gold",v:"$4,092/oz",sub:"+0.5% d/d — safe-haven bid on Middle East escalation",dir:1},
+  {l:"Copper",v:"$6.19/lb",sub:"≈$13,650/t · −0.9% d/d — grid/EV buildout keeps floor firm",dir:-1},
+  {l:"Lithium carbonate",v:"CN¥163k/t",sub:"≈$24.2/kg LCE · off May 2-yr high of ¥200.5k",dir:-1}
+]};
+function renderMacroCmdty(){
+  const arrow=d=>d>0?'<span style="color:#dc2626;font-size:9px;">▲</span>':d<0?'<span style="color:#16a34a;font-size:9px;">▼</span>':'';
+  const carrow=d=>d>0?'<span style="color:#16a34a;font-size:9px;">▲</span>':d<0?'<span style="color:#dc2626;font-size:9px;">▼</span>':'';
+  const row=(r,arrFn)=>'<div class="fr"><span class="fl">'+r.l+(r.sub?'<br><span style="font-size:9px;color:#94a3b8;font-weight:400;">'+r.sub+'</span>':'')+'</span><span class="fval" '+(r.fx?'id="fx-'+r.fx+'"':'')+'>'+r.v+' '+arrFn(r.dir)+'</span></div>';
+  const mb=document.getElementById('macro-body'),cb=document.getElementById('cmdty-body');
+  if(mb){mb.innerHTML=MACRO_DATA.rows.map(r=>row(r,arrow)).join('');try{document.getElementById('macro-asof').textContent='Updated '+new Date(MACRO_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
+  if(cb){cb.innerHTML=CMDTY_DATA.rows.map(r=>row(r,carrow)).join('');try{document.getElementById('cmdty-asof').textContent='Updated '+new Date(CMDTY_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
+}
+async function fetchLiveFx(){
+  try{
+    const r=await fetch('https://api.frankfurter.app/latest?from=GBP&to=USD,EUR');
+    const j=await r.json();
+    if(j&&j.rates){
+      ['USD','EUR'].forEach(c=>{const el=document.getElementById('fx-'+c);if(el&&j.rates[c])el.innerHTML=j.rates[c].toFixed(3)+' <span style="font-size:8px;color:#0f766e;font-weight:700;">LIVE</span>';});
+      const ts=document.getElementById('macro-asof');if(ts)ts.textContent='FX live '+j.date+' · rest '+new Date(MACRO_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    }
+  }catch(e){console.warn('[fx] live fetch failed:',e.message);}
+}
+
 async function loadAll(){
   // ── Each section is isolated: one failure cannot block any other ──
   const btn=document.getElementById('refresh-btn');
@@ -2659,6 +2713,8 @@ async function loadAll(){
   try{renderShares();}catch(e){console.error('[loadAll] shares:',e.message);}
   try{renderNews();}catch(e){console.error('[loadAll] news:',e.message);}
   try{renderFableTake();}catch(e){console.error('[loadAll] fable take:',e.message);}
+  try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
+  fetchLiveFx();
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
 
