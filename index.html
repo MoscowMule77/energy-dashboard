@@ -244,7 +244,7 @@ table.sh tr:hover td{background:#fafbfc;}
 
 <!-- ═══ HEADER ═══ -->
 <div class="header">
-  <div><h1>⚡ Energy Markets</h1><div class="sub" id="header-date">Loading…</div></div>
+  <div><h1>⚡ Energy Markets <span style="font-size:10px;font-weight:700;vertical-align:middle;background:linear-gradient(135deg,#0f766e,#0d2137);color:#5eead4;border-radius:20px;padding:3px 10px;letter-spacing:.5px;">✦ FABLE 5</span></h1><div class="sub" id="header-date">Loading…</div></div>
   <div class="hbtns">
     <button class="hbtn primary" id="grid-btn" onclick="fetchGridWeather()">🌍 Refresh Grid &amp; Weather</button>
     <button class="hbtn primary" id="prices-btn" onclick="refreshPrices()">📡 Refresh Prices</button>
@@ -265,6 +265,35 @@ table.sh tr:hover td{background:#fafbfc;}
 <div class="fp">
   <div class="fp-title">🔍 Data Freshness &amp; Verification <span id="fp-summary">Loading…</span></div>
   <div class="fp-grid" id="fp-grid"></div>
+</div>
+
+<!-- ═══ FABLE 5 DAILY TAKE ═══ -->
+<style>
+  .fable-card{background:linear-gradient(135deg,#0d2137 0%,#0f4c4c 100%);border:1px solid #0f766e;border-radius:12px;padding:14px 18px;margin-bottom:14px;color:#e2e8f0;}
+  .fable-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:9px;}
+  .fable-title{font-size:13px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:#5eead4;}
+  .fable-badge{font-size:9px;font-weight:700;background:rgba(94,234,212,.15);border:1px solid rgba(94,234,212,.4);color:#5eead4;border-radius:20px;padding:3px 9px;letter-spacing:.5px;}
+  .fable-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+  .fchip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:9px;padding:6px 11px;min-width:86px;}
+  .fchip .fv{font-size:15px;font-weight:800;}
+  .fchip .fk{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-top:1px;}
+  .fchip .fd{font-size:10px;font-weight:700;margin-left:4px;}
+  .fup{color:#4ade80;}.fdn{color:#f87171;}.fneut{color:#94a3b8;}
+  .fable-text{font-size:12px;line-height:1.65;color:#cbd5e1;}
+  .fable-text strong{color:#f1f5f9;}
+  .news-chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px;}
+  .nchip{font-size:10px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer;user-select:none;transition:all .15s;}
+  .nchip:hover{border-color:#0f766e;color:#0f766e;}
+  .nchip.active{background:#0d2137;border-color:#0d2137;color:#fff;}
+  .pm-insight{background:#f0fdfa;border:1px solid #99f6e4;border-radius:9px;padding:9px 13px;font-size:11.5px;line-height:1.6;color:#134e4a;margin-bottom:12px;}
+</style>
+<div class="fable-card" id="fable-card">
+  <div class="fable-head">
+    <span class="fable-title">🔮 Analyst Take — Today vs Yesterday</span>
+    <span class="fable-badge">✦ CLAUDE FABLE 5 · <span id="fable-date">11 Jun 2026</span></span>
+  </div>
+  <div class="fable-chips" id="fable-chips"></div>
+  <div class="fable-text" id="fable-text"></div>
 </div>
 
 <!-- ═══ UK GENERATION MIX + WEATHER + IRRADIATION ═══ -->
@@ -420,6 +449,7 @@ table.sh tr:hover td{background:#fafbfc;}
       <thead><tr><th style="text-align:left;">30-day summary</th><th>🇬🇧 GB (£/MWh)</th><th>🇩🇪 DE (€/MWh)</th><th>🇪🇸 ES (€/MWh)</th></tr></thead>
       <tbody id="pm-summary-body"></tbody>
     </table>
+    <div class="pm-insight" id="pm-insight" style="display:none;"></div>
     <div class="gen-legend" style="margin:0 0 6px;">
       <span class="gen-leg-item"><span class="gen-leg-dot" style="background:#0d2137;"></span>Base (day-ahead avg)</span>
       <span class="gen-leg-item"><span class="gen-leg-dot" style="background:#3b82f6;"></span>Wind capture</span>
@@ -545,6 +575,7 @@ table.sh tr:hover td{background:#fafbfc;}
 
 <div class="news-section">
   <h2>📰 Energy News — Policy · Tech · M&amp;A · Markets · AI <span id="news-status" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;">saved headlines</span></h2>
+  <div class="news-chips" id="news-chips"></div>
   <div class="news-grid" id="news-grid">
     <!-- rendered from LIVE_NEWS (fetched on open) or baked NEWS_ITEMS fallback -->
   </div>
@@ -1042,6 +1073,7 @@ async function fetchGridWeather() {
     GRID_DATA = parsed;
     DATA_TS.grid.ts = parsed.fetchedAt;
     DATA_TS.grid.isLive = true;
+    try{renderFableTake();}catch(e){}
     renderCurrentMix(parsed.currentMix, parsed.carbonIntensity);
     renderGridCharts();
     buildFreshnessPanel();
@@ -1665,9 +1697,20 @@ function _newsDate(iso){const d=new Date((iso||"").length>10?iso:iso+"T00:00:00"
 // LIVE_NEWS is populated by fetchLiveNews() on page open; falls back to baked NEWS_ITEMS.
 let LIVE_NEWS=null;
 function _esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+let NEWS_FILTER=(function(){try{return localStorage.getItem('newsCatFilter')||'All';}catch(e){return 'All';}})();
+function setNewsFilter(c){NEWS_FILTER=c;try{localStorage.setItem('newsCatFilter',c);}catch(e){}renderNews();}
+function renderNewsChips(items){
+  const el=document.getElementById("news-chips"); if(!el)return;
+  const counts={};items.forEach(it=>{counts[it.cat]=(counts[it.cat]||0)+1;});
+  const cats=['All'].concat(Object.keys(NEWS_CATS).filter(c=>counts[c]));
+  if(NEWS_FILTER!=='All'&&!counts[NEWS_FILTER])NEWS_FILTER='All';
+  el.innerHTML=cats.map(c=>'<span class="nchip'+(c===NEWS_FILTER?' active':'')+'" onclick="setNewsFilter(\''+c+'\')">'+c+(c==='All'?' ('+items.length+')':' ('+counts[c]+')')+'</span>').join('');
+}
 function renderNews(){
   const g=document.getElementById("news-grid"); if(!g)return;
-  const items=(LIVE_NEWS&&LIVE_NEWS.length)?LIVE_NEWS:NEWS_ITEMS;
+  const all=(LIVE_NEWS&&LIVE_NEWS.length)?LIVE_NEWS:NEWS_ITEMS;
+  renderNewsChips(all.slice(0,12));
+  const items=NEWS_FILTER==='All'?all:all.filter(it=>it.cat===NEWS_FILTER);
   g.innerHTML=items.slice(0,12).map(function(it){
     const c=NEWS_CATS[it.cat]||{bg:"#334155",fg:"#cbd5e1"};
     return "<div class=\"news-card\">"+
@@ -2278,6 +2321,61 @@ async function runSelfCheck() {
 // ═══════════════════════════════════════════════
 //  MAIN LOAD
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  FABLE 5 ANALYST TAKE — computed 24h deltas + narrative
+//  Chips & narrative recompute from GRID_DATA/PM_DATA, so they
+//  stay correct after live refreshes and daily data swaps.
+// ═══════════════════════════════════════════════
+// Editor's note — refreshed by the daily task alongside the data blocks:
+const FABLE_NOTE = "Rain over London has knocked solar back while NW-European wind is weak: Germany cleared at €122.5/MWh (+26% d/d) against Spain's €44 — a €78 spread that's the widest in this 30-day window, and GB is leaning on French imports. With gas setting the GB price and the July cap rising 13%, every solar-recovery day from Friday (Met Office: 23–25°C, sunny) is a sell-into-peak opportunity for the battery.";
+function _fchip(label,val,delta,unit,invert){
+  let cls='fneut',arrow='·',txt='—';
+  if(delta!==null&&!isNaN(delta)){
+    const good=invert?delta<0:delta>0;
+    cls=Math.abs(delta)<0.05?'fneut':(good?'fup':'fdn');
+    arrow=Math.abs(delta)<0.05?'·':(delta>0?'▲':'▼');
+    txt=(delta>0?'+':'')+(Math.abs(delta)>=10?delta.toFixed(0):delta.toFixed(1))+(unit||'');
+  }
+  return '<div class="fchip"><span class="fv">'+val+'<span class="fd '+cls+'">'+arrow+' '+txt+'</span></span><div class="fk">'+label+'</div></div>';
+}
+function renderFableTake(){
+  const el=document.getElementById('fable-chips'), tx=document.getElementById('fable-text');
+  if(!el||!tx)return;
+  const G=(typeof GRID_DATA!=='undefined'&&GRID_DATA)?GRID_DATA:INITIAL_GRID_DATA;
+  const D=G.daily, today=D[D.length-1].mix, yest=D[D.length-2].mix;
+  const ren=+(today.wind+today.solar+today.hydro).toFixed(1);
+  const renY=+(yest.wind+yest.solar+yest.hydro).toFixed(1);
+  const gb=PM_DATA.gb.base, gbNow=gb[gb.length-1], gbPrev=gb[gb.length-2];
+  const deNow=PM_DATA.de.base[PM_DATA.de.base.length-1], esNow=PM_DATA.es.base[PM_DATA.es.base.length-1];
+  const spread=+(deNow-esNow).toFixed(1);
+  try{document.getElementById('fable-date').textContent=new Date(G.todayStr+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}catch(e){}
+  el.innerHTML=
+    _fchip('Wind share',today.wind.toFixed(1)+'%',+(today.wind-yest.wind).toFixed(1),'pp')+
+    _fchip('Solar share',today.solar.toFixed(1)+'%',+(today.solar-yest.solar).toFixed(1),'pp')+
+    _fchip('Gas share',today.gas.toFixed(1)+'%',+(today.gas-yest.gas).toFixed(1),'pp',true)+
+    _fchip('Renewables',ren+'%',+(ren-renY).toFixed(1),'pp')+
+    _fchip('Carbon',G.carbonIntensity+'g',null)+
+    _fchip('GB base (yday)','£'+gbNow.toFixed(0),+(gbNow-gbPrev).toFixed(1),'',true)+
+    _fchip('DE–ES spread','€'+spread.toFixed(0),null);
+  // Auto-narrative from the data, then the baked editor's note
+  const gasUp=today.gas>yest.gas, sUp=today.solar>yest.solar, wUp=today.wind>yest.wind;
+  const ciTone=G.carbonIntensity<120?'clean':(G.carbonIntensity<200?'moderate':'dirty');
+  let auto='<strong>Grid:</strong> renewables at '+ren+'% of generation ('+(ren>renY?'up':'down')+' from '+renY+'% yesterday), with wind '+(wUp?'firming to ':'easing to ')+today.wind.toFixed(1)+'% and solar '+(sUp?'up at ':'subdued at ')+today.solar.toFixed(1)+'%. Gas is '+(gasUp?'up at ':'down to ')+today.gas.toFixed(1)+'% '+(today.gas>20?'and on the margin':'and off the margin')+' — carbon intensity '+G.carbonIntensity+'g/kWh ('+ciTone+'). ';
+  auto+='<strong>Markets:</strong> GB day-ahead averaged £'+gbNow.toFixed(0)+'/MWh yesterday ('+(gbNow>gbPrev?'+':'')+(gbNow-gbPrev).toFixed(0)+' d/d); DE €'+deNow.toFixed(0)+' vs ES €'+esNow.toFixed(0)+'.<br>';
+  tx.innerHTML=auto+'<strong>Fable take:</strong> '+FABLE_NOTE;
+}
+// ═══ PM capture-rate insight — derived from PM_DATA each render ═══
+function renderPMInsight(){
+  const el=document.getElementById('pm-insight'); if(!el)return;
+  const avg=a=>a.reduce((s,v)=>s+v,0)/a.length;
+  const pct=(c,k)=>Math.round(avg(PM_DATA[c][k])/avg(PM_DATA[c].base)*100);
+  const negD=PM_DATA.de.neg.reduce((s,v)=>s+v,0), negE=PM_DATA.es.neg.reduce((s,v)=>s+v,0);
+  const esSolar=pct('es','solar'), deSolar=pct('de','solar'), gbSolar=pct('gb','solar');
+  const worst=esSolar<=deSolar?'Spain':'Germany', worstV=Math.min(esSolar,deSolar);
+  el.style.display='block';
+  el.innerHTML='💡 <strong>Capture-rate watch:</strong> 30-day solar capture is running at <strong>'+gbSolar+'%</strong> of base in GB, <strong>'+deSolar+'%</strong> in DE and <strong>'+esSolar+'%</strong> in ES — cannibalisation is deepest in '+worst+' ('+worstV+'%, with '+(worst==='Spain'?negE:negD)+' negative-price hours this month). Wind capture holds up better (GB '+pct('gb','wind')+'%, DE '+pct('de','wind')+'%, ES '+pct('es','wind')+'%). The gap between the two is the strongest argument in this data for co-locating storage with solar rather than wind.';
+}
+
 async function loadAll(){
   // ── Each section is isolated: one failure cannot block any other ──
   const btn=document.getElementById('refresh-btn');
@@ -2313,6 +2411,7 @@ async function loadAll(){
   // 3. Share prices
   try{renderShares();}catch(e){console.error('[loadAll] shares:',e.message);}
   try{renderNews();}catch(e){console.error('[loadAll] news:',e.message);}
+  try{renderFableTake();}catch(e){console.error('[loadAll] fable take:',e.message);}
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
 
@@ -2339,6 +2438,7 @@ async function loadAll(){
     requestAnimationFrame(()=>{
       try{ drawLookback(); }catch(e){ console.error('[loadAll] lookback:',e.message); }
       try{ renderPowerMarkets(); }catch(e){ console.error('[loadAll] power markets:',e.message); }
+      try{ renderPMInsight(); }catch(e){ console.error('[loadAll] pm insight:',e.message); }
       try{ renderLongTermForecast(); }catch(e){ console.error('[loadAll] LTF:',e.message); }
     });
   });
