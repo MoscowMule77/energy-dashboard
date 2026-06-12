@@ -628,22 +628,12 @@ table.sh tr:hover td{background:#fafbfc;}
 <!-- ═══ FORWARDS + CARBON + BESS ═══ -->
 <div class="row col3">
   <div class="card">
-    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">⚡ Power Forwards <span class="badge est">Indicative</span></div>
-    <div class="fr"><span class="fl">UK Win-26</span><span class="fval">£101/MWh</span></div>
-    <div class="fr"><span class="fl">UK Sum-27</span><span class="fval">£88/MWh</span></div>
-    <div class="fr"><span class="fl">UK Cal-27</span><span class="fval">£94/MWh</span></div>
-    <div class="fr"><span class="fl">Germany Cal-27</span><span class="fval">€90/MWh</span></div>
-    <div class="fr"><span class="fl">TTF Gas Win-26</span><span class="fval">€38/MWh</span></div>
-    <div class="fn">Verify on Bloomberg/ICE.</div>
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">⚡ Power Forwards <span class="badge est">Indicative</span> <span id="fwd-asof" class="ts comp"></span></div>
+    <div id="fwd-body"></div>
   </div>
   <div class="card">
-    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">🌿 Carbon <span class="badge est">Indicative</span></div>
-    <div class="fr"><span class="fl">EU ETS Dec-26</span><span class="fval">€78/t</span></div>
-    <div class="fr"><span class="fl">EU ETS Dec-27</span><span class="fval">€82/t</span></div>
-    <div class="fr"><span class="fl">UK ETS Dec-26</span><span class="fval">£55/t</span></div>
-    <div class="fr"><span class="fl">UK ETS Dec-27</span><span class="fval">£59/t</span></div>
-    <div class="fr"><span class="fl">UK/EU spread</span><span class="fval">-£14/t</span></div>
-    <div class="fn">CBAM supporting EU floor.</div>
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">🌿 Carbon <span class="badge est">Indicative</span> <span id="co2-asof" class="ts comp"></span></div>
+    <div id="co2-body"></div>
   </div>
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">🔋 BESS Market</div>
@@ -1527,7 +1517,13 @@ function buildFreshnessPanel() {
     const ts = d.ts || new Date().toISOString();
     const mins = d.ts ? ageMinutes(ts) : 0;
     let fc, stLabel;
-    if (!d.isLive) { fc='ind'; stLabel='~ Indicative'; }
+    if (!d.isLive) {
+      // Indicative = estimate-quality source; still verify it was rebaked by the daily task
+      const ageH = d.ts ? ageMinutes(d.ts)/60 : null;
+      if (ageH===null) { fc='warn'; stLabel='⚠ Indicative · no rebake date'; allOk=false; }
+      else if (ageH <= 36) { fc='ind'; stLabel='~ Indicative · rebaked '+(ageH<=24?'today':'yesterday'); }
+      else { fc='warn'; stLabel='⚠ Indicative · not rebaked '+Math.round(ageH/24)+'d'; allOk=false; }
+    }
     else if (mins < 120) { fc='ok'; stLabel='✓ Fresh'; }
     else if (mins < 480) { fc='warn'; stLabel='⚠ Stale'; allOk=false; }
     else { fc='stale'; stLabel='✗ Old'; allOk=false; }
@@ -2332,6 +2328,7 @@ async function loadBriefing(d){
       </p>`;
       const tsEl=document.getElementById('ts-brief');
       if(tsEl){tsEl.className='ts comp';tsEl.textContent='Summary (from live prices)';}
+      DATA_TS.briefing.ts=new Date().toISOString(); // regenerated this open from today's data
     } catch(e) {
       el.innerHTML=`<p style="color:#64748b;">Market summary loading… <a href="#" onclick="loadBriefing(new Date());return false;" style="color:#0f766e;">Retry</a></p>`;
       console.error('staticBriefing error:', e);
@@ -2352,6 +2349,7 @@ async function loadBriefing(d){
     if(res && res.trim().length>20){
       el.innerHTML=`<p>${res.trim()}</p>`;
       DATA_TS.briefing.ts=new Date().toISOString();
+      DATA_TS.briefing.isLive=true; // AI version generated live this session → ✓ Fresh
       setFeedStatus('briefing','ok',`AI · Claude Haiku · ${fmtTime(new Date())}`);
       const tsEl=document.getElementById('ts-brief');
       if(tsEl){tsEl.className='ts live';tsEl.textContent=`AI · ${fmtTime(new Date())}`;}
@@ -2694,6 +2692,35 @@ function renderMacroCmdty(){
   if(mb){mb.innerHTML=MACRO_DATA.rows.map(r=>row(r,arrow)).join('');try{document.getElementById('macro-asof').textContent='Updated '+new Date(MACRO_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
   if(cb){cb.innerHTML=CMDTY_DATA.rows.map(r=>row(r,carrow)).join('');try{document.getElementById('cmdty-asof').textContent='Updated '+new Date(CMDTY_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
 }
+// ═══ POWER FORWARDS + CARBON — baked daily by the 7am task (was hard-coded HTML) ═══
+const FWD_DATA={asOf:"2026-05-28",rows:[
+  {l:"UK Win-26",v:"£101/MWh"},
+  {l:"UK Sum-27",v:"£88/MWh"},
+  {l:"UK Cal-27",v:"£94/MWh"},
+  {l:"Germany Cal-27",v:"€90/MWh"},
+  {l:"TTF Gas Win-26",v:"€38/MWh"}
+],note:"Verify on Bloomberg/ICE."};
+const CO2_DATA={asOf:"2026-06-12",rows:[
+  {l:"EU ETS Dec-26",v:"€77/t",sub:"spot range 76.6–78.5 verified 12 Jun"},
+  {l:"EU ETS Dec-27",v:"€82/t"},
+  {l:"UK ETS Dec-26",v:"£55/t"},
+  {l:"UK ETS Dec-27",v:"£59/t"},
+  {l:"UK/EU spread",v:"-£14/t"}
+],note:"CBAM supporting EU floor."};
+const NAV_ASOF="2026-05-28"; // bump when NAVs in PRICES are re-verified against AIC
+function renderFwdCarbon(){
+  const row=r=>'<div class="fr"><span class="fl">'+r.l+(r.sub?'<br><span style="font-size:9px;color:#94a3b8;font-weight:400;">'+r.sub+'</span>':'')+'</span><span class="fval">'+r.v+'</span></div>';
+  const f=document.getElementById('fwd-body'),c=document.getElementById('co2-body');
+  if(f)f.innerHTML=FWD_DATA.rows.map(row).join('')+'<div class="fn">'+FWD_DATA.note+'</div>';
+  if(c)c.innerHTML=CO2_DATA.rows.map(row).join('')+'<div class="fn">'+CO2_DATA.note+'</div>';
+  const fmt=s=>new Date(s+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  try{document.getElementById('fwd-asof').textContent='Updated '+fmt(FWD_DATA.asOf);}catch(e){}
+  try{document.getElementById('co2-asof').textContent='Updated '+fmt(CO2_DATA.asOf);}catch(e){}
+  // feed real baked dates into the freshness panel instead of fixed strings
+  DATA_TS.forwards.ts=FWD_DATA.asOf+'T07:00:00';
+  DATA_TS.nav.ts=NAV_ASOF+'T07:00:00';
+}
+
 async function fetchLiveFx(){
   try{
     const r=await fetch('https://api.frankfurter.app/latest?from=GBP&to=USD,EUR');
@@ -2742,6 +2769,7 @@ async function loadAll(){
   try{renderNews();}catch(e){console.error('[loadAll] news:',e.message);}
   try{renderFableTake();}catch(e){console.error('[loadAll] fable take:',e.message);}
   try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
+  try{renderFwdCarbon();}catch(e){console.error('[loadAll] fwd/carbon:',e.message);}
   fetchLiveFx();
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
