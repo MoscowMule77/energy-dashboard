@@ -251,6 +251,7 @@ table.sh tr:hover td{background:#fafbfc;}
     <button class="hbtn" id="refresh-btn" onclick="loadAll()">↻ Refresh All</button>
     <button class="hbtn" onclick="location.reload()" title="Reload page to get latest baked-in data">⟳ Reload Page</button>
     <button class="hbtn" onclick="runSelfCheck()" title="Verify all sections are showing data">🔍 Self-check</button>
+    <button class="hbtn" onclick="showHighlights(true)" title="Top 5 biggest moves vs yesterday">✦ Top 5</button>
   </div>
   <div id="check-status" style="font-size:10px;width:100%;margin-top:3px;min-height:14px;"></div>
   <div id="feed-lights"></div>
@@ -383,6 +384,33 @@ table.sh tr:hover td{background:#fafbfc;}
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">☀️ Solar &amp; Storage System <span id="ts-solar" class="ts comp">Computed</span></div>
     <div class="sys-graphic" id="sys-graphic"></div>
+  </div>
+</div>
+
+<!-- ═══ SKY NOW — LIVE CLOUD + IRRADIANCE OVER SL9 8AY ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🛰️ Sky Now — SL9 8AY</span>
+      <div class="sec-r">
+        <span id="ts-sky" class="ts">Loading…</span>
+        <a href="https://open-meteo.com" target="_blank">Open-Meteo ↗</a>
+        <a href="https://www.rainviewer.com/api.html" target="_blank">RainViewer ↗</a>
+        <a href="https://view.eumetsat.int" target="_blank">EUMETSAT ↗</a>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;">
+      <div style="flex:1.15;min-width:250px;">
+        <div id="sky-map" style="position:relative;height:190px;border-radius:10px;overflow:hidden;background:#e0f2fe;border:1px solid #e2e8f0;">
+          <div class="shimmer w100" style="height:100%;margin:0;"></div>
+        </div>
+        <div id="sky-map-cap" style="font-size:9px;color:#94a3b8;margin-top:4px;">Meteosat infrared cloud (RainViewer tiles) over CARTO basemap · ◎ home array</div>
+      </div>
+      <div style="flex:1;min-width:250px;" id="sky-stats">
+        <div class="shimmer w75"></div><div class="shimmer w100"></div><div class="shimmer w50"></div>
+      </div>
+    </div>
+    <div id="sky-note" class="tfoot" style="margin-top:8px;"></div>
   </div>
 </div>
 
@@ -2772,7 +2800,251 @@ async function loadAll(){
   try{btn.disabled=false;btn.innerHTML='↻ Refresh All';}catch(e){}
 }
 
+// ═══════════════════════════════════════════════
+//  SKY NOW — SL9 8AY (Chalfont St Peter, ~51.607N 0.556W)
+//  · Irradiance + cloud layers: Open-Meteo current/15-min (CORS-open, no key;
+//    GHI is satellite+model blended, ~15-min cadence)
+//  · Cloud imagery: Meteosat IR tiles via RainViewer public API (10-min frames)
+//  Refreshes on load and every 10 minutes.
+// ═══════════════════════════════════════════════
+const SKY_LAT=51.6071, SKY_LON=-0.5560;
+
+function _skyTileXY(lat,lon,z){
+  const n=Math.pow(2,z), la=lat*Math.PI/180;
+  return {x:(lon+180)/360*n, y:(1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n};
+}
+function renderSkyMap(irPath,frameTime){
+  const el=document.getElementById('sky-map'); if(!el)return;
+  const z=8, t=_skyTileXY(SKY_LAT,SKY_LON,z);
+  const W=el.clientWidth||320, H=el.clientHeight||190;
+  const px=t.x*256, py=t.y*256;
+  const x0=Math.floor((px-W/2)/256), x1=Math.floor((px+W/2)/256);
+  const y0=Math.floor((py-H/2)/256), y1=Math.floor((py+H/2)/256);
+  let html='';
+  const layer=(urlFn,op)=>{
+    for(let tx=x0;tx<=x1;tx++)for(let ty=y0;ty<=y1;ty++){
+      html+='<img src="'+urlFn(z,tx,ty)+'" style="position:absolute;left:'+(tx*256-px+W/2)+'px;top:'+(ty*256-py+H/2)+'px;width:256px;height:256px;opacity:'+op+';" onerror="this.style.display=\'none\'" alt="">';
+    }
+  };
+  layer((z,x,y)=>'https://basemaps.cartocdn.com/light_all/'+z+'/'+x+'/'+y+'.png',1);
+  if(irPath) layer((z,x,y)=>'https://tilecache.rainviewer.com'+irPath+'/256/'+z+'/'+x+'/'+y+'/0/0_0.png',0.7);
+  html+='<div style="position:absolute;left:'+(W/2-8)+'px;top:'+(H/2-8)+'px;width:16px;height:16px;border:2.5px solid #ef4444;border-radius:50%;background:rgba(239,68,68,.18);box-shadow:0 0 0 2px rgba(255,255,255,.85);"></div>';
+  if(frameTime) html+='<div style="position:absolute;right:5px;bottom:5px;background:rgba(13,33,55,.75);color:#e2e8f0;font-size:9px;font-weight:700;border-radius:6px;padding:2px 7px;">IR frame '+frameTime+'</div>';
+  el.innerHTML=html;
+}
+async function fetchSkySat(){
+  // RainViewer index is CORS-open; tiles are plain <img> so no CORS needed
+  try{
+    const j=await fetch('https://api.rainviewer.com/public/weather-maps.json',{cache:'no-store'}).then(r=>r.json());
+    const ir=j&&j.satellite&&j.satellite.infrared;
+    if(ir&&ir.length){
+      const f=ir[ir.length-1];
+      renderSkyMap(f.path,fmtTime(new Date(f.time*1000)));
+      return true;
+    }
+  }catch(e){console.warn('[sky] rainviewer:',e.message);}
+  renderSkyMap(null,null); // basemap + marker only
+  const cap=document.getElementById('sky-map-cap');
+  if(cap)cap.innerHTML='Satellite tiles unavailable right now — basemap only. Live Meteosat imagery: <a href="https://view.eumetsat.int" target="_blank" style="color:#0f766e;">view.eumetsat.int ↗</a>';
+  return false;
+}
+function _skyBar(label,pct,col){
+  return '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:10px;color:#475569;">'+
+    '<span style="width:88px;flex-shrink:0;font-weight:600;">'+label+'</span>'+
+    '<div style="flex:1;height:8px;background:#f1f5f9;border-radius:5px;"><div style="width:'+Math.min(100,Math.max(0,pct))+'%;height:100%;background:'+col+';border-radius:5px;"></div></div>'+
+    '<span style="width:34px;text-align:right;font-weight:700;color:#334155;">'+Math.round(pct)+'%</span></div>';
+}
+function _clearSkyGHI(d){
+  // simple clear-sky estimate from solar elevation — for the clarity index only
+  const decl=_solarDecl(d)*Math.PI/180, lat=SKY_LAT*Math.PI/180;
+  const H=_hourAngleBST(d.getHours()+d.getMinutes()/60)*Math.PI/180;
+  const sinE=Math.sin(lat)*Math.sin(decl)+Math.cos(lat)*Math.cos(decl)*Math.cos(H);
+  return sinE<=0?0:1010*Math.pow(sinE,1.15);
+}
+async function fetchSkyNow(){
+  const st=document.getElementById('sky-stats'); if(!st)return;
+  fetchSkySat(); // satellite panel in parallel
+  try{
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+SKY_LAT+'&longitude='+SKY_LON+'&current=shortwave_radiation,direct_radiation,diffuse_radiation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,temperature_2m,weather_code&minutely_15=shortwave_radiation&daily=shortwave_radiation_sum&forecast_days=1&timezone=Europe%2FLondon',{cache:'no-store'});
+    const j=await r.json();
+    const c=j.current, now=new Date();
+    const ghi=Math.round(c.shortwave_radiation||0), dir=Math.round(c.direct_radiation||0), dif=Math.round(c.diffuse_radiation||0);
+    // today's energy so far: 15-min GHI averages up to now (W/m² ÷ 4 → Wh/m²)
+    let soFar=0;
+    try{
+      const m=j.minutely_15;
+      for(let i=0;i<m.time.length;i++){ if(new Date(m.time[i])<=now && m.shortwave_radiation[i]!=null) soFar+=m.shortwave_radiation[i]/4; }
+    }catch(e){}
+    const soFarKwh=soFar/1000;
+    const dayMJ=(j.daily&&j.daily.shortwave_radiation_sum&&j.daily.shortwave_radiation_sum[0])||0;
+    const dayKwhM2=dayMJ/3.6;
+    // clarity index: measured GHI vs clear-sky estimate
+    const cs=_clearSkyGHI(now), clarity=cs>20?Math.min(100,Math.round(ghi/cs*100)):null;
+    const clabel=clarity===null?['🌙','Night',  '#475569']:
+                 clarity>=70 ?['☀️','Bright — near clear-sky','#b45309']:
+                 clarity>=40 ?['⛅','Filtered sun','#0e7490']:
+                 clarity>=15 ?['☁️','Overcast','#475569']:
+                              ['🌧','Dark / thick cloud','#334155'];
+    const estKw=expectedKwNow(ghi), estDayKwh=expectedKwh(dayMJ), estSoFar=expectedKwh(soFarKwh*3.6);
+    st.innerHTML=
+      '<div class="cs" style="margin-bottom:9px;">'+
+        '<div class="csp"><div class="cv">'+ghi+'</div><div class="ck">GHI now W/m²</div></div>'+
+        '<div class="csp"><div class="cv">'+Math.round(c.cloud_cover)+'%</div><div class="ck">Cloud cover</div></div>'+
+        '<div class="csp"><div class="cv" style="color:#b45309;">'+estKw.toFixed(1)+' kW</div><div class="ck">Est. array now</div></div>'+
+        '<div class="csp"><div class="cv" style="color:#0e7490;">'+soFarKwh.toFixed(2)+'</div><div class="ck">kWh/m² so far today</div></div>'+
+      '</div>'+
+      _skyBar('Low cloud',c.cloud_cover_low||0,'#64748b')+
+      _skyBar('Mid cloud',c.cloud_cover_mid||0,'#94a3b8')+
+      _skyBar('High cloud',c.cloud_cover_high||0,'#cbd5e1')+
+      _skyBar('Direct beam',ghi>0?dir/ghi*100:0,'#f59e0b')+
+      '<div style="margin-top:8px;font-size:11px;color:'+clabel[2]+';font-weight:700;">'+clabel[0]+' '+clabel[1]+(clarity!==null?' — sky clarity '+clarity+'% of clear-sky':'')+'</div>';
+    document.getElementById('sky-note').innerHTML=
+      '<strong>Performance check:</strong> with GHI at '+ghi+' W/m² (direct '+dir+' / diffuse '+dif+'), the 13.44 kWp array should be making ≈ <strong>'+estKw.toFixed(1)+' kW</strong> right now and has had ≈ <strong>'+estSoFar.toFixed(1)+' kWh</strong> of resource so far today (full-day forecast '+dayKwhM2.toFixed(1)+' kWh/m² ≈ '+estDayKwh.toFixed(0)+' kWh). If the Sigen app reads well below this while clarity is high, look for shading, soiling or inverter derating. Irradiance: Open-Meteo satellite+model blend, 15-min steps · clouds: Meteosat IR, ~10-min frames.';
+    const ts=document.getElementById('ts-sky');
+    if(ts){ts.className='ts live';ts.textContent='LIVE · '+fmtTime(now)+' · '+Math.round(c.temperature_2m)+'°C';}
+  }catch(e){
+    console.error('[sky] fetch:',e.message);
+    st.innerHTML='<div style="font-size:11px;color:#64748b;">Live sky feed unavailable — <a href="#" onclick="fetchSkyNow();return false;" style="color:#0f766e;">retry</a>. (Open-Meteo needs an internet connection; it works in both the Claude app and a browser.)</div>';
+    const ts=document.getElementById('ts-sky');
+    if(ts){ts.className='ts comp';ts.textContent='Unavailable';}
+  }
+}
+try{SECTION_CHECKS.push({id:'Sky now (SL9)',ok:()=>!!document.getElementById('sky-stats')?.querySelector('.cs'),retry:()=>{try{fetchSkyNow();}catch(e){}}});}catch(e){}
+
+// ═══════════════════════════════════════════════
+//  TOP 5 OVERNIGHT MOVES — opening popup
+//  Ranks every day-over-day delta on the page by significance
+//  (each delta normalised by a typical daily move for that series)
+//  and shows the 5 biggest. Auto-shows once per data-day;
+//  reopen any time via the ✦ Top 5 header button.
+// ═══════════════════════════════════════════════
+(function(){
+  const css=document.createElement('style');
+  css.textContent=
+    '.hl-modal{position:fixed;inset:0;z-index:9500;background:rgba(13,33,55,.62);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;transition:opacity .25s;}'+
+    '.hl-modal.show{opacity:1;}'+
+    '.hl-box{background:linear-gradient(150deg,#0d2137 0%,#0f4c4c 100%);border:1px solid #0f766e;border-radius:14px;width:min(560px,95vw);max-height:90vh;overflow:auto;color:#e2e8f0;box-shadow:0 18px 60px rgba(0,0,0,.45);transform:translateY(16px) scale(.98);transition:transform .3s cubic-bezier(.2,.8,.3,1.1);}'+
+    '.hl-modal.show .hl-box{transform:translateY(0) scale(1);}'+
+    '.hl-hd{display:flex;justify-content:space-between;align-items:center;padding:15px 18px 10px;}'+
+    '.hl-title{font-size:14px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#5eead4;}'+
+    '.hl-sub{font-size:10px;color:#94a3b8;margin-top:2px;}'+
+    '.hl-x{border:none;background:rgba(255,255,255,.1);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:13px;color:#cbd5e1;flex-shrink:0;}'+
+    '.hl-x:hover{background:rgba(255,255,255,.2);}'+
+    '.hl-row{display:flex;align-items:center;gap:12px;padding:10px 18px;border-top:1px solid rgba(255,255,255,.07);opacity:0;transform:translateX(-10px);animation:hlIn .35s forwards;}'+
+    '@keyframes hlIn{to{opacity:1;transform:none;}}'+
+    '.hl-rank{width:26px;height:26px;border-radius:50%;background:rgba(94,234,212,.12);border:1px solid rgba(94,234,212,.4);color:#5eead4;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}'+
+    '.hl-main{flex:1;min-width:0;}'+
+    '.hl-t{font-size:12px;font-weight:700;color:#f1f5f9;}'+
+    '.hl-n{font-size:10.5px;color:#94a3b8;line-height:1.45;margin-top:1px;}'+
+    '.hl-val{text-align:right;flex-shrink:0;}'+
+    '.hl-v{font-size:14px;font-weight:800;color:#f1f5f9;}'+
+    '.hl-d{font-size:11px;font-weight:700;margin-top:1px;}'+
+    '.hl-ft{padding:10px 18px 14px;font-size:9.5px;color:#64748b;border-top:1px solid rgba(255,255,255,.07);}';
+  document.head.appendChild(css);
+})();
+
+function computeHighlights(){
+  const cand=[];
+  const add=(score,icon,title,now,delta,good,note)=>{
+    if(isNaN(score)||!isFinite(score))return;
+    cand.push({score,icon,title,now,delta,good,note});
+  };
+  try{
+    const G=(typeof GRID_DATA!=='undefined'&&GRID_DATA)?GRID_DATA:INITIAL_GRID_DATA;
+    const D=G.daily,t=D[D.length-1].mix,y=D[D.length-2].mix;
+    const pp=(a,b)=>+(a-b).toFixed(1);
+    // Grid mix (typical daily move ≈ 4pp)
+    const dW=pp(t.wind,y.wind);
+    add(Math.abs(dW)/4,'💨','Wind share '+(dW>=0?'firming':'easing'),t.wind.toFixed(1)+'%',(dW>0?'+':'')+dW+'pp',dW>0,dW>0?'More wind pressures day-ahead prices lower — better grid-charging, softer export peaks.':'Less wind hands the margin back to gas — firmer evening peaks for export.');
+    const dS=pp(t.solar,y.solar);
+    add(Math.abs(dS)/4,'☀️','Solar share '+(dS>=0?'up':'down'),t.solar.toFixed(1)+'%',(dS>0?'+':'')+dS+'pp',dS>0,dS>0?'Stronger midday solar deepens the afternoon price trough — classic charge window.':'Weaker solar shallows the midday trough; grid leans harder on imports and gas.');
+    const dG=pp(t.gas,y.gas);
+    add(Math.abs(dG)/4,'🔥','Gas share '+(dG>=0?'up':'down'),t.gas.toFixed(1)+'%',(dG>0?'+':'')+dG+'pp',dG<0,(t.gas>20?'Gas is setting the marginal price':'Gas largely off the margin')+' — carbon intensity '+G.carbonIntensity+'g/kWh.');
+    const renT=+(t.wind+t.solar+t.hydro).toFixed(1),renY=+(y.wind+y.solar+y.hydro).toFixed(1),dR=pp(renT,renY);
+    add(Math.abs(dR)/5,'🌿','Renewables '+(dR>=0?'up':'down'),renT+'%',(dR>0?'+':'')+dR+'pp',dR>0,'Wind + solar + hydro share of generation vs yesterday.');
+    // Solar resource for the array (typical move ≈ 6 MJ/m²)
+    const sw=G.weather.shortwave_radiation_sum,swT=sw[sw.length-1],swY=sw[sw.length-2],dSw=+(swT-swY).toFixed(1);
+    try{
+      const kT=expectedKwh(swT).toFixed(0),kY=expectedKwh(swY).toFixed(0);
+      add(Math.abs(dSw)/6,'🏠','Your solar day '+(dSw>=0?'improves':'worsens'),'~'+kT+' kWh',(dSw>0?'+':'')+dSw+' MJ/m²',dSw>0,'Est. array yield ~'+kT+' kWh today vs ~'+kY+' kWh yesterday (13.44 kWp).');
+    }catch(e){}
+    // Temperature (typical ≈ 3°C)
+    const tm=G.weather.temperature_2m_max,dT=+(tm[tm.length-1]-tm[tm.length-2]).toFixed(1);
+    add(Math.abs(dT)/3.5,'🌡️','Max temp '+(dT>=0?'up':'down'),tm[tm.length-1].toFixed(0)+'°C',(dT>0?'+':'')+dT+'°C',null,'London daily max vs yesterday — drives cooling/heating demand at the margin.');
+  }catch(e){console.warn('[hl] grid candidates:',e.message);}
+  try{
+    // Power markets (typical GB move ≈ £10, DE ≈ €15)
+    const gb=PM_DATA.gb.base,dGB=+(gb[gb.length-1]-gb[gb.length-2]).toFixed(1);
+    add(Math.abs(dGB)/10,'⚡','GB day-ahead '+(dGB>=0?'jumped':'fell'),'£'+gb[gb.length-1].toFixed(0)+'/MWh',(dGB>0?'+':'')+'£'+dGB,dGB<0,'Daily base-load average vs the day before — the anchor for Agile-style export rates.');
+    const de=PM_DATA.de.base,dDE=+(de[de.length-1]-de[de.length-2]).toFixed(1);
+    const es=PM_DATA.es.base,spread=+(de[de.length-1]-es[es.length-1]).toFixed(0);
+    add(Math.abs(dDE)/15,'🇩🇪','German power '+(dDE>=0?'spiked':'dropped'),'€'+de[de.length-1].toFixed(0)+'/MWh',(dDE>0?'+':'')+'€'+dDE,dDE<0,'DE–ES spread now €'+spread+' — the interconnector/storage arbitrage signal.');
+    // BESS economics vs 30-day average
+    const plan=bessPlan(modelDayAheadPrices(new Date()));
+    const hist=PM_DATA.gb.bess,avg30=hist.reduce((s,v)=>s+v,0)/hist.length;
+    const dB=+(plan.perMWh[0]-avg30).toFixed(1);
+    add(Math.abs(dB)/8,'🔋','Battery spread '+(dB>=0?'above':'below')+' normal','£'+plan.perMWh[0].toFixed(1)+'/MWh',(dB>0?'+':'')+'£'+dB+' vs 30d',dB>0,plan.cycles.length+'-cycle day modelled — 30-day average is £'+avg30.toFixed(1)+'/MWh per cycle.');
+  }catch(e){console.warn('[hl] market candidates:',e.message);}
+  try{
+    // Biggest single share-price mover (typical ≈ 1.5%)
+    const all=[].concat(PRICES.rit||[],PRICES.ukUtil||[],PRICES.euUtil||[]);
+    const top=all.filter(r=>r&&!isNaN(r.chgPct)).sort((a,b)=>Math.abs(b.chgPct)-Math.abs(a.chgPct))[0];
+    if(top){
+      const nav=top.nav?Math.round((1-top.price/top.nav)*100):null;
+      add(Math.abs(top.chgPct)/1.5,'📈',top.name+' ('+top.tk+')',top.price+(top.tk.length<=4&&top.nav?'p':''),(top.chgPct>0?'+':'')+top.chgPct.toFixed(1)+'%',top.chgPct>0,'Biggest mover on the board'+(nav!==null?' — still a '+nav+'% NAV discount.':'.'));
+    }
+  }catch(e){console.warn('[hl] price candidates:',e.message);}
+  return cand.sort((a,b)=>b.score-a.score).slice(0,5);
+}
+
+function ensureHLModal(){
+  if(document.getElementById('hl-modal'))return;
+  const d=document.createElement('div');d.id='hl-modal';d.className='hl-modal';d.style.display='none';
+  d.innerHTML='<div class="hl-box">'
+    +'<div class="hl-hd"><div><div class="hl-title">✦ Top 5 Overnight Moves</div><div class="hl-sub" id="hl-sub">vs yesterday</div></div><button class="hl-x" onclick="closeHighlights()">✕</button></div>'
+    +'<div id="hl-rows"></div>'
+    +'<div class="hl-ft">Ranked by size of move vs a normal day for each series · computed from today\'s data · reopen any time with <strong style="color:#5eead4;">✦ Top 5</strong> in the header.</div>'
+    +'</div>';
+  d.addEventListener('click',e=>{if(e.target===d)closeHighlights();});
+  document.body.appendChild(d);
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeHighlights();});
+}
+function closeHighlights(){
+  const m=document.getElementById('hl-modal');if(!m)return;
+  m.classList.remove('show');setTimeout(()=>{m.style.display='none';},250);
+}
+function showHighlights(force){
+  try{
+    const G=(typeof GRID_DATA!=='undefined'&&GRID_DATA)?GRID_DATA:INITIAL_GRID_DATA;
+    const key='hl5SeenDate';
+    if(!force){try{if(localStorage.getItem(key)===G.todayStr)return;}catch(e){}}
+    const items=computeHighlights();
+    if(items.length<3&&!force)return; // not enough data — stay quiet
+    ensureHLModal();
+    try{document.getElementById('hl-sub').textContent=new Date((G.todayStr||'')+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})+' — biggest changes vs the day before';}catch(e){}
+    document.getElementById('hl-rows').innerHTML=items.map((h,i)=>{
+      const dc=h.good===null?'fneut':(h.good?'fup':'fdn');
+      const ar=h.good===null?'·':(String(h.delta).indexOf('-')===0?'▼':'▲');
+      return '<div class="hl-row" style="animation-delay:'+(0.08+i*0.07)+'s;">'
+        +'<div class="hl-rank">'+(i+1)+'</div>'
+        +'<div style="font-size:18px;flex-shrink:0;">'+h.icon+'</div>'
+        +'<div class="hl-main"><div class="hl-t">'+h.title+'</div><div class="hl-n">'+h.note+'</div></div>'
+        +'<div class="hl-val"><div class="hl-v">'+h.now+'</div><div class="hl-d '+dc+'">'+ar+' '+h.delta+'</div></div>'
+        +'</div>';
+    }).join('');
+    const m=document.getElementById('hl-modal');
+    m.style.display='flex';
+    requestAnimationFrame(()=>m.classList.add('show'));
+    try{localStorage.setItem(key,G.todayStr);}catch(e){}
+  }catch(e){console.error('[hl] showHighlights:',e.message);}
+}
+
 loadAll();
+// Opening popup — let the page paint first, then surface the day's top 5 moves
+setTimeout(()=>{try{showHighlights(false);}catch(e){}},1100);
+// Sky Now (SL9 8AY) — live irradiance + cloud satellite; refresh every 10 min
+setTimeout(()=>{try{fetchSkyNow();}catch(e){}},400);
+setInterval(()=>{try{fetchSkyNow();}catch(e){}},10*60*1000);
 </script>
 </body>
 </html>
