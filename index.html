@@ -698,7 +698,7 @@ const DATA_TS = {
   n2ex:     {ts:null, source:'Indicative model', isLive:false},
   briefing: {ts:null, source:'Claude AI (Haiku)', isLive:false},
   forwards: {ts:'2026-05-28T08:00:00', source:'Indicative — verify Bloomberg/ICE', isLive:false},
-  nav:      {ts:'2026-05-28T08:00:00', source:'Indicative estimates — verify AIC', isLive:false},
+  nav:      {ts:'2026-06-11T07:42:50', source:'Discount = live share price vs last published NAV (AIC)', isLive:true},
 };
 
 // ═══════════════════════════════════════════════
@@ -1508,7 +1508,7 @@ function buildFreshnessPanel() {
     {key:'n2ex',    label:'N2EX Prices',       icon:'📉'},
     {key:'briefing',label:'Market Briefing',   icon:'📝'},
     {key:'forwards',label:'Power Forwards',    icon:'⚡'},
-    {key:'nav',     label:'NAV Estimates',     icon:'📋'},
+    {key:'nav',     label:'NAV Discounts',     icon:'📋'},
   ];
   let allOk = true;
   let html = '';
@@ -1968,7 +1968,9 @@ async function refreshPrices() {
     if(matched>0){
       DATA_TS.prices.ts=new Date().toISOString();
       DATA_TS.prices.source='Yahoo Finance v7 API';
+      DATA_TS.nav.ts=DATA_TS.prices.ts; // discounts recomputed from the fresh prices
       renderShares();
+      buildFreshnessPanel();
       setGridStatus(`✓ ${matched} prices refreshed · ${fmtTime(new Date())}`);
       setFeedStatus('prices','ok',`Live · ${matched} tickers · ${fmtTime(new Date())}`);
     } else {
@@ -2718,7 +2720,9 @@ function renderFwdCarbon(){
   try{document.getElementById('co2-asof').textContent='Updated '+fmt(CO2_DATA.asOf);}catch(e){}
   // feed real baked dates into the freshness panel instead of fixed strings
   DATA_TS.forwards.ts=FWD_DATA.asOf+'T07:00:00';
-  DATA_TS.nav.ts=NAV_ASOF+'T07:00:00';
+  // NAV *discount* moves with the live share price; the NAV figure itself is the quarterly vintage
+  DATA_TS.nav.ts=DATA_TS.prices.ts;
+  DATA_TS.nav.source='Discount = live price vs NAV · NAV figures verified '+fmt(NAV_ASOF)+' (AIC)';
 }
 
 async function fetchLiveFx(){
@@ -2841,24 +2845,36 @@ function _skyTileXY(lat,lon,z){
   const n=Math.pow(2,z), la=lat*Math.PI/180;
   return {x:(lon+180)/360*n, y:(1-Math.log(Math.tan(la)+1/Math.cos(la))/Math.PI)/2*n};
 }
-function renderSkyMap(irPath,frameTime){
+function renderSkyMap(irHost,irPath,frameTime){
   const el=document.getElementById('sky-map'); if(!el)return;
   const z=8, t=_skyTileXY(SKY_LAT,SKY_LON,z);
   const W=el.clientWidth||320, H=el.clientHeight||190;
   const px=t.x*256, py=t.y*256;
-  const x0=Math.floor((px-W/2)/256), x1=Math.floor((px+W/2)/256);
-  const y0=Math.floor((py-H/2)/256), y1=Math.floor((py+H/2)/256);
   let html='';
-  const layer=(urlFn,op)=>{
+  // layer at its own zoom zl, scaled up to the z=8 view (RainViewer satellite IR maxes out ~z6)
+  const layer=(zl,urlFn,op,isIr)=>{
+    const sc=Math.pow(2,z-zl)*256; // one zl-tile in view px
+    const x0=Math.floor((px-W/2)/sc), x1=Math.floor((px+W/2)/sc);
+    const y0=Math.floor((py-H/2)/sc), y1=Math.floor((py+H/2)/sc);
     for(let tx=x0;tx<=x1;tx++)for(let ty=y0;ty<=y1;ty++){
-      html+='<img src="'+urlFn(z,tx,ty)+'" style="position:absolute;left:'+(tx*256-px+W/2)+'px;top:'+(ty*256-py+H/2)+'px;width:256px;height:256px;opacity:'+op+';" onerror="this.style.display=\'none\'" alt="">';
+      html+='<img src="'+urlFn(zl,tx,ty)+'" style="position:absolute;left:'+(tx*sc-px+W/2)+'px;top:'+(ty*sc-py+H/2)+'px;width:'+sc+'px;height:'+sc+'px;opacity:'+op+';" onerror="this.style.display=\'none\'" '+(isIr?'onload="window._skyIrLoaded=true;"':'')+' alt="">';
     }
   };
-  layer((z,x,y)=>'https://basemaps.cartocdn.com/light_all/'+z+'/'+x+'/'+y+'.png',1);
-  if(irPath) layer((z,x,y)=>'https://tilecache.rainviewer.com'+irPath+'/256/'+z+'/'+x+'/'+y+'/0/0_0.png',0.7);
+  layer(8,(zl,x,y)=>'https://basemaps.cartocdn.com/light_all/'+zl+'/'+x+'/'+y+'.png',1,false);
+  if(irPath) layer(6,(zl,x,y)=>irHost+irPath+'/256/'+zl+'/'+x+'/'+y+'/0/0_0.png',0.75,true);
   html+='<div style="position:absolute;left:'+(W/2-8)+'px;top:'+(H/2-8)+'px;width:16px;height:16px;border:2.5px solid #ef4444;border-radius:50%;background:rgba(239,68,68,.18);box-shadow:0 0 0 2px rgba(255,255,255,.85);"></div>';
   if(frameTime) html+='<div style="position:absolute;right:5px;bottom:5px;background:rgba(13,33,55,.75);color:#e2e8f0;font-size:9px;font-weight:700;border-radius:6px;padding:2px 7px;">IR frame '+frameTime+'</div>';
   el.innerHTML=html;
+  // verify the cloud layer actually rendered; say so honestly if it didn't
+  if(irPath){
+    window._skyIrLoaded=false;
+    setTimeout(()=>{
+      const cap=document.getElementById('sky-map-cap'); if(!cap)return;
+      cap.innerHTML=window._skyIrLoaded
+        ?'Meteosat infrared cloud (RainViewer, ~10-min frames) over CARTO basemap · ◎ home array · white/grey = cloud, map visible = clear'
+        :'⚠ Cloud tiles didn’t load this time — basemap only. Live Meteosat: <a href="https://view.eumetsat.int" target="_blank" style="color:#0f766e;">view.eumetsat.int ↗</a> · retries on the 10-min refresh';
+    },6000);
+  }
 }
 async function fetchSkySat(){
   // RainViewer index is CORS-open; tiles are plain <img> so no CORS needed
@@ -2867,13 +2883,13 @@ async function fetchSkySat(){
     const ir=j&&j.satellite&&j.satellite.infrared;
     if(ir&&ir.length){
       const f=ir[ir.length-1];
-      renderSkyMap(f.path,fmtTime(new Date(f.time*1000)));
+      renderSkyMap((j.host||'https://tilecache.rainviewer.com'),f.path,fmtTime(new Date(f.time*1000)));
       return true;
     }
   }catch(e){console.warn('[sky] rainviewer:',e.message);}
-  renderSkyMap(null,null); // basemap + marker only
+  renderSkyMap(null,null,null); // basemap + marker only
   const cap=document.getElementById('sky-map-cap');
-  if(cap)cap.innerHTML='Satellite tiles unavailable right now — basemap only. Live Meteosat imagery: <a href="https://view.eumetsat.int" target="_blank" style="color:#0f766e;">view.eumetsat.int ↗</a>';
+  if(cap)cap.innerHTML='Satellite feed unavailable right now — basemap only. Live Meteosat imagery: <a href="https://view.eumetsat.int" target="_blank" style="color:#0f766e;">view.eumetsat.int ↗</a>';
   return false;
 }
 function _skyBar(label,pct,col){
