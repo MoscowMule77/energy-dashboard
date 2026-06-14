@@ -659,7 +659,7 @@ table.sh tr:hover td{background:#fafbfc;}
 </div>
 
 <div class="news-section">
-  <h2>📰 Energy News — Policy · Tech · M&amp;A · Markets · AI <span id="news-status" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;">saved headlines</span></h2>
+  <h2>📰 Energy News — Policy · Tech · M&amp;A · Markets · AI <span id="news-status" onclick="fetchLiveNews()" title="Click to refresh headlines" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved headlines</span></h2>
   <div class="news-chips" id="news-chips"></div>
   <div class="news-grid" id="news-grid">
     <!-- rendered from LIVE_NEWS (fetched on open) or baked NEWS_ITEMS fallback -->
@@ -1828,27 +1828,49 @@ function _newsCat(title){
   return "Markets";
 }
 function _cleanTitle(t){return (t||"").replace(/\s+-\s+[^-]+$/,"").trim();}
+// fetch() with an abort timeout so one hung proxy can't stall the whole refresh
+function _fetchTimeout(url,ms){
+  const ctrl=new AbortController();
+  const t=setTimeout(()=>ctrl.abort(),ms||7000);
+  return fetch(url,{cache:"no-store",signal:ctrl.signal}).finally(()=>clearTimeout(t));
+}
+function _looksLikeFeed(txt){ return !!txt && (txt.indexOf("<item")!==-1 || txt.indexOf("<rss")!==-1 || txt.indexOf("<feed")!==-1); }
+// resolve with the first promise that fulfils; reject only when every one has rejected
+function _firstOk(promises){
+  return new Promise((resolve,reject)=>{
+    let left=promises.length;
+    if(!left){reject(new Error("none"));return;}
+    promises.forEach(p=>Promise.resolve(p).then(resolve,()=>{ if(--left===0) reject(new Error("all failed")); }));
+  });
+}
 async function _proxyFetch(target){
-  const proxies=[
+  // cache-bust so EVERY reload pulls a genuinely fresh copy (defeats proxy/CDN/browser caching)
+  const fresh=target+(target.indexOf("?")!==-1?"&":"?")+"_cb="+Date.now();
+  const builders=[
+    u=>u, // direct (works only where CORS/CSP allow — harmless to try)
     u=>"https://api.allorigins.win/raw?url="+encodeURIComponent(u),
+    u=>"https://api.codetabs.com/v1/proxy/?quest="+encodeURIComponent(u),
     u=>"https://corsproxy.io/?url="+encodeURIComponent(u),
-    u=>"https://thingproxy.freeboard.io/fetch/"+u
+    u=>"https://thingproxy.freeboard.io/fetch/"+u,
+    u=>"https://api.allorigins.win/get?url="+encodeURIComponent(u) // wraps payload as JSON {contents:…}
   ];
-  for(const p of proxies){
-    try{
-      const r=await fetch(p(target),{cache:"no-store"});
-      if(!r.ok) continue;
-      const txt=await r.text();
-      // only accept a genuine RSS/Atom payload — otherwise try the next proxy
-      if(txt && (txt.indexOf("<item")!==-1 || txt.indexOf("<rss")!==-1 || txt.indexOf("<feed")!==-1)) return txt;
-    }catch(e){/* try next proxy */}
-  }
-  return null;
+  // Race all routes; the first that returns a genuine RSS payload wins.
+  const attempts=builders.map(b=>new Promise((resolve,reject)=>{
+    _fetchTimeout(b(fresh),7000)
+      .then(r=>r.ok?r.text():Promise.reject(new Error("http "+r.status)))
+      .then(txt=>{
+        if(txt && txt.charAt(0)==="{" && txt.indexOf("\"contents\"")!==-1){ try{ txt=JSON.parse(txt).contents||""; }catch(e){} }
+        _looksLikeFeed(txt)?resolve(txt):reject(new Error("not a feed"));
+      })
+      .catch(reject);
+  }));
+  try{ return await _firstOk(attempts); }catch(e){ return null; }
 }
 async function fetchLiveNews(){
   const st=document.getElementById("news-status");
-  if(st)st.textContent="updating…";
-  const q="UK energy OR electricity OR Ofgem OR renewables OR \"National Grid\" when:7d";
+  if(st){st.textContent="updating…";st.title="Fetching the latest headlines…";}
+  const bakedDate=(NEWS_ITEMS[0]&&NEWS_ITEMS[0].date)?_newsDate(NEWS_ITEMS[0].date):"";
+  const q="UK energy OR electricity OR Ofgem OR renewables OR \"National Grid\" OR grid OR battery OR nuclear when:7d";
   const rss="https://news.google.com/rss/search?q="+encodeURIComponent(q)+"&hl=en-GB&gl=GB&ceid=GB:en";
   try{
     const xml=await _proxyFetch(rss);
@@ -1871,11 +1893,13 @@ async function fetchLiveNews(){
       if(out.length>=12) break;
     }
     if(out.length<4) throw new Error("too few items");
+    out.sort((a,b)=>(b.date||"").localeCompare(a.date||"")); // newest first
     LIVE_NEWS=out;
     renderNews();
-    if(st)st.textContent="live · "+(typeof fmtTime==="function"?fmtTime(new Date()):new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));
+    if(st){st.textContent="live · "+(typeof fmtTime==="function"?fmtTime(new Date()):new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));st.title="Live Google News headlines · refreshed this load · click to refresh";}
   }catch(e){
-    if(st)st.textContent="saved headlines";
+    LIVE_NEWS=null; renderNews();
+    if(st){st.textContent="saved headlines"+(bakedDate?" · "+bakedDate:"")+" (live unavailable)";st.title="Live fetch blocked or proxies unreachable — showing the daily-curated set. Click to retry. "+((e&&e.message)||"");}
   }
 }
 
