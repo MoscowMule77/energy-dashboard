@@ -3202,7 +3202,47 @@ function showHighlights(force){
     '.ai-warn{font-size:11px;color:#fbbf24;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:8px;padding:8px 11px;margin-bottom:10px;}';
   document.head.appendChild(css);
 })();
+// ── Browser AI backend ──────────────────────────────────────────────
+//  Inside the Claude app the box uses Claude (window.cowork.askClaude).
+//  On the web (GitHub Pages) it POSTs to a Cloudflare Worker that proxies
+//  Google Gemini and keeps the API key secret. Paste your deployed worker
+//  URL below to switch the browser box on. Leave "" to keep it app-only.
+//  Deploy steps: see DEPLOY-ASK-AI.md in this folder.
+const AI_PROXY_URL="";   // e.g. "https://energy-ask-ai.yourname.workers.dev"
+const AI_INLINE=COWORK||!!AI_PROXY_URL;   // can answer inline: Claude in-app, or Gemini via proxy
+const AI_HANDOFF=!AI_INLINE;              // no backend yet → hand the question to the Gemini app
+const AI_ENABLED=true;                    // the box is always usable (handoff covers the no-backend case)
 const AI_SUGGESTIONS=['Why are power prices so low today?','What should I do with my battery today?','Is today a good day to export?','What is driving the grid mix right now?','Any risks to watch in the next 24h?'];
+// Routes a prompt to whichever backend is available: Claude in-app, else the Gemini proxy.
+async function aiAnswer(prompt){
+  if(COWORK&&window.cowork&&window.cowork.askClaude){
+    return (await window.cowork.askClaude(prompt,[]))||'';
+  }
+  if(AI_PROXY_URL){
+    const r=await fetch(AI_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
+    let d={};try{d=await r.json();}catch(e){}
+    if(!r.ok||d.error)throw new Error(d.error||('HTTP '+r.status));
+    return d.text||'';
+  }
+  throw new Error('No AI backend configured');
+}
+// The full analyst prompt = instructions + today's data + the user's question.
+function buildPrompt(q){
+  return 'You are a sharp UK energy-markets analyst answering a question for the owner of a 13.44kWp solar + 54kWh SigenStor battery system in London. Use ONLY the dashboard data below; if something is not in it, say so briefly. Answer in 2-4 sentences, concrete and practical, no headings.\n\n--- TODAY DASHBOARD DATA ---\n'+buildAICtx()+'\n\n--- QUESTION ---\n'+q;
+}
+// No backend configured → copy the prompt (question + data) and open the Gemini app to paste.
+function handoffToGemini(q,prompt,ans){
+  let copied=false;
+  try{const t=document.createElement('textarea');t.value=prompt;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.focus();t.select();copied=document.execCommand('copy');t.remove();}catch(e){}
+  if(navigator.clipboard&&navigator.clipboard.writeText){try{navigator.clipboard.writeText(prompt);copied=true;}catch(e){}}
+  window.open('https://gemini.google.com/app','_blank','noopener');
+  const esc=s=>String(s).replace(/</g,'&lt;');
+  ans.innerHTML='<div class="ai-q">'+esc(q)+'</div>'
+    +(copied
+       ? '✅ Your question <em>plus today\'s grid, price and battery data</em> were copied to the clipboard, and Gemini just opened in a new tab. Paste (⌘/Ctrl-V) into Gemini and press Enter.'
+       : 'Gemini just opened in a new tab. (Clipboard was blocked — copy your question manually.)')
+    +'<div style="font-size:10px;color:#94a3b8;margin-top:8px;">Want answers right here instead of a new tab? Deploy the free Gemini proxy — see DEPLOY-ASK-AI.md.</div>';
+}
 function buildAICtx(){
   const lines=[];
   try{
@@ -3236,9 +3276,9 @@ function ensureAIModal(){
   d.innerHTML='<div class="ai-box">'
     +'<div class="ai-hd"><div><div class="ai-title">💬 Ask the Dashboard</div><div class="ai-sub">AI answers grounded in today\'s live grid, prices &amp; news</div></div><button class="ai-x" onclick="closeAI()">✕</button></div>'
     +'<div class="ai-body">'
-    +(COWORK?'':'<div class="ai-warn">⚠ AI Q&amp;A runs inside the Claude app. In a plain browser the box is disabled — open this dashboard in Claude to ask questions.</div>')
+    +(AI_HANDOFF?'<div class="ai-warn">ℹ No AI backend deployed yet, so your question (with today\'s data) opens in the <strong>Gemini app</strong> in a new tab. For inline answers right here, deploy the free Gemini proxy — see DEPLOY-ASK-AI.md.</div>':'')
     +'<div class="ai-chips" id="ai-chips"></div>'
-    +'<div class="ai-inrow"><textarea class="ai-ta" id="ai-input" placeholder="Ask anything about today\'s energy markets…"'+(COWORK?'':' disabled')+'></textarea><button class="ai-send" id="ai-send" onclick="submitAI()"'+(COWORK?'':' disabled')+'>Ask</button></div>'
+    +'<div class="ai-inrow"><textarea class="ai-ta" id="ai-input" placeholder="Ask anything about today\'s energy markets…"></textarea><button class="ai-send" id="ai-send" onclick="submitAI()">'+(AI_HANDOFF?'Ask in Gemini ↗':'Ask')+'</button></div>'
     +'<div class="ai-ans" id="ai-ans"></div>'
     +'</div></div>';
   d.addEventListener('click',e=>{if(e.target===d)closeAI();});
@@ -3248,19 +3288,19 @@ function ensureAIModal(){
   const ta=document.getElementById('ai-input');
   if(ta) ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submitAI();}});
 }
-function openAI(){ensureAIModal();const m=document.getElementById('ai-modal');m.style.display='flex';requestAnimationFrame(()=>m.classList.add('show'));setTimeout(()=>{try{if(COWORK)document.getElementById('ai-input').focus();}catch(e){}},120);}
+function openAI(){ensureAIModal();const m=document.getElementById('ai-modal');m.style.display='flex';requestAnimationFrame(()=>m.classList.add('show'));setTimeout(()=>{try{if(AI_ENABLED)document.getElementById('ai-input').focus();}catch(e){}},120);}
 function closeAI(){const m=document.getElementById('ai-modal');if(!m)return;m.classList.remove('show');setTimeout(()=>{m.style.display='none';},250);}
 function askAISuggestion(el){const ta=document.getElementById('ai-input');if(ta)ta.value=el.textContent;submitAI();}
 async function submitAI(){
   const ta=document.getElementById('ai-input'),ans=document.getElementById('ai-ans'),btn=document.getElementById('ai-send');
   if(!ta||!ans)return;
   const q=ta.value.trim();if(!q)return;
-  if(!COWORK){ans.innerHTML='<div class="ai-warn" style="margin:0;">AI Q&amp;A needs the Claude app — it is not available in a plain browser.</div>';return;}
+  const prompt=buildPrompt(q);
+  if(AI_HANDOFF){handoffToGemini(q,prompt,ans);return;}
   btn.disabled=true;ta.disabled=true;
   ans.innerHTML='<div class="ai-q">'+q.replace(/</g,'&lt;')+'</div><span class="spinner"></span> Thinking…';
   try{
-    const prompt='You are a sharp UK energy-markets analyst answering a question for the owner of a 13.44kWp solar + 54kWh SigenStor battery system in London. Use ONLY the dashboard data below; if something is not in it, say so briefly. Answer in 2-4 sentences, concrete and practical, no headings.\n\n--- TODAY DASHBOARD DATA ---\n'+buildAICtx()+'\n\n--- QUESTION ---\n'+q;
-    const res=await window.cowork.askClaude(prompt,[]);
+    const res=await aiAnswer(prompt);
     ans.innerHTML='<div class="ai-q">'+q.replace(/</g,'&lt;')+'</div>'+((res&&res.trim())?res.trim().replace(/</g,'&lt;'):'No answer returned — try rephrasing.');
   }catch(e){
     ans.innerHTML='<div class="ai-q">'+q.replace(/</g,'&lt;')+'</div><span style="color:#fbbf24;">AI request failed: '+((e&&e.message)||'unknown error')+'. Try again.</span>';
