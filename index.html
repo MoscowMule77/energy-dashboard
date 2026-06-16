@@ -691,7 +691,7 @@ if (!COWORK) {
 //  DATA TIMESTAMPS
 // ═══════════════════════════════════════════════
 const DATA_TS = {
-  prices:   {ts:'2026-06-13T07:30:00', source:'Yahoo Finance / LSE / Investing.com (saved 12 Jun Fri closes; live-refreshed on open)', isLive:true},
+  prices:   {ts:'2026-06-16T07:30:00', source:'Yahoo Finance / LSE / Investing.com (saved 15 Jun Mon closes; live-refreshed on open)', isLive:true},
   grid:     {ts:null, source:'Carbon Intensity API + Open-Meteo', isLive:true},
   battery:  {ts:null, source:'Computed from date/time/season', isLive:true},
   solar:    {ts:null, source:'Computed from date/time/season', isLive:true},
@@ -833,34 +833,34 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 14 Jun 2026 — Met Office (London): bright/sunny spells, max 22°C / min 12°C
-    time:["2026-06-07","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13","2026-06-14"],
-    temperature_2m_max:[21.0,20.5,19.7,19.5,17.0,19.0,20.5,22.0],
-    temperature_2m_min:[13.0,12.5,11.5,11.0,15.0,11.0,11.0,12.0],
-    weathercode:[1,1,2,2,61,3,2,1],
-    shortwave_radiation_sum:[24.0,22.5,19.5,20.5,9.5,16.0,19.5,24.0]
+    // Updated 16 Jun 2026 — Met Office (London): very warm & humid, sunny spells (hazy), max 27°C / min 14°C; rain spreading from west this evening
+    time:["2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13","2026-06-14","2026-06-15","2026-06-16"],
+    temperature_2m_max:[19.7,19.5,17.0,19.0,20.5,22.0,24.0,27.0],
+    temperature_2m_min:[11.5,11.0,15.0,11.0,11.0,12.0,13.0,14.0],
+    weathercode:[2,2,61,3,2,1,1,2],
+    shortwave_radiation_sum:[19.5,20.5,9.5,16.0,19.5,24.0,25.0,26.0]
   },
   daily:[
-    // Daily averages — energymix.uk (Elexon/NESO) past-day through 13 Jun; 14 Jun = live snapshot so far
-    {date:"2026-06-07",mix:{wind:22.0,solar:22.0,nuclear:8.5,gas:17.5,biomass:6.8,imports:18.7,hydro:0.8,coal:0,other:3.7},n:48},
-    {date:"2026-06-08",mix:{wind:22.0,solar:16.0,nuclear:8.5,gas:23.0,biomass:7.0,imports:19.5,hydro:1.0,coal:0,other:3.0},n:48},
+    // Daily averages — energymix.uk (Elexon/NESO) past-day through 15 Jun; 16 Jun = live snapshot so far
     {date:"2026-06-09",mix:{wind:24.0,solar:17.0,nuclear:8.0,gas:22.0,biomass:6.8,imports:19.0,hydro:1.0,coal:0,other:2.2},n:48},
     {date:"2026-06-10",mix:{wind:21.2,solar:11.0,nuclear:10.8,gas:34.7,biomass:8.6,imports:11.8,hydro:1.1,coal:0,other:0.8},n:48},
     {date:"2026-06-11",mix:{wind:23.0,solar:10.1,nuclear:9.3,gas:27.1,biomass:7.4,imports:20.9,hydro:1.1,coal:0,other:1.1},n:48},
     {date:"2026-06-12",mix:{wind:35.0,solar:13.0,nuclear:11.0,gas:15.0,biomass:4.5,imports:19.5,hydro:1.0,coal:0,other:1.0},n:48},
     {date:"2026-06-13",mix:{wind:48.0,solar:13.5,nuclear:11.5,gas:11.0,biomass:3.3,imports:11.5,hydro:0.7,coal:0,other:0.5},n:48},
-    {date:"2026-06-14",mix:{wind:29.5,solar:8.0,nuclear:14.8,gas:16.5,biomass:4.0,imports:25.2,hydro:0.9,coal:0,other:1.1},n:20}
+    {date:"2026-06-14",mix:{wind:29.5,solar:8.0,nuclear:14.8,gas:16.5,biomass:4.0,imports:25.2,hydro:0.9,coal:0,other:1.1},n:48},
+    {date:"2026-06-15",mix:{wind:13.1,solar:14.3,nuclear:10.5,gas:35.3,biomass:5.9,imports:18.7,hydro:1.4,coal:0,other:0.8},n:48},
+    {date:"2026-06-16",mix:{wind:12.1,solar:6.3,nuclear:10.9,gas:43.3,biomass:6.4,imports:18.6,hydro:1.1,coal:0,other:1.4},n:20}
   ],
-  // Live snapshot 14 Jun 2026 ~07:35 BST — energymix.uk (Elexon/NESO data), bright sunny spells, high wind + imports, gas easing off margin
-  currentMix:{wind:29.5,solar:8.0,nuclear:14.8,gas:16.5,biomass:4.0,imports:25.2,hydro:0.9,coal:0,other:1.1},
-  carbonIntensity:93,  // gCO₂/kWh — energymix.uk 14 Jun ~07:35 BST (windy Sunday, negative spot −£6.5/MWh)
-  todayStr:"2026-06-14",
-  fetchedAt:"2026-06-14T06:50:00.000Z",
-  // Hourly irradiance today (W/m²) — estimated curve for a bright/sunny-spells June day
-  hourlyIrr:   [0,0,0,0,35,100,200,310,420,520,600,650,670,650,600,520,420,310,200,100,25,0,0,0],
-  hourlyDirect:[0,0,0,0,12,40,90,150,220,290,350,390,405,390,350,290,220,150,90,40,8,0,0,0],
+  // Live snapshot 16 Jun 2026 ~07:15 BST — energymix.uk (Elexon/NESO data), warm calm morning: gas firmly on the margin (43%), wind low (12%), demand 27GW
+  currentMix:{wind:12.1,solar:6.3,nuclear:10.9,gas:43.3,biomass:6.4,imports:18.6,hydro:1.1,coal:0,other:1.4},
+  carbonIntensity:198,  // gCO₂/kWh — energymix.uk 16 Jun ~07:15 BST (low wind, gas-heavy, spot ~£130/MWh)
+  todayStr:"2026-06-16",
+  fetchedAt:"2026-06-16T06:20:00.000Z",
+  // Hourly irradiance today (W/m²) — estimated curve for a warm sunny-spells (hazy) June day
+  hourlyIrr:   [0,0,0,0,40,110,210,330,450,560,650,700,720,700,650,560,450,330,210,110,30,0,0,0],
+  hourlyDirect:[0,0,0,0,14,45,100,165,240,310,375,415,430,415,375,310,240,165,100,45,10,0,0,0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:370, currentDirect:150, currentDiffuse:220, // W/m² at ~07:50 BST (bright sunny spells)
+  currentIrr:330, currentDirect:160, currentDiffuse:170, // W/m² at ~07:20 BST (warm, sunny spells building)
 };
 
 // Last confirmed reading from system (user-provided 29 May 2026 ~07:15 BST)
@@ -1564,10 +1564,10 @@ function updateSectionTs() {
   if(!DATA_TS.grid.ts){const el=document.getElementById('ts-grid');if(el){el.className='ts';el.textContent='Not yet fetched';}}
 }
 
-const PM_DATA={dates:["2026-05-15","2026-05-16","2026-05-17","2026-05-18","2026-05-19","2026-05-20","2026-05-21","2026-05-22","2026-05-23","2026-05-24","2026-05-25","2026-05-26","2026-05-27","2026-05-28","2026-05-29","2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06","2026-06-07","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13"],
-  gb:{base:[115.3,96.7,103.0,110.7,116.0,111.6,106.1,115.0,98.2,66,32,103.6,99.6,97.8,96.0,91.8,91.7,95.3,92.2,70,58,101.9,86.0,88,92,101,111.4,95,60,50],wind:[106.1,88.4,93.3,100.2,107.3,100.0,95.1,106.1,88.4,36,2,92.6,91.9,89.3,86.3,79.6,79.0,85.4,82.6,58.9,28,89.7,78.4,78,82,91,101.4,85,48,35],solar:[94.9,75.2,84.6,90.5,92.2,94.4,84.0,93.4,75.5,49.5,-8.6,87.4,83.1,78.6,63.6,61.5,74.5,74.6,73.2,49.9,41.6,79.5,64.9,68,72,81,91.4,75,36,28],bess:[50.5,53.5,57.5,60.8,52.5,55.4,58.3,57.3,56.8,75.0,110.1,54.3,56.5,59.3,66.0,60.0,55.1,53.4,56.1,62.4,75.8,56.9,52.3,51,51,51,51,51,55,56],neg:[0,0,0,0,0,0,0,0,0,4,17,0,0,0,0,0,1,0,0,2,3,0,1,0,0,0,0,0,1,2]},
-  de:{base:[76.7,69.5,61.6,84.4,73.2,80.9,77.1,78.1,63.7,64.7,77.7,78.3,75.1,70.8,67.1,52.2,46.2,64.3,73.3,68.8,72.0,65.6,45.8,58,64,66,122.5,70,42,27],wind:[64.8,59.4,52.3,72.0,65.0,70.9,67.7,64.2,50.9,52.2,69.2,69.7,64.3,59.5,58.4,39.2,33.6,50.8,62.2,60.6,63.1,54.5,36.7,47,53,55,111.5,59,29,14],solar:[50.8,34.3,20.5,57.2,45.4,47.8,49.8,47.0,29.9,26.9,43.3,51.7,43.6,38.5,28.6,11.1,3.9,35.8,40.0,39.4,45.6,35.0,12.4,28,34,36,92.5,40,9,-6],bess:[78.2,98.0,97.7,78.5,75.0,89.3,75.0,78.1,92.4,90.1,85.0,70.2,85.7,83.4,87.4,94.2,101.0,83.7,81.9,80.3,75.9,83.4,86.5,85.6,79.2,79,76,79,84,91],neg:[3,9,6,4,3,3,2,1,5,6,4,2,4,1,4,9,11,4,2,2,1,1,5,6,2,2,0,2,4,8]},
-  es:{base:[35.7,25.9,31.8,43.8,41.2,47.3,39.3,48.1,35.6,35.1,48.2,45.3,52.6,45.3,51.2,33.5,32.6,56.6,53.4,58.5,53.0,59.0,43.7,50,55,56,44.3,50,48,46],wind:[29.8,18.0,26.2,39.7,35.1,42.4,32.1,41.4,29.3,30.4,41.0,40.8,46.1,40.6,45.1,28.1,26.6,52.1,45.9,53.2,48.7,53.3,38.6,44,49,50,38.3,44,42,40],solar:[7.2,-9.4,0.6,17.3,17.2,17.5,15.6,17.7,1.6,-0.8,26.4,24.2,31.1,23.8,28.2,6.3,-4.1,27.4,22.7,29.2,30.7,37.5,14.3,24,29,30,17.3,24,20,18],bess:[72.4,88.5,82.0,78.7,65.3,71.8,75.0,75.2,81.0,93.2,73.3,72.3,71.8,74.6,73.4,75.4,91.1,80.2,80.4,74.5,70.1,76.7,71.7,75.8,74.4,74,75.2,74,77,79],neg:[2,7,8,5,2,2,3,5,6,8,8,6,7,3,5,8,10,5,4,3,2,5,4,5,4,4,4,4,5,6]}};
+const PM_DATA={dates:["2026-05-17","2026-05-18","2026-05-19","2026-05-20","2026-05-21","2026-05-22","2026-05-23","2026-05-24","2026-05-25","2026-05-26","2026-05-27","2026-05-28","2026-05-29","2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06","2026-06-07","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13","2026-06-14","2026-06-15"],
+  gb:{base:[103.0,110.7,116.0,111.6,106.1,115.0,98.2,66,32,103.6,99.6,97.8,96.0,91.8,91.7,95.3,92.2,70,58,101.9,86.0,88,92,101,111.4,95,60,50,45,95],wind:[93.3,100.2,107.3,100.0,95.1,106.1,88.4,36,2,92.6,91.9,89.3,86.3,79.6,79.0,85.4,82.6,58.9,28,89.7,78.4,78,82,91,101.4,85,48,35,33,85],solar:[84.6,90.5,92.2,94.4,84.0,93.4,75.5,49.5,-8.6,87.4,83.1,78.6,63.6,61.5,74.5,74.6,73.2,49.9,41.6,79.5,64.9,68,72,81,91.4,75,36,28,23,73],bess:[57.5,60.8,52.5,55.4,58.3,57.3,56.8,75.0,110.1,54.3,56.5,59.3,66.0,60.0,55.1,53.4,56.1,62.4,75.8,56.9,52.3,51,51,51,51,51,55,56,56,52],neg:[0,0,0,0,0,0,0,4,17,0,0,0,0,0,1,0,0,2,3,0,1,0,0,0,0,0,1,2,2,0]},
+  de:{base:[61.6,84.4,73.2,80.9,77.1,78.1,63.7,64.7,77.7,78.3,75.1,70.8,67.1,52.2,46.2,64.3,73.3,68.8,72.0,65.6,45.8,58,64,66,122.5,70,42,27,27,74.3],wind:[52.3,72.0,65.0,70.9,67.7,64.2,50.9,52.2,69.2,69.7,64.3,59.5,58.4,39.2,33.6,50.8,62.2,60.6,63.1,54.5,36.7,47,53,55,111.5,59,29,14,16,63.3],solar:[20.5,57.2,45.4,47.8,49.8,47.0,29.9,26.9,43.3,51.7,43.6,38.5,28.6,11.1,3.9,35.8,40.0,39.4,45.6,35.0,12.4,28,34,36,92.5,40,9,-6,-3,44],bess:[97.7,78.5,75.0,89.3,75.0,78.1,92.4,90.1,85.0,70.2,85.7,83.4,87.4,94.2,101.0,83.7,81.9,80.3,75.9,83.4,86.5,85.6,79.2,79,76,79,84,91,87,78],neg:[6,4,3,3,2,1,5,6,4,2,4,1,4,9,11,4,2,2,1,1,5,6,2,2,0,2,4,8,7,1]},
+  es:{base:[31.8,43.8,41.2,47.3,39.3,48.1,35.6,35.1,48.2,45.3,52.6,45.3,51.2,33.5,32.6,56.6,53.4,58.5,53.0,59.0,43.7,50,55,56,44.3,50,48,46,46,86.1],wind:[26.2,39.7,35.1,42.4,32.1,41.4,29.3,30.4,41.0,40.8,46.1,40.6,45.1,28.1,26.6,52.1,45.9,53.2,48.7,53.3,38.6,44,49,50,38.3,44,42,40,40,80.1],solar:[0.6,17.3,17.2,17.5,15.6,17.7,1.6,-0.8,26.4,24.2,31.1,23.8,28.2,6.3,-4.1,27.4,22.7,29.2,30.7,37.5,14.3,24,29,30,17.3,24,20,18,18,60],bess:[82.0,78.7,65.3,71.8,75.0,75.2,81.0,93.2,73.3,72.3,71.8,74.6,73.4,75.4,91.1,80.2,80.4,74.5,70.1,76.7,71.7,75.8,74.4,74,75.2,74,77,79,79,73],neg:[8,5,2,2,3,5,6,8,8,6,7,3,5,8,10,5,4,3,2,5,4,5,4,4,4,4,5,6,6,3]}};
 const PM_CFG={gb:{cur:'£'},de:{cur:'€'},es:{cur:'€'}};
 let pmCharts={};
 function renderPowerMarkets(){
@@ -1788,7 +1788,7 @@ async function openPMDay(c,idx){
 //  Policy · Technology · M&A · Markets · AI. Keep to 12 (4×3 grid).
 // ═══════════════════════════════════════════════
 const NEWS_CATS={"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Technology":{bg:"#92400e",fg:"#fde68a"},"M&A":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#065f46",fg:"#a7f3d0"},"AI":{bg:"#0e7490",fg:"#a5f3fc"}};
-const NEWS_ITEMS=[{"cat": "Markets", "title": "UK power prices turn negative as renewables set to flood the grid", "desc": "GB spot fell below zero for the first time since April as strong wind and solar overwhelm weekend demand — confirmed by today's −£6.5/MWh morning print.", "src": "Bloomberg", "url": "https://www.bloomberg.com/news/articles/2026-06-12/uk-power-prices-turn-negative-as-renewables-set-to-flood-grid", "date": "2026-06-12"}, {"cat": "M&A", "title": "ENGIE to acquire UK Power Networks in £10.5bn landmark deal", "desc": "ENGIE agrees a £10.5bn (£15.8bn EV) purchase of UK Power Networks — 8.5m customers across London, the South East and East — expected to close mid-2026.", "src": "ENGIE UK", "url": "https://www.engie.co.uk/news/engie-announces-the-acquisition-of-uk-power-networks-uks-best-in-class-electricity-distribution-network/", "date": "2026-06-05"}, {"cat": "Policy", "title": "Carbon Budget 7: Parliament must pass 535 MtCO₂e target by 30 June", "desc": "The draft CB7 Order — an 87% cut on 1990 for 2038–42 — must be legislated within weeks; the impact assessment puts the net benefit at £865bn over 25 years.", "src": "Commons Library", "url": "https://researchbriefings.files.parliament.uk/documents/CBP-9888/CBP-9888.pdf", "date": "2026-06-11"}, {"cat": "Policy", "title": "NESO Gate 2: 283GW of projects given connection dates to 2035", "desc": "Reformed queue allocates 283GW of generation and storage — 132GW 'Phase 1' before 2030 and 151GW to 2035 — with the next application window in H2 2026.", "src": "DataCenterDynamics", "url": "https://www.datacenterdynamics.com/en/news/neso-reveals-results-of-uks-grid-connection-reforms/", "date": "2026-06-10"}, {"cat": "Policy", "title": "DESNZ budget rises 16% to £12.6bn as net-zero cost row sharpens", "desc": "Spending Review settlement lifts DESNZ to £12.6bn by 2028-29 to crowd in CP30 capital, while EAC MPs warn the transition must stay fair as costs bite.", "src": "Carbon Brief", "url": "https://www.carbonbrief.org/uk-spending-review-2025-key-climate-and-energy-announcements/", "date": "2026-06-10"}, {"cat": "AI", "title": "140 data-centre proposals seek 50GW — above GB peak demand", "desc": "Electric Insights finds proposed AI data centres want 50GW of connections, more than Britain's ~45GW peak, with half already financially committed.", "src": "Electric Insights", "url": "https://reports.electricinsights.co.uk/?p=2687", "date": "2026-06-08"}, {"cat": "Technology", "title": "Rolls-Royce SMR confirmed as UK's chosen small-reactor design", "desc": "Rolls-Royce SMR is named the UK's preferred small modular reactor, with Great British Energy–Nuclear taking on the detailed design contract.", "src": "World Nuclear News", "url": "https://www.world-nuclear-news.org/articles/rolls-royce-smr-named-as-uks-selected-technology", "date": "2026-06-06"}, {"cat": "M&A", "title": "UK battery M&A rebounds: CIP, Gresham House, Eelpower trade 4.2GWh", "desc": "A wave of UK storage deals sees CIP, Fidra, Elements Green, Gresham House and Eelpower transact on a combined 4.2GWh of battery assets.", "src": "Energy-Storage.news", "url": "https://www.energy-storage.news/uk-bess-ma-rebounds-with-cip-fidra-elements-green-gresham-house-eelpower-transacting-on-4-2gwh/", "date": "2026-06-08"}, {"cat": "Markets", "title": "Wind curtailment topped £1bn in 2025 — a GB record", "desc": "Paying wind farms to switch off when the grid can't move their output cost consumers over £1bn last year, renewing pressure to accelerate grid upgrades.", "src": "Smart Energy", "url": "https://www.smart-energy.uk/post/daily-energy-market-report", "date": "2026-06-09"}, {"cat": "Technology", "title": "Plug-in solar panels set for UK supermarket shelves within months", "desc": "The government plans to bring low-cost 'plug-in' solar panels — no professional install needed — to high-street retailers, opening rooftop-style generation to renters.", "src": "GOV.UK", "url": "https://www.gov.uk/government/news/government-to-make-plug-in-solar-available-within-months", "date": "2026-06-11"}, {"cat": "AI", "title": "UK and US data centres now draw ~6% of national electricity", "desc": "Data centres powering the AI surge now consume around 6% of all electricity in both the UK and US, intensifying pressure on grid capacity.", "src": "E&T", "url": "https://eandt.theiet.org/2026/05/15/uk-and-us-data-centres-now-consume-around-6-national-electricity", "date": "2026-05-15"}, {"cat": "Markets", "title": "GB to trial discounted electricity on windy days to cut bills", "desc": "A government-backed trial will let suppliers pass curtailed-wind value through as cheaper power in high-wind periods, launching ahead of winter.", "src": "Renewables Now", "url": "https://renewablesnow.com/news/uk-to-trial-discounted-power-on-windy-days-plug-in-solar-coming-soon-1291898/", "date": "2026-06-08"}];
+const NEWS_ITEMS=[{"cat": "Policy", "title": "NESO Gate 2: 700+ clean-power projects now offered grid connections", "desc": "More than half the schemes needed for the 2030 clean-power target — 713 of 1,223 projects, ~37GW of wind, solar, battery and gas — have been issued reformed connection dates, with the next window in H2 2026.", "src": "NESO", "url": "https://www.neso.energy/neso-implements-electricity-grid-connection-reforms-unlock-investment-great-britain", "date": "2026-06-12"}, {"cat": "Markets", "title": "UK power prices turn negative for 9 hours, hitting −£25/MWh", "desc": "An Atlantic storm drove wind output up and GB spot below zero for nine hours on 12 June, as low as −£25/MWh — a swing fully reversed by today's calm, gas-heavy ~£130/MWh morning.", "src": "Bloomberg", "url": "https://www.bloomberg.com/news/articles/2026-06-12/uk-power-prices-turn-negative-as-renewables-set-to-flood-grid", "date": "2026-06-12"}, {"cat": "M&A", "title": "ENGIE to acquire UK Power Networks in £10.5bn landmark deal", "desc": "ENGIE agrees a £10.5bn (£15.8bn EV) purchase of UK Power Networks — 8.5m customers across London, the South East and East — expected to close mid-2026.", "src": "ENGIE UK", "url": "https://www.engie.co.uk/news/engie-announces-the-acquisition-of-uk-power-networks-uks-best-in-class-electricity-distribution-network/", "date": "2026-06-05"}, {"cat": "AI", "title": "140 data-centre proposals seek 50GW — more than GB peak demand", "desc": "Developers want about 50GW of connections for new AI data centres, above Britain's ~45GW peak, straining a grid already struggling to connect renewables.", "src": "Bloomberg", "url": "https://www.bloomberg.com/news/articles/2026-06-12/uk-power-prices-turn-negative-as-renewables-set-to-flood-grid", "date": "2026-06-12"}, {"cat": "Policy", "title": "Carbon Budget 7: Parliament must pass 535 MtCO₂e target by 30 June", "desc": "The draft CB7 Order — an 87% cut on 1990 for 2038–42 — must be legislated within weeks as the net-zero spending debate sharpens around the Spending Review.", "src": "Commons Library", "url": "https://researchbriefings.files.parliament.uk/documents/CBP-9888/CBP-9888.pdf", "date": "2026-06-11"}, {"cat": "Technology", "title": "Rolls-Royce SMR named UK's chosen small-reactor; GB Energy–Nuclear formed", "desc": "Rolls-Royce SMR is confirmed as preferred bidder as Great British Nuclear is renamed Great British Energy–Nuclear, with first SMR grid connection targeted for the mid-2030s.", "src": "World Nuclear News", "url": "https://www.world-nuclear-news.org/articles/new-nuclear-firmly-in-uks-energy-plans-minister-says", "date": "2026-06-09"}, {"cat": "Markets", "title": "Wind curtailment topped £1bn in 2025 — could hit £8bn/yr by 2030", "desc": "Paying wind farms to switch off when the grid can't move their output cost consumers over £1bn last year; UKERC warns it could reach £8bn annually by 2030 without grid upgrades.", "src": "UKERC", "url": "https://ukerc.ac.uk/news/transmission-network-unavailability-the-quiet-driving-force-behind-rising-curtailment-costs-in-great-britain/", "date": "2026-06-10"}, {"cat": "Technology", "title": "Plug-in solar panels set for UK supermarket shelves within months", "desc": "The government plans to bring low-cost 'plug-in' solar panels — no professional install needed — to high-street retailers, opening rooftop-style generation to renters.", "src": "GOV.UK", "url": "https://www.gov.uk/government/news/government-to-make-plug-in-solar-available-within-months", "date": "2026-06-11"}, {"cat": "M&A", "title": "UK battery M&A rebounds: CIP, Gresham House, Eelpower trade 4.2GWh", "desc": "A wave of UK storage deals sees CIP, Fidra, Elements Green, Gresham House and Eelpower transact on a combined 4.2GWh of battery assets as firming capacity draws capital.", "src": "Energy-Storage.news", "url": "https://www.energy-storage.news/uk-bess-ma-rebounds-with-cip-fidra-elements-green-gresham-house-eelpower-transacting-on-4-2gwh/", "date": "2026-06-08"}, {"cat": "AI", "title": "AI data-centre electricity use jumped 50% in 2025 — now ~6% of GB power", "desc": "Electricity drawn by AI-focused data centres surged 50% last year; wider digital infrastructure now accounts for around 6% of GB demand, per IEA/Uptime estimates.", "src": "CMS", "url": "https://cms.law/en/gbr/publication/power-hungry-the-uk-s-grid-grapples-with-the-ai-data-centre-surge", "date": "2026-06-10"}, {"cat": "Policy", "title": "GB to trial discounted electricity on windy days to cut bills", "desc": "A government-backed trial will let suppliers pass curtailed-wind value through as cheaper power during high-wind periods, launching ahead of winter.", "src": "RenewableUK", "url": "https://www.renewableuk.com/news-and-resources/press-releases/renewableuk-welcomes-trial-scheme-to-offer-consumers-lower-electricity-bills-on-windy-days/", "date": "2026-06-09"}, {"cat": "Markets", "title": "Brent slides to ~$80 as US–Iran de-escalation unwinds war premium", "desc": "Crude fell to ~$80.5/bbl on 16 June on reports of a US–Iran peace track, easing the geopolitical premium that had lifted gas and UK forward power.", "src": "Trading Economics", "url": "https://tradingeconomics.com/commodity/crude-oil", "date": "2026-06-16"}];
 function _newsDate(iso){const d=new Date((iso||"").length>10?iso:iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
 // LIVE_NEWS is populated by fetchLiveNews() on page open; falls back to baked NEWS_ITEMS.
 let LIVE_NEWS=null;
@@ -2474,7 +2474,7 @@ async function runSelfCheck() {
 //  stay correct after live refreshes and daily data swaps.
 // ═══════════════════════════════════════════════
 // Editor's note — refreshed by the daily task alongside the data blocks:
-const FABLE_NOTE = "A sunny, breezy Sunday has GB spot diving below zero (−£6.5/MWh this morning) as wind tops 31% and interconnectors supply a remarkable 27% — gas is barely on the margin at 18% and carbon intensity has dropped to ~93g. The weekend renewables glut is starker on the continent: Germany cleared at just €27/MWh (−72% d/d) versus Spain's €46, an unusual split that leaves GB importing into its own price trough. With a warmer, brighter week ahead every solar-recovery afternoon is a sell-into-peak window for the battery, while the Carbon Budget 7 vote (535 MtCO₂e) still has to clear Parliament before 30 June.";
+const FABLE_NOTE = "The wind has dropped right out: a warm, hazy, near-windless Tuesday morning has wind down to ~12% and gas firmly back on the margin at 43%, sending carbon intensity to ~198g and GB spot to ~£130/MWh — a hard reversal of the weekend when prices went negative. Yesterday's day-ahead averaged ~£95, and the continent shows an unusual split with Spain (€86) clearing dearer than Germany (€74) as Iberian solar tightened into the evening. Brent has slid to ~$80 on Middle-East de-escalation, taking some heat out of gas — but with rain arriving from the west tonight and light winds persisting, gas stays price-setting into tomorrow, and both the MPC decision and May CPI land on 18 June (hold expected).";
 function _fchip(label,val,delta,unit,invert){
   let cls='fneut',arrow='·',txt='—';
   if(delta!==null&&!isNaN(delta)){
@@ -2693,21 +2693,21 @@ function renderDCTracker(){
 //  UK MACRO + GLOBAL COMMODITIES — baked daily by the 7am task;
 //  FX pairs additionally refresh live on open via frankfurter.app (ECB rates, CORS-open, no key).
 // ═══════════════════════════════════════════════
-const MACRO_DATA={asOf:"2026-06-14",rows:[
-  {l:"BoE base rate",v:"3.75%",sub:"held Mar · MPC 18 Jun, hold expected; Bailey 'no hurry'",dir:0},
+const MACRO_DATA={asOf:"2026-06-16",rows:[
+  {l:"BoE base rate",v:"3.75%",sub:"held Mar/Apr · MPC 18 Jun, hold expected; Bailey 'no hurry'",dir:0},
   {l:"CPI inflation (Apr)",v:"2.8%",sub:"prev 3.3% · May print due 18 Jun alongside MPC",dir:-1},
   {l:"RPI inflation (Apr)",v:"3.0%",sub:"prev 4.1%",dir:-1},
-  {l:"10-yr gilt yield",v:"4.79%",sub:"lowest since Apr — Middle-East de-escalation eases risk",dir:-1},
-  {l:"Unemployment",v:"5.1%",sub:"pandemic-era high · wage growth 4.5%, weakest since 2022",dir:0},
-  {l:"GBP/USD",v:"1.352",sub:"firmer as dollar softens; range 1.34–1.36",dir:1,fx:"USD"},
-  {l:"GBP/EUR",v:"1.156",sub:"week range 1.153–1.160",dir:0,fx:"EUR"}
+  {l:"10-yr gilt yield",v:"4.90%",sub:"edges up ahead of 18 Jun MPC + May CPI",dir:1},
+  {l:"Unemployment",v:"5.0%",sub:"3m to Mar · eased from 5.1%; wage growth ~4.5%",dir:-1},
+  {l:"GBP/USD",v:"1.350",sub:"steady as dollar soft; range 1.34–1.36",dir:0,fx:"USD"},
+  {l:"GBP/EUR",v:"1.157",sub:"week range 1.156–1.160",dir:0,fx:"EUR"}
 ]};
-const CMDTY_DATA={asOf:"2026-06-14",rows:[
-  {l:"Brent crude",v:"$87/bbl",sub:"−4% Fri to <$86.5 — Iran war premium unwinding",dir:-1},
-  {l:"TTF gas (front-month)",v:"€46.5/MWh",sub:"−6.5% d/d as geopolitical risk eases",dir:-1},
-  {l:"UK NBP gas",v:"≈113p/th",sub:"tracking TTF lower + transport basis",dir:-1},
-  {l:"Gold",v:"$4,219/oz",sub:"fresh record bid · wknd mkt closed, last 13 Jun",dir:1},
-  {l:"Copper",v:"$6.47/lb",sub:"≈$14,250/t · near record — grid/EV buildout firm",dir:1},
+const CMDTY_DATA={asOf:"2026-06-16",rows:[
+  {l:"Brent crude",v:"$80/bbl",sub:"−0.4% to ~$80.5 on 16 Jun — US-Iran de-escalation unwinds war premium",dir:-1},
+  {l:"TTF gas (front-month)",v:"€41/MWh",sub:"softer as Mideast risk eases; Goldman ~€29 2026 avg view",dir:-1},
+  {l:"UK NBP gas",v:"≈100p/th",sub:"tracking TTF lower + transport basis",dir:-1},
+  {l:"Gold",v:"$4,400/oz",sub:"holding above $4,400; Goldman target $4,900 by Dec",dir:1},
+  {l:"Copper",v:"$5.85/lb",sub:"≈$12,900/t · easing from record on softer demand",dir:-1},
   {l:"Lithium carbonate",v:"CN¥163k/t",sub:"≈$24.2/kg LCE · last verified 11 Jun, off ¥200.5k high",dir:0}
 ]};
 function renderMacroCmdty(){
@@ -2719,15 +2719,15 @@ function renderMacroCmdty(){
   if(cb){cb.innerHTML=CMDTY_DATA.rows.map(r=>row(r,carrow)).join('');try{document.getElementById('cmdty-asof').textContent='Updated '+new Date(CMDTY_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
 }
 // ═══ POWER FORWARDS + CARBON — baked daily by the 7am task (was hard-coded HTML) ═══
-const FWD_DATA={asOf:"2026-06-14",rows:[
-  {l:"UK Win-26",v:"£102/MWh",sub:"~£102 day-ahead/fwd early Jun"},
+const FWD_DATA={asOf:"2026-06-16",rows:[
+  {l:"UK Win-26",v:"£102/MWh",sub:"~£102 fwd; reviewed 16 Jun"},
   {l:"UK Sum-27",v:"£88/MWh",sub:"last verified 28 May"},
   {l:"UK Cal-27",v:"£94/MWh",sub:"last verified 28 May"},
   {l:"Germany Cal-27",v:"€90/MWh",sub:"last verified 28 May"},
   {l:"TTF Gas Win-26",v:"€38/MWh",sub:"last verified 28 May; front-month €46.5"}
 ],note:"Verify on Bloomberg/ICE."};
-const CO2_DATA={asOf:"2026-06-14",rows:[
-  {l:"EU ETS Dec-26",v:"€78/t",sub:"2026 outlook avg ~€82; spot ~€78 mid-Jun"},
+const CO2_DATA={asOf:"2026-06-16",rows:[
+  {l:"EU ETS Dec-26",v:"€78/t",sub:"2026 outlook avg ~€82; spot ~€78 mid-Jun (reviewed 16 Jun)"},
   {l:"EU ETS Dec-27",v:"€82/t"},
   {l:"UK ETS Dec-26",v:"£55/t",sub:"linkage talks support; EA H2-26 ~£74"},
   {l:"UK ETS Dec-27",v:"£59/t"},
@@ -2816,7 +2816,7 @@ async function loadAll(){
   requestAnimationFrame(()=>{
     try{
       drawIntraday(now);
-      setFeedStatus('n2ex','ok','Modelled · £55/MWh N2EX anchor · windy weekend, spot negative · 14 Jun 2026');
+      setFeedStatus('n2ex','ok','Modelled · £95/MWh N2EX anchor · warm calm Tue, gas back on margin · 16 Jun 2026');
     }catch(e){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
@@ -3208,23 +3208,36 @@ function showHighlights(force){
 //  Google Gemini and keeps the API key secret. Paste your deployed worker
 //  URL below to switch the browser box on. Leave "" to keep it app-only.
 //  Deploy steps: see DEPLOY-ASK-AI.md in this folder.
-const AI_PROXY_URL="";   // e.g. "https://energy-ask-ai.yourname.workers.dev"
-const AI_INLINE=COWORK||!!AI_PROXY_URL;   // can answer inline: Claude in-app, or Gemini via proxy
-const AI_HANDOFF=!AI_INLINE;              // no backend yet → hand the question to the Gemini app
-const AI_ENABLED=true;                    // the box is always usable (handoff covers the no-backend case)
+// Direct Gemini key, referrer-locked to this site. Paste your Google AI Studio key here to
+// get inline answers in BOTH the Claude app and the browser. Restrict the key to
+// https://moscowmule77.github.io/* in Google Cloud so it cannot be used anywhere else.
+const GEMINI_API_KEY="";   // e.g. "AIza..."
+const AI_PROXY_URL="";     // optional Cloudflare Worker proxy (used only if no key is set)
+const AI_INLINE=COWORK||!!AI_PROXY_URL||!!GEMINI_API_KEY;  // answers render inline in the styled box
+const AI_HANDOFF=!AI_INLINE;             // only if NO backend at all → open the Gemini app as a fallback
+const AI_ENABLED=true;
 const AI_SUGGESTIONS=['Why are power prices so low today?','What should I do with my battery today?','Is today a good day to export?','What is driving the grid mix right now?','Any risks to watch in the next 24h?'];
 // Routes a prompt to whichever backend is available: Claude in-app, else the Gemini proxy.
 async function aiAnswer(prompt){
-  if(COWORK&&window.cowork&&window.cowork.askClaude){
-    return (await window.cowork.askClaude(prompt,[]))||'';
-  }
+  if(GEMINI_API_KEY)return await geminiAnswer(prompt);
   if(AI_PROXY_URL){
     const r=await fetch(AI_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt})});
     let d={};try{d=await r.json();}catch(e){}
     if(!r.ok||d.error)throw new Error(d.error||('HTTP '+r.status));
     return d.text||'';
   }
+  if(COWORK&&window.cowork&&window.cowork.askClaude)return (await window.cowork.askClaude(prompt,[]))||'';
   throw new Error('No AI backend configured');
+}
+// Direct call to Google Gemini. The key is referrer-locked to this site (and free-tier),
+// so it is safe to ship in the page. Used in both the app and the browser for one consistent path.
+async function geminiAnswer(prompt){
+  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key='+encodeURIComponent(GEMINI_API_KEY);
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{temperature:0.4,maxOutputTokens:512}})});
+  let d={};try{d=await r.json();}catch(e){}
+  if(!r.ok)throw new Error((d&&d.error&&d.error.message)||('Gemini HTTP '+r.status));
+  const parts=(d.candidates&&d.candidates[0]&&d.candidates[0].content&&d.candidates[0].content.parts)||[];
+  return parts.map(p=>p.text||'').join('').trim();
 }
 // The full analyst prompt = instructions + today's data + the user's question.
 function buildPrompt(q){
