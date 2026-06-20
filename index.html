@@ -429,6 +429,25 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
+<!-- ═══ DAILY PERFORMANCE RATIO + 30-DAY ENERGY BY SOURCE ═══ -->
+<div class="row col2">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>☀️ Daily Performance Ratio — Expected vs Actual</span>
+      <div class="sec-r"><span class="ts live">on-site irradiance + Sigen PV</span></div>
+    </div>
+    <div id="pr-body"><div class="shimmer w75"></div><div class="shimmer w100"></div><div class="shimmer w50"></div></div>
+  </div>
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🔋 Energy by Source — daily (kWh)</span>
+      <div class="sec-r"><span class="ts comp">mySigen · builds to 30d</span></div>
+    </div>
+    <div style="height:210px;"><canvas id="chart-energy-days"></canvas></div>
+    <div class="tfoot" style="margin-top:8px;">Daily energy supplied by <strong style="color:#f59e0b;">Solar</strong> (direct) / <strong style="color:#16a34a;">Battery</strong> (discharge) / <strong style="color:#94a3b8;">Grid import</strong>, from mySigen. Backfills toward 30 days as daily readings accumulate — or in one shot via the Sigen API.</div>
+  </div>
+</div>
+
 <!-- ═══ N2EX ═══ -->
 <div class="row">
   <div class="card">
@@ -2812,6 +2831,67 @@ async function fetchAWNLive(){
     if(ts){ts.className='ts comp';ts.textContent='AW Net · baked (open Chrome, then Refresh)';}
   }
 }
+// ═══════════════════════════════════════════════
+//  DAILY PERFORMANCE RATIO + ENERGY BY SOURCE
+//  PR = actual PV (mySigen) ÷ (on-site insolation kWh/m² × SYSTEM_KWP).
+//  Expected @ reference PR 0.80 for comparison. History grows as daily
+//  readings accumulate (mySigen read when logged in; or backfilled via Sigen API).
+// ═══════════════════════════════════════════════
+const PR_DATA={ refPR:0.80, sysKwp:13.44,
+  days:[
+    // {date, insol kWh/m² (AW Net), actual kWh PV (mySigen)}
+    {date:"2026-06-20", insol:4.33, actual:53.52}
+  ]
+};
+// Daily energy by SOURCE (mySigen) — how the day's energy was supplied (kWh).
+const ENERGY_DAYS=[
+  {date:"2026-06-20", solar:53.52, battery:36.62, grid:1.51}  // solar direct + battery discharge + grid import
+];
+function renderPRPanel(){
+  const el=document.getElementById('pr-body'); if(!el||typeof PR_DATA==='undefined')return;
+  const d=PR_DATA.days[PR_DATA.days.length-1];
+  const ideal=+(d.insol*PR_DATA.sysKwp).toFixed(1);
+  const expected=+(d.insol*PR_DATA.sysKwp*PR_DATA.refPR).toFixed(1);
+  const pr=+(d.actual/ideal).toFixed(2);
+  const vsExp=Math.round((d.actual/expected-1)*100);
+  const prCol=pr>=PR_DATA.refPR?'#16a34a':(pr>=PR_DATA.refPR-0.08?'#f59e0b':'#ef4444');
+  const mx=Math.max(ideal,expected,d.actual)||1;
+  const bar=(label,val,col)=>'<div style="margin-bottom:7px;"><div style="display:flex;justify-content:space-between;font-size:10px;color:#475569;margin-bottom:2px;"><span>'+label+'</span><span style="font-weight:700;color:#334155;">'+val+' kWh</span></div><div style="height:13px;background:#f1f5f9;border-radius:6px;overflow:hidden;"><div style="width:'+(val/mx*100).toFixed(1)+'%;height:100%;background:'+col+';border-radius:6px;"></div></div></div>';
+  el.innerHTML=
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">'+
+      '<div style="text-align:center;min-width:104px;"><div style="font-size:36px;font-weight:800;color:'+prCol+';line-height:1;">'+pr.toFixed(2)+'</div><div style="font-size:10px;color:#94a3b8;margin-top:2px;">Realized PR<br>(reference '+PR_DATA.refPR.toFixed(2)+')</div></div>'+
+      '<div style="flex:1;min-width:230px;">'+
+        bar('Ideal — PR 1.00',ideal,'#cbd5e1')+
+        bar('Expected — PR '+PR_DATA.refPR,expected,'#f59e0b')+
+        bar('Actual — SigenStor PV',d.actual,prCol)+
+      '</div>'+
+    '</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;">'+
+      '<div class="csp"><div class="cv">'+d.insol+'</div><div class="ck">Insolation kWh/m² (on-site)</div></div>'+
+      '<div class="csp"><div class="cv">'+expected+' kWh</div><div class="ck">Expected @PR '+PR_DATA.refPR+'</div></div>'+
+      '<div class="csp"><div class="cv">'+d.actual+' kWh</div><div class="ck">Actual PV (Sigen)</div></div>'+
+      '<div class="csp"><div class="cv" style="color:'+(vsExp>=0?'#16a34a':'#ef4444')+';">'+(vsExp>=0?'+':'')+vsExp+'%</div><div class="ck">vs expected</div></div>'+
+    '</div>'+
+    '<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 10px;line-height:1.5;margin-top:10px;">'+d.date+': on-site irradiance of '+d.insol+' kWh/m² implies ≈'+expected+' kWh expected at the 0.80 reference PR; the SigenStor produced '+d.actual+' kWh — a realized PR of <strong>'+pr.toFixed(2)+'</strong> ('+(vsExp>=0?'+':'')+vsExp+'% vs expected). The west-facing string catching the clear afternoon (peak 987 W/m²) lifts output above a flat GHI estimate.</div>'+
+    '<div class="tfoot" style="margin-top:6px;">PR = actual ÷ (insolation × '+PR_DATA.sysKwp+' kWp). Insolation: AW Net GX station (measured) · production: mySigen. A multi-day PR trend builds as daily readings accumulate.</div>';
+}
+let _energyChart=null;
+function renderEnergyDays(){
+  const ctx=document.getElementById('chart-energy-days'); if(!ctx||typeof Chart==='undefined'||typeof ENERGY_DAYS==='undefined')return;
+  if(_energyChart)_energyChart.destroy();
+  const D=ENERGY_DAYS;
+  _energyChart=new Chart(ctx.getContext('2d'),{type:'bar',
+    data:{labels:D.map(x=>x.date.slice(5)),datasets:[
+      {label:'Solar',data:D.map(x=>x.solar),backgroundColor:'#f59e0b',stack:'s'},
+      {label:'Battery',data:D.map(x=>x.battery),backgroundColor:'#16a34a',stack:'s'},
+      {label:'Grid import',data:D.map(x=>x.grid),backgroundColor:'#94a3b8',stack:'s'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{font:{size:9},boxWidth:10}},tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.raw+' kWh'}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:8}}},
+        y:{stacked:true,grid:{color:'#f8fafc'},ticks:{font:{size:9},callback:v=>v+' kWh'},beginAtZero:true,title:{display:true,text:'Energy supplied by source (kWh/day)',font:{size:9}}}}}
+  });
+}
 const MACRO_DATA={asOf:"2026-06-20",rows:[
   {l:"BoE base rate",v:"3.75%",sub:"held at 18 Jun MPC (7–2; two voted +25bp) — markets price ~1 hike by Dec",dir:0},
   {l:"CPI inflation (May)",v:"2.8%",sub:"unchanged from Apr; BoE sees ~3¼% by Q4 on energy",dir:0},
@@ -2918,6 +2998,8 @@ async function loadAll(){
   try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
   try{renderFwdCarbon();}catch(e){console.error('[loadAll] fwd/carbon:',e.message);}
   try{renderLocalWeather();}catch(e){console.error('[loadAll] local weather:',e.message);}
+  try{renderPRPanel();}catch(e){console.error('[loadAll] PR panel:',e.message);}
+  try{renderEnergyDays();}catch(e){console.error('[loadAll] energy days:',e.message);}
   fetchLiveFx();
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
@@ -2983,7 +3065,9 @@ async function loadAll(){
 //  · Cloud imagery: Meteosat IR tiles via RainViewer public API (10-min frames)
 //  Refreshes on load and every 10 minutes.
 // ═══════════════════════════════════════════════
-const SKY_LAT=51.6071, SKY_LON=-0.5560;
+const SKY_LAT=51.5819, SKY_LON=-0.5505;   // GX Weather Station (Mill Ln, SL9 8AY) — exact array location
+const SKY_ZOOM=9;                          // was 8 — tighter, more local view
+const SKY_SS=2;                            // supersample factor: request imagery at ×2 px, display at ×1 → crisp
 
 function _skyTileXY(lat,lon,z){
   const n=Math.pow(2,z), la=lat*Math.PI/180;
@@ -3004,7 +3088,7 @@ function _skyMercBBox(W,H,z){ // EPSG:3857 bbox of the map window, aligned with 
 }
 function renderSkyMap(satSrc,cand){
   const el=document.getElementById('sky-map'); if(!el)return;
-  const z=8, t=_skyTileXY(SKY_LAT,SKY_LON,z);
+  const z=SKY_ZOOM, t=_skyTileXY(SKY_LAT,SKY_LON,z);
   const W=el.clientWidth||320, H=el.clientHeight||190;
   const px=t.x*256, py=t.y*256;
   let html='';
@@ -3012,7 +3096,8 @@ function renderSkyMap(satSrc,cand){
     const x0=Math.floor((px-W/2)/256), x1=Math.floor((px+W/2)/256);
     const y0=Math.floor((py-H/2)/256), y1=Math.floor((py+H/2)/256);
     for(let tx=x0;tx<=x1;tx++)for(let ty=y0;ty<=y1;ty++){
-      html+='<img src="https://basemaps.cartocdn.com/'+path+'/'+z+'/'+tx+'/'+ty+'.png" style="position:absolute;left:'+(tx*256-px+W/2)+'px;top:'+(ty*256-py+H/2)+'px;width:256px;height:256px;opacity:'+op+';" onerror="this.style.display=\'none\'" alt="">';
+      // @2x = retina (512px) Carto tiles for a sharper basemap
+      html+='<img src="https://basemaps.cartocdn.com/'+path+'/'+z+'/'+tx+'/'+ty+'@2x.png" style="position:absolute;left:'+(tx*256-px+W/2)+'px;top:'+(ty*256-py+H/2)+'px;width:256px;height:256px;opacity:'+op+';" onerror="this.style.display=\'none\'" alt="">';
     }
   };
   tiles('light_all',1); // base
@@ -3025,8 +3110,9 @@ function renderSkyMap(satSrc,cand){
 async function fetchSkySat(){
   const el=document.getElementById('sky-map'); if(!el)return false;
   const W=el.clientWidth||320, H=el.clientHeight||190;
-  const bbox=_skyMercBBox(W,H,8).join(',');
-  const mk=l=>'https://view.eumetsat.int/geoserver/wms?service=WMS&version=1.3.0&request=GetMap&layers='+encodeURIComponent(l)+'&styles=&format=image/png&transparent=true&crs=EPSG:3857&bbox='+bbox+'&width='+Math.round(W)+'&height='+Math.round(H)+'&_t='+Date.now();
+  const bbox=_skyMercBBox(W,H,SKY_ZOOM).join(',');
+  // Supersample: request the WMS frame at ×SKY_SS resolution; renderSkyMap paints it at W×H → crisper.
+  const mk=l=>'https://view.eumetsat.int/geoserver/wms?service=WMS&version=1.3.0&request=GetMap&layers='+encodeURIComponent(l)+'&styles=&format=image/png&transparent=true&crs=EPSG:3857&bbox='+bbox+'&width='+Math.round(W*SKY_SS)+'&height='+Math.round(H*SKY_SS)+'&_t='+Date.now();
   for(const cand of SKY_SAT_LAYERS){
     const im=await new Promise(res=>{
       const i=new Image(); const t=setTimeout(()=>res(null),12000);
@@ -3065,38 +3151,54 @@ async function fetchSkyNow(){
     const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+SKY_LAT+'&longitude='+SKY_LON+'&current=shortwave_radiation,direct_radiation,diffuse_radiation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,temperature_2m,weather_code&minutely_15=shortwave_radiation&daily=shortwave_radiation_sum&forecast_days=1&timezone=Europe%2FLondon',{cache:'no-store'});
     const j=await r.json();
     const c=j.current, now=new Date();
-    const ghi=Math.round(c.shortwave_radiation||0), dir=Math.round(c.direct_radiation||0), dif=Math.round(c.diffuse_radiation||0);
-    // today's energy so far: 15-min GHI averages up to now (W/m² ÷ 4 → Wh/m²)
+    const omGhi=Math.round(c.shortwave_radiation||0), dir=Math.round(c.direct_radiation||0), dif=Math.round(c.diffuse_radiation||0);
+    // Prefer the on-site station's MEASURED solar radiation (ground truth) over the Open-Meteo model.
+    let stationGhi=null, stationAgeMin=null;
+    try{
+      if(typeof AWN_DATA!=='undefined' && AWN_DATA.current && AWN_DATA.current.solarWm2!=null){
+        stationGhi=Math.round(AWN_DATA.current.solarWm2);
+        stationAgeMin=(Date.now()-new Date(AWN_DATA.asOf).getTime())/60000;
+      }
+    }catch(e){}
+    const ghi=(stationGhi!=null)?stationGhi:omGhi, onSite=stationGhi!=null;
+    // today's energy so far: prefer the station's measured insolation, else Open-Meteo 15-min sum
     let soFar=0;
     try{
       const m=j.minutely_15;
       for(let i=0;i<m.time.length;i++){ if(new Date(m.time[i])<=now && m.shortwave_radiation[i]!=null) soFar+=m.shortwave_radiation[i]/4; }
     }catch(e){}
-    const soFarKwh=soFar/1000;
+    let soFarKwh=soFar/1000, soFarSrc='Open-Meteo';
+    try{ if(typeof AWN_DATA!=='undefined' && AWN_DATA.solar && AWN_DATA.solar.insolation_kwh_m2!=null){ soFarKwh=AWN_DATA.solar.insolation_kwh_m2; soFarSrc='on-site'; } }catch(e){}
     const dayMJ=(j.daily&&j.daily.shortwave_radiation_sum&&j.daily.shortwave_radiation_sum[0])||0;
     const dayKwhM2=dayMJ/3.6;
-    // clarity index: measured GHI vs clear-sky estimate
-    const cs=_clearSkyGHI(now), clarity=cs>20?Math.min(100,Math.round(ghi/cs*100)):null;
-    const clabel=clarity===null?['🌙','Night',  '#475569']:
-                 clarity>=70 ?['☀️','Bright — near clear-sky','#b45309']:
-                 clarity>=40 ?['⛅','Filtered sun','#0e7490']:
-                 clarity>=15 ?['☁️','Overcast','#475569']:
-                              ['🌧','Dark / thick cloud','#334155'];
-    const estKw=expectedKwNow(ghi), estDayKwh=expectedKwh(dayMJ), estSoFar=expectedKwh(soFarKwh*3.6);
+    // clarity index: only meaningful when the sun is high enough — avoids a false "overcast" near sunrise/sunset
+    const cs=_clearSkyGHI(now), sunUp=cs>=60;
+    const clarity=sunUp?Math.min(100,Math.round(ghi/cs*100)):null;
+    const clabel=clarity===null?['🌙',(cs>0?'Low sun / after sunset':'Night'),'#475569']:
+                 clarity>=72 ?['☀️','Clear — near full sun','#b45309']:
+                 clarity>=45 ?['⛅','Hazy / filtered sun','#0e7490']:
+                 clarity>=20 ?['☁️','Cloudy','#475569']:
+                              ['🌧','Overcast / thick cloud','#334155'];
+    const estKw=expectedKwNow(ghi), estDayKwh=expectedKwh(dayMJ);
+    const modelDisagrees=clarity!=null && clarity>=70 && (c.cloud_cover||0)>=70;
     st.innerHTML=
       '<div class="cs" style="margin-bottom:9px;">'+
-        '<div class="csp"><div class="cv">'+ghi+'</div><div class="ck">GHI now W/m²</div></div>'+
-        '<div class="csp"><div class="cv">'+Math.round(c.cloud_cover)+'%</div><div class="ck">Cloud cover</div></div>'+
+        '<div class="csp"><div class="cv">'+ghi+'</div><div class="ck">GHI now W/m² · '+(onSite?'on-site':'model')+'</div></div>'+
+        '<div class="csp"><div class="cv"'+(clarity!=null?' style="color:'+clabel[2]+';"':'')+'>'+(clarity!=null?clarity+'%':'—')+'</div><div class="ck">Sky clarity (measured)</div></div>'+
         '<div class="csp"><div class="cv" style="color:#b45309;">'+estKw.toFixed(1)+' kW</div><div class="ck">Est. array now</div></div>'+
-        '<div class="csp"><div class="cv" style="color:#0e7490;">'+soFarKwh.toFixed(2)+'</div><div class="ck">kWh/m² so far today</div></div>'+
+        '<div class="csp"><div class="cv" style="color:#0e7490;">'+soFarKwh.toFixed(2)+'</div><div class="ck">kWh/m² so far ('+soFarSrc+')</div></div>'+
       '</div>'+
+      '<div style="font-size:9px;color:#94a3b8;margin:2px 0 4px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Cloud — Open-Meteo model (forecast, not measured)</div>'+
+      _skyBar('Total cloud',c.cloud_cover||0,'#94a3b8')+
       _skyBar('Low cloud',c.cloud_cover_low||0,'#64748b')+
       _skyBar('Mid cloud',c.cloud_cover_mid||0,'#94a3b8')+
       _skyBar('High cloud',c.cloud_cover_high||0,'#cbd5e1')+
-      _skyBar('Direct beam',ghi>0?dir/ghi*100:0,'#f59e0b')+
-      '<div style="margin-top:8px;font-size:11px;color:'+clabel[2]+';font-weight:700;">'+clabel[0]+' '+clabel[1]+(clarity!==null?' — sky clarity '+clarity+'% of clear-sky':'')+'</div>';
+      _skyBar('Direct beam',omGhi>0?dir/omGhi*100:0,'#f59e0b')+
+      '<div style="margin-top:8px;font-size:11px;color:'+clabel[2]+';font-weight:700;">'+clabel[0]+' '+clabel[1]+(clarity!==null?' — '+clarity+'% of clear-sky ('+(onSite?'measured on-site':'modelled')+')':'')+'</div>'+
+      (modelDisagrees?'<div style="font-size:9.5px;color:#0e7490;margin-top:3px;">ℹ️ Model shows '+Math.round(c.cloud_cover)+'% cloud, but your station is measuring near-full sun — trusting the on-site sensor.</div>':'')+
+      (onSite&&stationAgeMin!=null&&stationAgeMin>90?'<div style="font-size:9.5px;color:#f59e0b;margin-top:3px;">⚠ on-site reading ~'+Math.round(stationAgeMin)+' min old — open Chrome &amp; hit Refresh for a live value.</div>':'');
     document.getElementById('sky-note').innerHTML=
-      '<strong>Performance check:</strong> with GHI at '+ghi+' W/m² (direct '+dir+' / diffuse '+dif+'), the 13.44 kWp array should be making ≈ <strong>'+estKw.toFixed(1)+' kW</strong> right now and has had ≈ <strong>'+estSoFar.toFixed(1)+' kWh</strong> of resource so far today (full-day forecast '+dayKwhM2.toFixed(1)+' kWh/m² ≈ '+estDayKwh.toFixed(0)+' kWh). If the Sigen app reads well below this while clarity is high, look for shading, soiling or inverter derating. Irradiance: Open-Meteo satellite+model blend, 15-min steps · clouds: EUMETSAT Meteosat, ~10–15 min frames.';
+      '<strong>Performance check:</strong> '+(onSite?'on-site':'modelled')+' GHI is '+ghi+' W/m², so the 13.44 kWp array should be making ≈ <strong>'+estKw.toFixed(1)+' kW</strong> right now, with ≈ <strong>'+soFarKwh.toFixed(2)+' kWh/m²</strong> of resource collected so far today (full-day forecast '+dayKwhM2.toFixed(1)+' kWh/m² ≈ '+estDayKwh.toFixed(0)+' kWh). If Sigen reads well below this while clarity is high, look for shading, soiling or inverter derating. <strong>GHI &amp; clarity:</strong> '+(onSite?'your AW Net station (measured)':'Open-Meteo model')+' · <strong>cloud %:</strong> Open-Meteo forecast · <strong>imagery:</strong> EUMETSAT Meteosat ~10–15 min frames.';
     const ts=document.getElementById('ts-sky');
     if(ts){ts.className='ts live';ts.textContent='LIVE · '+fmtTime(now)+' · '+Math.round(c.temperature_2m)+'°C';}
   }catch(e){
