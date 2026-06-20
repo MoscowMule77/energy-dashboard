@@ -414,6 +414,17 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
+<!-- ═══ LOCAL CONDITIONS & SOLAR PERFORMANCE — GX WEATHER STATION (AW Net) ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🌤️ Local Conditions &amp; Solar Performance — GX Weather Station</span>
+      <div class="sec-r"><span id="ts-awn" class="ts live">AW Net · on-site</span><a href="https://ambientweather.net/dashboard" target="_blank">AW Net ↗</a></div>
+    </div>
+    <div id="awn-body"><div class="shimmer w75"></div><div class="shimmer w100"></div><div class="shimmer w50"></div></div>
+  </div>
+</div>
+
 <!-- ═══ N2EX ═══ -->
 <div class="row">
   <div class="card">
@@ -2693,6 +2704,54 @@ function renderDCTracker(){
 //  UK MACRO + GLOBAL COMMODITIES — baked daily by the 7am task;
 //  FX pairs additionally refresh live on open via frankfurter.app (ECB rates, CORS-open, no key).
 // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
+//  LOCAL WEATHER STATION + SOLAR PERFORMANCE — baked each refresh from
+//  AW Net (Ambient Weather) GX station via the daily task (keys in Scheduled/awn_keys.txt).
+//  Expected gen = on-site insolation (kWh/m²) × SYSTEM_KWP × refPR.
+//  Realized PR = actual SigenStor production ÷ (insolation × SYSTEM_KWP) — null until the
+//  Sigen production feed is wired (OpenAPI creds pending).
+// ═══════════════════════════════════════════════
+const AWN_DATA={
+  station:"GX Weather Station", loc:"Gerrards Cross, Bucks (SL9 8AY)", lat:51.58,
+  asOf:"2026-06-20T08:50:00Z", localTime:"20 Jun 2026, 09:50 BST",
+  current:{tempC:21.6, feelsC:21.7, humidity:73, windMph:1.3, gustMph:2.2, maxGustMph:9, windDir:"ENE", rainTodayMm:0.0, pressInHg:30.13, uv:2, solarWm2:186, indoorC:24.9},
+  solar:{insolation_kwh_m2:0.58, peakWm2:358, mj_so_far:2.09, hourly:[0,0,0,0,1,11,33,132,182,244,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  perf:{refPR:0.80, sysKwp:13.44, expectedKwhSoFar:6.2, actualKwh:null, realizedPR:null},
+  summary:"Cool, cloudy morning at Gerrards Cross — 21.6°C (feels 21.7°), light easterly breeze gusting to ~9 mph, humidity 73%, UV 2. Broken cloud is holding solar to a ~358 W/m² peak so far, ~0.58 kWh/m² collected — a soft start for PV versus a clear June day."
+};
+function renderLocalWeather(){
+  const el=document.getElementById('awn-body'); if(!el||typeof AWN_DATA==='undefined')return;
+  const c=AWN_DATA.current,s=AWN_DATA.solar,p=AWN_DATA.perf;
+  const kpi=(v,k,col)=>'<div class="csp"><div class="cv"'+(col?' style="color:'+col+';"':'')+'>'+v+'</div><div class="ck">'+k+'</div></div>';
+  const realized=p.realizedPR!=null?p.realizedPR.toFixed(2):'—';
+  const prCol=p.realizedPR==null?'#94a3b8':(p.realizedPR>=p.refPR?'#16a34a':(p.realizedPR>=p.refPR-0.08?'#f59e0b':'#ef4444'));
+  const H=s.hourly||[], mx=Math.max(60,...H), w=240,h=34,bw=w/24;
+  const bars=H.map((v,i)=>{const bh=Math.max(0,Math.round(v/mx*h));return '<rect x="'+(i*bw).toFixed(1)+'" y="'+(h-bh)+'" width="'+(bw-1).toFixed(1)+'" height="'+bh+'" fill="'+(v>0?'#f59e0b':'#eef2f7')+'"/>';}).join('');
+  el.innerHTML=
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">'+
+      kpi(c.tempC.toFixed(1)+'°C','Temp · feels '+c.feelsC.toFixed(1)+'°')+
+      kpi(c.humidity+'%','Humidity')+
+      kpi(c.windMph.toFixed(1)+' mph','Wind '+c.windDir+' · gust '+c.maxGustMph)+
+      kpi(c.rainTodayMm.toFixed(1)+' mm','Rain today')+
+      kpi(c.pressInHg.toFixed(2)+'"','Pressure')+
+      kpi(c.uv,'UV index')+
+    '</div>'+
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;">'+
+      '<div style="flex:1.3;min-width:240px;">'+
+        '<div style="font-size:10px;color:#94a3b8;margin-bottom:3px;">Measured irradiance today (W/m²) · peak '+s.peakWm2+' · '+s.insolation_kwh_m2+' kWh/m²</div>'+
+        '<svg viewBox="0 0 '+w+' '+h+'" width="100%" height="40" preserveAspectRatio="none">'+bars+'</svg>'+
+        '<div style="display:flex;justify-content:space-between;font-size:8px;color:#cbd5e1;"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:240px;">'+
+        kpi(c.solarWm2+' W/m²','Solar now','#f59e0b')+
+        kpi(p.expectedKwhSoFar.toFixed(1)+' kWh','Expected gen so far @PR '+p.refPR)+
+        kpi(p.refPR.toFixed(2),'Reference PR')+
+        kpi(realized,'Realized PR',prCol)+
+      '</div>'+
+    '</div>'+
+    '<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 10px;line-height:1.5;margin-top:10px;">'+AWN_DATA.summary+'</div>'+
+    '<div class="tfoot" style="margin-top:6px;">Station: '+AWN_DATA.station+', '+AWN_DATA.loc+' · '+AWN_DATA.lat+'°N · updated '+AWN_DATA.localTime+'. Expected gen = on-site insolation × '+p.sysKwp+' kWp × PR '+p.refPR+'. Realized PR awaits the SigenStor production feed (Sigen OpenAPI credentials pending).</div>';
+}
 const MACRO_DATA={asOf:"2026-06-20",rows:[
   {l:"BoE base rate",v:"3.75%",sub:"held at 18 Jun MPC (7–2; two voted +25bp) — markets price ~1 hike by Dec",dir:0},
   {l:"CPI inflation (May)",v:"2.8%",sub:"unchanged from Apr; BoE sees ~3¼% by Q4 on energy",dir:0},
@@ -2798,6 +2857,7 @@ async function loadAll(){
   try{renderFableTake();}catch(e){console.error('[loadAll] fable take:',e.message);}
   try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
   try{renderFwdCarbon();}catch(e){console.error('[loadAll] fwd/carbon:',e.message);}
+  try{renderLocalWeather();}catch(e){console.error('[loadAll] local weather:',e.message);}
   fetchLiveFx();
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
