@@ -373,7 +373,7 @@ table.sh tr:hover td{background:#fafbfc;}
         <canvas id="chart-irr"></canvas>
       </div>
       <div class="tfoot" style="margin-top:8px;">
-        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 11 South + 17 West · 35° tilt · 51.5°N · PR 0.80. Verify actual output in SigenStor app.
+        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 11 South + 17 West · 35° tilt · 51.5°N · in-plane PR ~0.85 (vs-horizontal reference 0.90). Verify actual output in SigenStor app.
         <br>Location: London (51.5°N, 0.1°W) — adjust for your actual site if needed.
       </div>
     </div>
@@ -405,7 +405,7 @@ table.sh tr:hover td{background:#fafbfc;}
     </div>
     <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;">
       <div style="flex:1.15;min-width:250px;">
-        <div id="sky-map" style="position:relative;height:190px;border-radius:10px;overflow:hidden;background:#e0f2fe;border:1px solid #e2e8f0;">
+        <div id="sky-map" style="position:relative;height:340px;border-radius:10px;overflow:hidden;background:#e0f2fe;border:1px solid #e2e8f0;">
           <div class="shimmer w100" style="height:100%;margin:0;"></div>
         </div>
         <div id="sky-map-cap" style="font-size:9px;color:#94a3b8;margin-top:4px;">Loading EUMETSAT Meteosat imagery… · ◎ home array</div>
@@ -808,7 +808,7 @@ const FUEL_ORDER = ['wind','solar','nuclear','gas','biomass','imports','hydro','
 //  (shortwave_radiation_sum is MJ/m² → ÷3.6 = kWh/m²)
 // ═══════════════════════════════════════════════
 const SYSTEM_KWP = 13.44;          // 28 × Aiko 480Wp
-const PERF_RATIO = 0.80;
+const PERF_RATIO = 0.85;   // in-plane (POA) system PR — Aiko Neostar ABC (24.5% eff, −0.26%/°C) + Sigen 10kW (97% Euro eff) + standard UK losses ≈ 0.85
 // ── Array orientation (added Jun 2026) ──
 //   South-facing: 11 × 480Wp = 5.28 kWp   ·   West-facing: 17 × 480Wp = 8.16 kWp
 //   Tilt 35° (assumed UK pitch) · London 51.5°N.
@@ -867,34 +867,34 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 20 Jun 2026 — Met Office (London): warm but cooler than Fri, part-cloudy (sun am, cloud pm), max 26°C / min 18°C; <5% rain
-    time:["2026-06-13","2026-06-14","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-20"],
-    temperature_2m_max:[20.5,22.0,24.0,27.0,28.0,28.0,29.0,26.0],
-    temperature_2m_min:[11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0],
-    weathercode:[2,1,1,2,1,1,0,2],
-    shortwave_radiation_sum:[19.5,24.0,25.0,26.0,27.0,27.0,29.0,23.0]
+    // Updated 21 Jun 2026 — Met Office (London): heat-health alert, hot & humid Sunday, low-30s with hazy brighter spells, max 31°C / min 20°C; <5% rain
+    time:["2026-06-14","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-20","2026-06-21"],
+    temperature_2m_max:[22.0,24.0,27.0,28.0,28.0,29.0,26.0,31.0],
+    temperature_2m_min:[12.0,13.0,14.0,15.0,16.0,17.0,18.0,20.0],
+    weathercode:[1,1,2,1,1,0,2,2],
+    shortwave_radiation_sum:[24.0,25.0,26.0,27.0,27.0,29.0,23.0,27.0]
   },
   daily:[
-    // Daily averages — energymix.uk (Elexon/NESO) past-day through 19 Jun; 20 Jun = live snapshot so far
-    {date:"2026-06-13",mix:{wind:48.0,solar:13.5,nuclear:11.5,gas:11.0,biomass:3.3,imports:11.5,hydro:0.7,coal:0,other:0.5},n:48},
+    // Daily averages — energymix.uk (Elexon/NESO) past-day through 20 Jun; 21 Jun = live snapshot so far
     {date:"2026-06-14",mix:{wind:29.5,solar:8.0,nuclear:14.8,gas:16.5,biomass:4.0,imports:25.2,hydro:0.9,coal:0,other:1.1},n:48},
     {date:"2026-06-15",mix:{wind:13.1,solar:14.3,nuclear:10.5,gas:35.3,biomass:5.9,imports:18.7,hydro:1.4,coal:0,other:0.8},n:48},
     {date:"2026-06-16",mix:{wind:20.0,solar:13.0,nuclear:10.5,gas:33.0,biomass:6.2,imports:15.0,hydro:1.0,coal:0,other:1.3},n:48},
     {date:"2026-06-17",mix:{wind:24.0,solar:15.0,nuclear:10.5,gas:28.0,biomass:6.0,imports:14.5,hydro:1.0,coal:0,other:1.0},n:48},
     {date:"2026-06-18",mix:{wind:28.1,solar:17.2,nuclear:9.6,gas:29.2,biomass:5.7,imports:8.0,hydro:1.1,coal:0,other:1.1},n:48},
     {date:"2026-06-19",mix:{wind:30.0,solar:15.0,nuclear:10.5,gas:27.0,biomass:6.0,imports:9.5,hydro:1.0,coal:0,other:1.0},n:48},
-    {date:"2026-06-20",mix:{wind:27.0,solar:9.0,nuclear:10.5,gas:29.0,biomass:6.5,imports:14.5,hydro:1.0,coal:0,other:2.5},n:20}
+    {date:"2026-06-20",mix:{wind:13.8,solar:19.4,nuclear:10.9,gas:31.7,biomass:6.0,imports:17.0,hydro:1.2,coal:0,other:0.0},n:48},
+    {date:"2026-06-21",mix:{wind:10.0,solar:5.0,nuclear:16.0,gas:34.5,biomass:10.0,imports:22.4,hydro:1.0,coal:0,other:1.1},n:20}
   ],
-  // Live snapshot 20 Jun 2026 ~07:20 BST — cooler part-cloudy Sat morning: wind ~27%, gas on the margin ~29%, low morning solar; CI ~145g
-  currentMix:{wind:27.0,solar:9.0,nuclear:10.5,gas:29.0,biomass:6.5,imports:14.5,hydro:1.0,coal:0,other:2.5},
-  carbonIntensity:145,  // gCO₂/kWh — 20 Jun ~07:20 BST (cooler, cloudier, gas firmly on the margin)
-  todayStr:"2026-06-20",
-  fetchedAt:"2026-06-20T06:21:25.000Z",
-  // Hourly irradiance today (W/m²) — estimated curve for a part-cloudy June day (sun am, cloud pm), peak ~650
-  hourlyIrr:   [0,0,0,0,55,140,270,410,530,610,650,640,580,500,400,310,230,150,80,30,5,0,0,0],
-  hourlyDirect:[0,0,0,0,25,75,150,240,320,380,400,370,300,230,160,110,70,40,20,8,0,0,0,0],
+  // Live snapshot 21 Jun 2026 ~07:05 BST — hot, near-windless heatwave Sunday morning: wind collapsed to ~10%, gas back on the margin ~35%, low early solar; CI ~152g
+  currentMix:{wind:10.0,solar:5.0,nuclear:16.0,gas:34.5,biomass:10.0,imports:22.4,hydro:1.0,coal:0,other:1.1},
+  carbonIntensity:152,  // gCO₂/kWh — 21 Jun ~07:05 BST (still air, wind low, gas firmly on the margin)
+  todayStr:"2026-06-21",
+  fetchedAt:"2026-06-21T06:05:00.000Z",
+  // Hourly irradiance today (W/m²) — estimated curve for a hot, hazy-bright June heatwave day, peak ~780
+  hourlyIrr:   [0,0,0,0,60,160,320,480,620,720,770,780,740,660,560,440,320,210,110,40,5,0,0,0],
+  hourlyDirect:[0,0,0,0,30,90,190,300,400,470,500,510,480,420,350,260,180,110,50,15,0,0,0,0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:280, currentDirect:130, currentDiffuse:150, // W/m² at ~07:20 BST (part-cloudy, ramping)
+  currentIrr:110, currentDirect:50, currentDiffuse:60, // W/m² at ~07:05 BST (humid haze, ramping)
 };
 
 // Last confirmed reading from system (user-provided 29 May 2026 ~07:15 BST)
@@ -2156,7 +2156,7 @@ function renderSystemGraphic(d){
     ${useLive?`⬛ <strong>SOC &amp; generation</strong>: ${socTag}`:`⚠ <strong>Estimated only</strong> — no live reading available`}<br>
     🔗 <strong>Live data:</strong> <a href="https://web-eu.sigencloud.com/" target="_blank" style="color:#0f766e;">SigenCloud web portal ↗</a>
     &nbsp;·&nbsp; <span style="color:#94a3b8;">API integration requires OAuth credentials — capture from browser network tab to enable live sync</span>
-    ${GRID_DATA?'<br>* Forecast from Open-Meteo irradiation · shortwave_radiation_sum ÷ 3.6 × 13.44kWp × 0.80 PR':''}
+    ${GRID_DATA?'<br>* Forecast from Open-Meteo irradiation · shortwave_radiation_sum ÷ 3.6 × 13.44kWp × 0.85 PR':''}
   </div>`;
 }
 
@@ -2740,7 +2740,7 @@ const AWN_DATA={
   asOf:"2026-06-20T08:50:00Z", localTime:"20 Jun 2026, 09:50 BST",
   current:{tempC:21.6, feelsC:21.7, humidity:73, windMph:1.3, gustMph:2.2, maxGustMph:9, windDir:"ENE", rainTodayMm:0.0, pressInHg:30.13, uv:2, solarWm2:186, indoorC:24.9},
   solar:{insolation_kwh_m2:0.58, peakWm2:358, mj_so_far:2.09, hourly:[0,0,0,0,1,11,33,132,182,244,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-  perf:{refPR:0.80, sysKwp:13.44, expectedKwhSoFar:6.2, actualKwh:null, realizedPR:null},
+  perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:7.0, actualKwh:null, realizedPR:null},
   summary:"Cool, cloudy morning at Gerrards Cross — 21.6°C (feels 21.7°), light easterly breeze gusting to ~9 mph, humidity 73%, UV 2. Broken cloud is holding solar to a ~358 W/m² peak so far, ~0.58 kWh/m² collected — a soft start for PV versus a clear June day."
 };
 function renderLocalWeather(){
@@ -2808,7 +2808,7 @@ function _awnJs(){
       localTime:new Date(tref).toLocaleString('en-GB',{timeZone:'Europe/London',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' BST',
       current:{tempC:f2c(ld.tempf),feelsC:f2c(ld.feelsLike),humidity:ld.humidity!=null?ld.humidity:0,windMph:+(+(ld.windspeedmph||0)).toFixed(1),gustMph:+(+(ld.windgustmph||0)).toFixed(1),maxGustMph:Math.round(ld.maxdailygust||0),windDir:wd,rainTodayMm:+(((ld.dailyrainin||0)*25.4).toFixed(1)),pressInHg:+(+(ld.baromrelin||0)).toFixed(2),uv:ld.uv!=null?ld.uv:0,solarWm2:Math.round(ld.solarradiation||0),indoorC:f2c(ld.tempinf)},
       solar:{insolation_kwh_m2:ins,peakWm2:Math.round(Math.max(0,...all,0)),mj_so_far:mj,hourly:hourly},
-      perf:{refPR:0.80,sysKwp:13.44,expectedKwhSoFar:+((ins*13.44*0.80).toFixed(1)),actualKwh:null,realizedPR:null}
+      perf:{refPR:0.90,sysKwp:13.44,expectedKwhSoFar:+((ins*13.44*0.90).toFixed(1)),actualKwh:null,realizedPR:null}
     });
   })()`;
 }
@@ -2834,10 +2834,11 @@ async function fetchAWNLive(){
 // ═══════════════════════════════════════════════
 //  DAILY PERFORMANCE RATIO + ENERGY BY SOURCE
 //  PR = actual PV (mySigen) ÷ (on-site insolation kWh/m² × SYSTEM_KWP).
-//  Expected @ reference PR 0.80 for comparison. History grows as daily
+//  Expected @ reference PR 0.90 for comparison. History grows as daily
 //  readings accumulate (mySigen read when logged in; or backfilled via Sigen API).
+//  refPR 0.90 = in-plane system PR ~0.85 (datasheets) × ~1.05 tilt gain over horizontal GHI.
 // ═══════════════════════════════════════════════
-const PR_DATA={ refPR:0.80, sysKwp:13.44,
+const PR_DATA={ refPR:0.90, sysKwp:13.44,
   days:[
     // {date, insol kWh/m² (AW Net), actual kWh PV (mySigen)}
     {date:"2026-06-20", insol:4.33, actual:53.52}
@@ -2872,7 +2873,7 @@ function renderPRPanel(){
       '<div class="csp"><div class="cv">'+d.actual+' kWh</div><div class="ck">Actual PV (Sigen)</div></div>'+
       '<div class="csp"><div class="cv" style="color:'+(vsExp>=0?'#16a34a':'#ef4444')+';">'+(vsExp>=0?'+':'')+vsExp+'%</div><div class="ck">vs expected</div></div>'+
     '</div>'+
-    '<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 10px;line-height:1.5;margin-top:10px;">'+d.date+': on-site irradiance of '+d.insol+' kWh/m² implies ≈'+expected+' kWh expected at the 0.80 reference PR; the SigenStor produced '+d.actual+' kWh — a realized PR of <strong>'+pr.toFixed(2)+'</strong> ('+(vsExp>=0?'+':'')+vsExp+'% vs expected). The west-facing string catching the clear afternoon (peak 987 W/m²) lifts output above a flat GHI estimate.</div>'+
+    '<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 10px;line-height:1.5;margin-top:10px;">'+d.date+': on-site irradiance of '+d.insol+' kWh/m² implies ≈'+expected+' kWh expected at the '+PR_DATA.refPR.toFixed(2)+' reference PR; the SigenStor produced '+d.actual+' kWh — a realized PR of <strong>'+pr.toFixed(2)+'</strong> ('+(vsExp>=0?'+':'')+vsExp+'% vs expected). Reference 0.90 = in-plane system PR ~0.85 (Aiko ABC + Sigen 97% Euro-eff) × the 35° tilt gain over horizontal.</div>'+
     '<div class="tfoot" style="margin-top:6px;">PR = actual ÷ (insolation × '+PR_DATA.sysKwp+' kWp). Insolation: AW Net GX station (measured) · production: mySigen. A multi-day PR trend builds as daily readings accumulate.</div>';
 }
 let _energyChart=null;
