@@ -893,12 +893,12 @@ const INITIAL_GRID_DATA = {
   currentIrr:110, currentDirect:50, currentDiffuse:60, // W/m² at ~07:05 BST (humid haze, ramping)
 };
 
-// Last confirmed reading from system (user-provided 29 May 2026 ~07:15 BST)
+// Last confirmed reading from system (user-provided via mySigen → Device)
 const LAST_KNOWN_SOLAR = {
-  solarKw: 1.5,     // overcast/light-rain midday — diffuse only
-  soc: 0.15,        // user-confirmed "under 20%" 11 Jun ~11:50 BST
-  ts: '2026-06-11T10:52:00.000Z',
-  source: 'User-confirmed'
+  solarKw: 1.5,     // fallback only — live "solar now" comes from Open-Meteo / AW Net
+  soc: 0.052,       // user-confirmed 5.2% — 21 Jun 2026 ~07:55 BST (mySigen → Device → SOC)
+  ts: '2026-06-21T06:55:00.000Z',
+  source: 'User-confirmed (mySigen)'
 };
 let GRID_DATA = INITIAL_GRID_DATA;
 
