@@ -369,7 +369,7 @@ table.sh tr:hover td{background:#fafbfc;}
         <canvas id="chart-irr"></canvas>
       </div>
       <div class="tfoot" style="margin-top:8px;">
-        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 11 South + 17 West · 35° tilt · 51.5°N · in-plane PR ~0.85 (vs-horizontal reference 0.90). Verify actual output in SigenStor app.
+        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 11 South + 17 West · 35° tilt · 51.5°N · PR 0.90 (Aiko ABC + Sigen 97% inverter, cool UK climate). Verify actual output in SigenStor app.
         <br>Location: London (51.5°N, 0.1°W) — adjust for your actual site if needed.
       </div>
     </div>
@@ -646,7 +646,7 @@ table.sh tr:hover td{background:#fafbfc;}
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🏦 UK Macro Indicators</span><div class="sec-r"><span id="macro-asof" class="ts">–</span><a href="https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate" target="_blank">BoE ↗</a><a href="https://www.ons.gov.uk/economy/inflationandpriceindices" target="_blank">ONS ↗</a></div></div>
     <div id="macro-body"></div>
-    <div class="fn">FX refreshes live on open (frankfurter.app / ECB rates); other indicators refreshed by the daily 7am task from BoE/ONS/market data.</div>
+    <div class="fn">FX refreshes live on open (frankfurter.dev / ECB rates); other indicators refreshed by the daily 7am task from BoE/ONS/market data.</div>
   </div>
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🌐 Global Commodities</span><div class="sec-r"><span id="cmdty-asof" class="ts">–</span><a href="https://tradingeconomics.com/commodities" target="_blank">Trading Economics ↗</a></div></div>
@@ -804,7 +804,7 @@ const FUEL_ORDER = ['wind','solar','nuclear','gas','biomass','imports','hydro','
 //  (shortwave_radiation_sum is MJ/m² → ÷3.6 = kWh/m²)
 // ═══════════════════════════════════════════════
 const SYSTEM_KWP = 13.44;          // 28 × Aiko 480Wp
-const PERF_RATIO = 0.85;   // in-plane (POA) system PR — Aiko Neostar ABC (24.5% eff, −0.26%/°C) + Sigen 10kW (97% Euro eff) + standard UK losses ≈ 0.85
+const PERF_RATIO = 0.90;   // system PR — Aiko Neostar ABC (24.5% eff, −0.26%/°C) + Sigen 10kW (97% Euro eff) in the cool UK climate ≈ 0.90
 // ── Array orientation (added Jun 2026) ──
 //   South-facing: 11 × 480Wp = 5.28 kWp   ·   West-facing: 17 × 480Wp = 8.16 kWp
 //   Tilt 35° (assumed UK pitch) · London 51.5°N.
@@ -2144,7 +2144,7 @@ function renderSystemGraphic(d){
 
   document.getElementById('sys-graphic').innerHTML = svg + `<div class="flow-stats">
     <div class="flow-stat"><div class="fv">${solarKw.toFixed(1)} kW</div><div class="fk">Solar now (${solTag})</div></div>
-    <div class="flow-stat"><div class="fv" style="color:${battFill};">${socPct}%</div><div class="fk">Battery SOC</div></div>
+    <div class="flow-stat"><div class="fv" style="color:${battFill};">${socPct}%${useLive?'':' <span style="font-size:9px;color:#94a3b8;font-weight:600;">est.</span>'}</div><div class="fk">Battery SOC${useLive?'':' (modelled — no live feed)'}</div></div>
     <div class="flow-stat"><div class="fv">${displayForecast} kWh</div><div class="fk">Forecast today${GRID_DATA?'*':' (est.)'}</div></div>
     <div class="flow-stat"><div class="fv">${(soc*54).toFixed(0)} kWh</div><div class="fk">Stored (calc.)</div></div>
   </div>
@@ -2152,7 +2152,7 @@ function renderSystemGraphic(d){
     ${useLive?`⬛ <strong>SOC &amp; generation</strong>: ${socTag}`:`⚠ <strong>Estimated only</strong> — no live reading available`}<br>
     🔗 <strong>Live data:</strong> <a href="https://web-eu.sigencloud.com/" target="_blank" style="color:#0f766e;">SigenCloud web portal ↗</a>
     &nbsp;·&nbsp; <span style="color:#94a3b8;">API integration requires OAuth credentials — capture from browser network tab to enable live sync</span>
-    ${GRID_DATA?'<br>* Forecast from Open-Meteo irradiation · shortwave_radiation_sum ÷ 3.6 × 13.44kWp × 0.85 PR':''}
+    ${GRID_DATA?'<br>* Forecast from Open-Meteo irradiation · shortwave_radiation_sum ÷ 3.6 × 13.44kWp × 0.90 PR':''}
   </div>`;
 }
 
@@ -2722,7 +2722,7 @@ function renderDCTracker(){
 
 // ═══════════════════════════════════════════════
 //  UK MACRO + GLOBAL COMMODITIES — baked daily by the 7am task;
-//  FX pairs additionally refresh live on open via frankfurter.app (ECB rates, CORS-open, no key).
+//  FX pairs additionally refresh live on open via frankfurter.dev (ECB rates, CORS-open, no key).
 // ═══════════════════════════════════════════════
 // ═══════════════════════════════════════════════
 //  LOCAL WEATHER STATION + SOLAR PERFORMANCE — baked each refresh from
@@ -2832,7 +2832,7 @@ async function fetchAWNLive(){
 //  PR = actual PV (mySigen) ÷ (on-site insolation kWh/m² × SYSTEM_KWP).
 //  Expected @ reference PR 0.90 for comparison. History grows as daily
 //  readings accumulate (mySigen read when logged in; or backfilled via Sigen API).
-//  refPR 0.90 = in-plane system PR ~0.85 (datasheets) × ~1.05 tilt gain over horizontal GHI.
+//  refPR 0.90 — high-eff Aiko ABC (−0.26%/°C) + Sigen 97% inverter, cool UK climate.
 // ═══════════════════════════════════════════════
 const PR_DATA={ refPR:0.90, sysKwp:13.44,
   days:[
@@ -2869,7 +2869,7 @@ function renderPRPanel(){
       '<div class="csp"><div class="cv">'+d.actual+' kWh</div><div class="ck">Actual PV (Sigen)</div></div>'+
       '<div class="csp"><div class="cv" style="color:'+(vsExp>=0?'#16a34a':'#ef4444')+';">'+(vsExp>=0?'+':'')+vsExp+'%</div><div class="ck">vs expected</div></div>'+
     '</div>'+
-    '<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 10px;line-height:1.5;margin-top:10px;">'+d.date+': on-site irradiance of '+d.insol+' kWh/m² implies ≈'+expected+' kWh expected at the '+PR_DATA.refPR.toFixed(2)+' reference PR; the SigenStor produced '+d.actual+' kWh — a realized PR of <strong>'+pr.toFixed(2)+'</strong> ('+(vsExp>=0?'+':'')+vsExp+'% vs expected). Reference 0.90 = in-plane system PR ~0.85 (Aiko ABC + Sigen 97% Euro-eff) × the 35° tilt gain over horizontal.</div>'+
+    '<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 10px;line-height:1.5;margin-top:10px;">'+d.date+': on-site irradiance of '+d.insol+' kWh/m² implies ≈'+expected+' kWh expected at the '+PR_DATA.refPR.toFixed(2)+' reference PR; the SigenStor produced '+d.actual+' kWh — a realized PR of <strong>'+pr.toFixed(2)+'</strong> ('+(vsExp>=0?'+':'')+vsExp+'% vs expected). Reference PR 0.90 reflects high-efficiency Aiko ABC modules (−0.26%/°C) + the Sigen 97% inverter in the cool UK climate.</div>'+
     '<div class="tfoot" style="margin-top:6px;">PR = actual ÷ (insolation × '+PR_DATA.sysKwp+' kWp). Insolation: AW Net GX station (measured) · production: mySigen. A multi-day PR trend builds as daily readings accumulate.</div>';
 }
 let _energyChart=null;
@@ -2947,7 +2947,7 @@ function renderFwdCarbon(){
 
 async function fetchLiveFx(){
   try{
-    const r=await fetch('https://api.frankfurter.app/latest?from=GBP&to=USD,EUR');
+    const r=await fetch('https://api.frankfurter.dev/v1/latest?base=GBP&symbols=USD,EUR');
     const j=await r.json();
     if(j&&j.rates){
       ['USD','EUR'].forEach(c=>{const el=document.getElementById('fx-'+c);if(el&&j.rates[c])el.innerHTML=j.rates[c].toFixed(3)+' <span style="font-size:8px;color:#0f766e;font-weight:700;">LIVE</span>';});
