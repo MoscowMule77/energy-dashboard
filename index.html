@@ -666,6 +666,17 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
+<!-- ═══ GLOBAL MARKETS HEATMAP — INDICES 24h ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🌍 Global Markets — 24h Pulse</span>
+      <div class="sec-r"><span id="indices-asof" class="ts live">Live · Yahoo</span><a href="https://finance.yahoo.com/world-indices" target="_blank">Indices ↗</a></div>
+    </div>
+    <div id="indices-body"><div class="shimmer w75"></div><div class="shimmer w100"></div><div class="shimmer w50"></div></div>
+  </div>
+</div>
+
 <!-- ═══ FORWARDS + CARBON + BESS ═══ -->
 <div class="row col3">
   <div class="card">
@@ -2962,6 +2973,54 @@ function renderStrings(){
     '<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 10px;line-height:1.5;margin-top:8px;">Bars are each string’s output <strong>per panel</strong> (W/panel), so size and orientation are normalised out. '+STRING_DATA.note+'</div>'+
     '<div class="tfoot" style="margin-top:6px;">Live per-string V/I from the Sigen inverter · snapshot '+new Date(STRING_DATA.asOf).toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'})+'. A string lagging others of the same orientation points to shading, soiling or a fault — most diagnostic at midday.</div>';
 }
+// ═══════════════════════════════════════════════
+//  GLOBAL MARKETS — index levels + 24h change (Yahoo v8 chart, same-origin via Chrome).
+//  Baked daily; the dashboard re-fetches live when Chrome is open.
+// ═══════════════════════════════════════════════
+const INDICES_DATA={ asOf:"2026-06-22T07:30:00.000Z",
+  pulse:"Risk-on tilt — Wall Street leads (Nasdaq +1.9%, S&P +1.1%) with Tokyo +1.6%, while Europe and the UK drift flat-to-soft. VIX up 4% but still calm at ~17, so no fear, just rotation into US tech.",
+  items:[
+    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10362.14,chg:-0.01},
+    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:23064.95,chg:-0.59},
+    {sym:'^GSPC',name:'S&P 500',region:'US',price:7500.58,chg:1.08},
+    {sym:'^IXIC',name:'Nasdaq',region:'US',price:26517.93,chg:1.91},
+    {sym:'^DJI',name:'Dow Jones',region:'US',price:51564.70,chg:0.14},
+    {sym:'^GDAXI',name:'DAX',region:'DE',price:24947.15,chg:-0.15},
+    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8384.73,chg:-0.43},
+    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6294.72,chg:0.03},
+    {sym:'^N225',name:'Nikkei 225',region:'JP',price:72353.96,chg:1.55},
+    {sym:'^HSI',name:'Hang Seng',region:'HK',price:23768.52,chg:-0.65},
+    {sym:'^VIX',name:'VIX',region:'Vol',price:17.47,chg:4.11}
+  ]
+};
+function renderIndices(){
+  const el=document.getElementById('indices-body'); if(!el||typeof INDICES_DATA==='undefined')return;
+  const it=INDICES_DATA.items;
+  const bg=c=>{const x=Math.max(-2,Math.min(2,c))/2; return x>=0?'rgba(22,163,74,'+(0.10+0.55*x).toFixed(2)+')':'rgba(239,68,68,'+(0.10+0.55*(-x)).toFixed(2)+')';};
+  const tc=c=>c>=0?'#15803d':'#b91c1c';
+  const fmt=p=>p.toLocaleString('en-GB',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const tiles=it.map(x=>'<div style="background:'+bg(x.chg)+';border:1px solid rgba(15,23,42,.06);border-radius:10px;padding:9px 11px;min-width:118px;flex:1 1 118px;">'+
+      '<div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;display:flex;justify-content:space-between;gap:4px;"><span style="font-weight:700;">'+x.name+'</span><span style="opacity:.65;">'+x.region+'</span></div>'+
+      '<div style="font-size:19px;font-weight:800;color:'+tc(x.chg)+';line-height:1.15;margin:3px 0 1px;">'+(x.chg>=0?'▲':'▼')+' '+Math.abs(x.chg).toFixed(2)+'%</div>'+
+      '<div style="font-size:11px;color:#475569;font-weight:600;">'+fmt(x.price)+'</div>'+
+    '</div>').join('');
+  const sorted=[...it].filter(x=>x.sym!=='^VIX').sort((a,b)=>b.chg-a.chg);
+  const mxa=Math.max(0.5,...sorted.map(x=>Math.abs(x.chg)));
+  const bars=sorted.map(x=>{const w=(Math.abs(x.chg)/mxa*48).toFixed(1),up=x.chg>=0;return '<div style="display:flex;align-items:center;height:19px;font-size:10px;">'+
+      '<span style="width:88px;text-align:right;padding-right:7px;color:#64748b;flex-shrink:0;">'+x.name+'</span>'+
+      '<div style="flex:1;position:relative;height:12px;">'+
+        '<div style="position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:#cbd5e1;"></div>'+
+        (up?'<div style="position:absolute;left:50%;width:'+w+'%;height:100%;background:#16a34a;border-radius:0 3px 3px 0;"></div>'
+           :'<div style="position:absolute;right:50%;width:'+w+'%;height:100%;background:#ef4444;border-radius:3px 0 0 3px;"></div>')+
+      '</div>'+
+      '<span style="width:50px;text-align:right;font-weight:700;color:'+tc(x.chg)+';">'+(up?'+':'')+x.chg.toFixed(2)+'%</span>'+
+    '</div>';}).join('');
+  el.innerHTML=
+    '<div style="background:linear-gradient(135deg,#0d2137,#0f766e);color:#e2e8f0;border-radius:10px;padding:10px 13px;margin-bottom:11px;font-size:11.5px;line-height:1.55;">⚡ <strong style="color:#5eead4;">Market pulse:</strong> '+INDICES_DATA.pulse+'</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px;">'+tiles+'</div>'+
+    '<div style="font-size:10px;color:#94a3b8;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">24-hour moves — ranked (best → worst)</div>'+bars+
+    '<div class="tfoot" style="margin-top:9px;">Live index levels &amp; 24h change · Yahoo Finance · '+new Date(INDICES_DATA.asOf).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'. Tile colour = size of the move; VIX is the volatility gauge (rising = more market fear).</div>';
+}
 const MACRO_DATA={asOf:"2026-06-21",rows:[
   {l:"BoE base rate",v:"3.75%",sub:"held at 17 Jun MPC (7–2; two voted +25bp) — markets price ~1 hike by year-end",dir:0},
   {l:"CPI inflation (May)",v:"2.8%",sub:"unchanged from Apr; BoE sees a little over 3¼% by Q4 on energy",dir:0},
@@ -3066,6 +3125,7 @@ async function loadAll(){
   try{renderNews();}catch(e){console.error('[loadAll] news:',e.message);}
   try{renderFableTake();}catch(e){console.error('[loadAll] fable take:',e.message);}
   try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
+  try{renderIndices();}catch(e){console.error('[loadAll] indices:',e.message);}
   try{renderFwdCarbon();}catch(e){console.error('[loadAll] fwd/carbon:',e.message);}
   try{renderLocalWeather();}catch(e){console.error('[loadAll] local weather:',e.message);}
   try{renderPRPanel();}catch(e){console.error('[loadAll] PR panel:',e.message);}
