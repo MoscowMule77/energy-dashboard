@@ -2802,56 +2802,64 @@ function renderLocalWeather(){
 //  Keys live in the LOCAL copy only; build-share.py blanks them for the public
 //  page (where COWORK is false anyway, so it just keeps the baked AWN_DATA).
 const AWN_CFG={appKey:"",apiKey:"",mac:"48:E7:29:5F:98:91"}; // LOCAL ONLY — stripped from publish (rotated 22 Jun)
-function _awnJs(){
-  const mac=encodeURIComponent(AWN_CFG.mac);
-  return `(async()=>{
-    const APP=${JSON.stringify(AWN_CFG.appKey)},API=${JSON.stringify(AWN_CFG.apiKey)},MAC=${JSON.stringify(mac)};
-    if(!APP||!API)throw new Error('AWN keys not present');
-    const B='https://api.ambientweather.net/v1/devices';
-    const dev=await fetch(B+'?applicationKey='+APP+'&apiKey='+API).then(r=>r.json());
-    const d0=(dev&&dev[0])||{},ld=d0.lastData||{},info=d0.info||{};
-    await new Promise(r=>setTimeout(r,1300));
-    const hist=await fetch(B+'/'+MAC+'?applicationKey='+APP+'&apiKey='+API+'&limit=200').then(r=>r.json());
-    const tl=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/London'}));
-    const today=tl.getFullYear()+'-'+String(tl.getMonth()+1).padStart(2,'0')+'-'+String(tl.getDate()).padStart(2,'0');
-    const byH={},all=[];
-    for(const p of (hist||[])){const lo=new Date(new Date(p.dateutc).toLocaleString('en-US',{timeZone:'Europe/London'}));const ds=lo.getFullYear()+'-'+String(lo.getMonth()+1).padStart(2,'0')+'-'+String(lo.getDate()).padStart(2,'0');if(ds!==today)continue;const h=lo.getHours();(byH[h]=byH[h]||[]).push(p.solarradiation||0);all.push(p.solarradiation||0);}
-    const hourly=[];for(let h=0;h<24;h++){const a=byH[h];hourly[h]=a&&a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length):0;}
-    const mj=+((all.reduce((s,v)=>s+v,0)*300/1e6).toFixed(2)),ins=+(mj/3.6).toFixed(2);
-    const f2c=f=>f==null?null:+(((f-32)/1.8).toFixed(1));
-    const DIR=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-    const wd=ld.winddir!=null?DIR[Math.round(ld.winddir/22.5)%16]:'—';
-    const tref=ld.dateutc||Date.now();
-    return JSON.stringify({
-      station:info.name||'GX Weather Station',
-      loc:(info.coords&&info.coords.location)||'Gerrards Cross (SL9 8AY)',
-      lat:+(((info.coords&&info.coords.coords&&info.coords.coords.lat)||51.58)).toFixed(2),
-      asOf:new Date(tref).toISOString(),
-      localTime:new Date(tref).toLocaleString('en-GB',{timeZone:'Europe/London',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' BST',
-      current:{tempC:f2c(ld.tempf),feelsC:f2c(ld.feelsLike),humidity:ld.humidity!=null?ld.humidity:0,windMph:+(+(ld.windspeedmph||0)).toFixed(1),gustMph:+(+(ld.windgustmph||0)).toFixed(1),maxGustMph:Math.round(ld.maxdailygust||0),windDir:wd,rainTodayMm:+(((ld.dailyrainin||0)*25.4).toFixed(1)),pressInHg:+(+(ld.baromrelin||0)).toFixed(2),uv:ld.uv!=null?ld.uv:0,solarWm2:Math.round(ld.solarradiation||0),indoorC:f2c(ld.tempinf)},
-      solar:{insolation_kwh_m2:ins,peakWm2:Math.round(Math.max(0,...all,0)),mj_so_far:mj,hourly:hourly},
-      perf:{refPR:0.90,sysKwp:13.44,expectedKwhSoFar:+((ins*13.44*0.90).toFixed(1)),actualKwh:null,realizedPR:null}
-    });
-  })()`;
+// AW Net request URLs (direct) and a raw-fetch IIFE (Chrome bridge) — both return {dev,hist}; one shared parser.
+function _awnUrls(){ const B='https://api.ambientweather.net/v1/devices', q='?applicationKey='+AWN_CFG.appKey+'&apiKey='+AWN_CFG.apiKey; return {dev:B+q, hist:B+'/'+encodeURIComponent(AWN_CFG.mac)+q+'&limit=200'}; }
+function _awnFetchJs(){
+  const u=_awnUrls();
+  return `(async()=>{const dev=await fetch(${JSON.stringify(u.dev)}).then(r=>r.json());await new Promise(r=>setTimeout(r,1300));const hist=await fetch(${JSON.stringify(u.hist)}).then(r=>r.json());return JSON.stringify({dev,hist});})()`;
+}
+// Parse the raw AW Net device + history responses into the AWN_DATA shape (used by BOTH the direct and Chrome paths).
+function _awnParse(dev,hist){
+  const d0=(dev&&dev[0])||{},ld=d0.lastData||{},info=d0.info||{};
+  const tl=new Date(new Date().toLocaleString('en-US',{timeZone:'Europe/London'}));
+  const today=tl.getFullYear()+'-'+String(tl.getMonth()+1).padStart(2,'0')+'-'+String(tl.getDate()).padStart(2,'0');
+  const byH={},all=[];
+  for(const p of (hist||[])){const lo=new Date(new Date(p.dateutc).toLocaleString('en-US',{timeZone:'Europe/London'}));const ds=lo.getFullYear()+'-'+String(lo.getMonth()+1).padStart(2,'0')+'-'+String(lo.getDate()).padStart(2,'0');if(ds!==today)continue;const h=lo.getHours();(byH[h]=byH[h]||[]).push(p.solarradiation||0);all.push(p.solarradiation||0);}
+  const hourly=[];for(let h=0;h<24;h++){const a=byH[h];hourly[h]=a&&a.length?Math.round(a.reduce((s,v)=>s+v,0)/a.length):0;}
+  const mj=+((all.reduce((s,v)=>s+v,0)*300/1e6).toFixed(2)),ins=+(mj/3.6).toFixed(2);
+  const f2c=f=>f==null?null:+(((f-32)/1.8).toFixed(1));
+  const DIR=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+  const wd=ld.winddir!=null?DIR[Math.round(ld.winddir/22.5)%16]:'—';
+  const tref=ld.dateutc||Date.now();
+  return {
+    station:info.name||'GX Weather Station',
+    loc:(info.coords&&info.coords.location)||'Gerrards Cross (SL9 8AY)',
+    lat:+(((info.coords&&info.coords.coords&&info.coords.coords.lat)||51.58)).toFixed(2),
+    asOf:new Date(tref).toISOString(),
+    localTime:new Date(tref).toLocaleString('en-GB',{timeZone:'Europe/London',day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' BST',
+    current:{tempC:f2c(ld.tempf),feelsC:f2c(ld.feelsLike),humidity:ld.humidity!=null?ld.humidity:0,windMph:+(+(ld.windspeedmph||0)).toFixed(1),gustMph:+(+(ld.windgustmph||0)).toFixed(1),maxGustMph:Math.round(ld.maxdailygust||0),windDir:wd,rainTodayMm:+(((ld.dailyrainin||0)*25.4).toFixed(1)),pressInHg:+(+(ld.baromrelin||0)).toFixed(2),uv:ld.uv!=null?ld.uv:0,solarWm2:Math.round(ld.solarradiation||0),indoorC:f2c(ld.tempinf)},
+    solar:{insolation_kwh_m2:ins,peakWm2:Math.round(Math.max(0,...all,0)),mj_so_far:mj,hourly:hourly},
+    perf:{refPR:0.90,sysKwp:13.44,expectedKwhSoFar:+((ins*13.44*0.90).toFixed(1)),actualKwh:null,realizedPR:null}
+  };
 }
 async function fetchAWNLive(){
-  if(typeof AWN_CFG==='undefined'||!AWN_CFG.apiKey) return;   // keys stripped (public build)
-  if(!COWORK) return;                                         // needs the Chrome bridge
+  if(typeof AWN_CFG==='undefined'||!AWN_CFG.apiKey) return;   // keys stripped (public build) — keep baked
   const ts=document.getElementById('ts-awn'); if(ts){ts.className='ts';ts.textContent='AW Net · fetching…';}
+  let parsed=null, via='direct';
+  // Tier 1 — direct fetch (AW Net API is CORS-open; no Chrome bridge needed)
   try{
-    const tabId=await _getExecutableTab();
-    const raw=await window.cowork.callMcpTool('mcp__Claude_in_Chrome__javascript_tool',{action:'javascript_exec',tabId,text:_awnJs()});
-    const parsed=_mcpJson(raw);
-    if(!parsed||!parsed.current) throw new Error('no station data');
+    const u=_awnUrls();
+    const dev=await fetch(u.dev).then(r=>r.json());
+    await new Promise(r=>setTimeout(r,1300));
+    const hist=await fetch(u.hist).then(r=>r.json());
+    parsed=_awnParse(dev,hist);
+  }catch(e){ /* blocked by CSP/network — fall through to the Chrome bridge */ }
+  // Tier 2 — Chrome bridge fallback (Cowork only)
+  if((!parsed||!parsed.current) && COWORK){
+    via='chrome';
+    try{
+      const tabId=await _getExecutableTab();
+      const raw=await window.cowork.callMcpTool('mcp__Claude_in_Chrome__javascript_tool',{action:'javascript_exec',tabId,text:_awnFetchJs()});
+      const rj=_mcpJson(raw); parsed=_awnParse(rj.dev,rj.hist);
+    }catch(e){ console.warn('[awn] chrome:',e.message); }
+  }
+  if(parsed && parsed.current){
     const c=parsed.current,s=parsed.solar;
     parsed.summary='On-site now: '+c.tempC+'°C (feels '+c.feelsC+'°), '+c.windDir+' wind '+c.windMph+' mph, humidity '+c.humidity+'%, UV '+c.uv+'. Solar '+c.solarWm2+' W/m² · peak today '+s.peakWm2+' · '+s.insolation_kwh_m2+' kWh/m² collected.';
     Object.assign(AWN_DATA,parsed);
     renderLocalWeather();
-    if(ts){ts.className='ts live';ts.textContent='Live · '+c.solarWm2+' W/m² · '+fmtTime(new Date());}
-  }catch(e){
-    console.warn('[awn] live fetch:',e.message);
-    if(ts){ts.className='ts comp';ts.textContent='AW Net · baked (open Chrome, then Refresh)';}
-  }
+    if(ts){ts.className='ts live';ts.textContent='Live · '+c.solarWm2+' W/m² · '+fmtTime(new Date())+(via==='chrome'?' (Chrome)':'');}
+  } else if(ts){ ts.className='ts comp'; ts.textContent='AW Net · baked (live fetch unavailable)'; }
 }
 // ═══════════════════════════════════════════════
 //  DAILY PERFORMANCE RATIO + ENERGY BY SOURCE
