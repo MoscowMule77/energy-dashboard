@@ -829,7 +829,7 @@ const FUEL_ORDER = ['wind','solar','nuclear','gas','biomass','imports','hydro','
 // ═══════════════════════════════════════════════
 //  IRRADIATION CALCULATION
 //  Aiko 480Wp · 28 panels · 13.44 kWp system (was 11 kWp / 23 panels)
-//  Performance ratio: 0.80
+//  Performance ratio: 0.90 (see PERF_RATIO)
 //  Daily/now totals: expected = irr × SYSTEM_KWP × PR (flat-plate approximation)
 //  (kWp is already normalised to 1 kW/m² STC — no need to multiply by panel area)
 //  Intraday curve uses the orientation-aware model below (expectedKwOrientation),
@@ -1006,6 +1006,9 @@ function renderCurrentMix(mix, intensity) {
 //          first, and parses MCP results with trailing Tab Context text.
 // ═══════════════════════════════════════════════
 
+// Europe/London calendar-day key (YYYY-MM-DD) — used so "today" matches the
+// local day everywhere (weather is fetched in Europe/London; UTC drifts at night).
+function _londonDayKey(d){const lo=new Date(d.toLocaleString('en-US',{timeZone:'Europe/London'}));return lo.getFullYear()+'-'+String(lo.getMonth()+1).padStart(2,'0')+'-'+String(lo.getDate()).padStart(2,'0');}
 function _buildDaysList() {
   const today = new Date();
   const days = [];
@@ -1013,14 +1016,14 @@ function _buildDaysList() {
     const d = new Date(today); d.setDate(d.getDate()-i);
     days.push(d.toISOString().split('T')[0]);
   }
-  return {today, todayStr: today.toISOString().split('T')[0], days};
+  return {today, todayStr: _londonDayKey(today), days};
 }
 
 function _processRawGridData(today, todayStr, weatherRes, currentGen, intensityRes, dailyGen) {
   let currentMix={};
-  try{currentGen.data.generationmix.forEach(({fuel,perc})=>currentMix[fuel]=perc);}catch(e){}
+  try{currentGen.data.generationmix.forEach(({fuel,perc})=>currentMix[fuel]=perc);}catch(e){console.warn('[grid] currentMix parse:',e.message);}
   let carbonIntensity=null;
-  try{const id=intensityRes.data[0].intensity;carbonIntensity=id.actual!=null?id.actual:id.forecast;}catch(e){}
+  try{const id=intensityRes.data[0].intensity;carbonIntensity=id.actual!=null?id.actual:id.forecast;}catch(e){console.warn('[grid] carbonIntensity parse:',e.message);}
   let hourlyIrr=[],hourlyDirect=[],irrStartHour=0,currentIrr=null,currentDirect=null,currentDiffuse=null;
   try{
     const times=weatherRes.hourly?.time||[];
@@ -1034,7 +1037,7 @@ function _processRawGridData(today, todayStr, weatherRes, currentGen, intensityR
       const ci2=idxs.find(idx=>parseInt(times[idx].split('T')[1])===nowH);
       if(ci2!==undefined){currentIrr=weatherRes.hourly.shortwave_radiation[ci2];currentDirect=weatherRes.hourly.direct_radiation[ci2];currentDiffuse=weatherRes.hourly.diffuse_radiation[ci2];}
     }
-  }catch(e){}
+  }catch(e){console.warn('[grid] hourly irradiance parse:',e.message);}
   return {weather:weatherRes.daily,daily:dailyGen,currentMix,carbonIntensity,todayStr,hourlyIrr,hourlyDirect,irrStartHour,currentIrr,currentDirect,currentDiffuse,fetchedAt:new Date().toISOString()};
 }
 
@@ -1258,10 +1261,6 @@ function showGridError(msg) {
 let chartMix = null, chartIrr = null;
 
 function switchGenTab(name) {
-  document.querySelectorAll('.tab-bar:first-of-type .tab').forEach((t,i)=>{
-    // find the gen tab bar specifically
-  });
-  // Find the gen section tabs
   const bar = document.querySelector('#tp-mix').closest('.card').querySelectorAll('.tab');
   bar.forEach((t,i)=>t.classList.toggle('active',['mix','irr'][i]===name));
   document.getElementById('tp-mix').classList.toggle('active', name==='mix');
@@ -2026,15 +2025,6 @@ function renderShares() {
 // ═══════════════════════════════════════════════
 //  REFRESH SHARE PRICES
 // ═══════════════════════════════════════════════
-function parsePrices(text) {
-  const all=[...PRICES.rit.map(s=>({obj:s,yt:s.yt})),...PRICES.ukUtil.map((s,i)=>({obj:s,yt:['SSE.L','NG.L','CNA.L'][i]})),...PRICES.euUtil.map((s,i)=>({obj:s,yt:['IBE.MC','RWE.DE','EOAN.DE','ENEL.MI','ENGI.PA'][i]}))];
-  let matched=0;
-  const updated=JSON.parse(JSON.stringify(PRICES));
-  const allU=[...updated.rit.map(s=>({obj:s,yt:s.yt})),...updated.ukUtil.map((s,i)=>({obj:s,yt:['SSE.L','NG.L','CNA.L'][i]})),...updated.euUtil.map((s,i)=>({obj:s,yt:['IBE.MC','RWE.DE','EOAN.DE','ENEL.MI','ENGI.PA'][i]}))];
-  for(const{obj,yt}of allU){const esc=yt.replace(/\./g,'\\.').replace(/-/g,'\\-');const re=new RegExp(esc+'[\\s\\S]{0,10}?([\\d,]+\\.\\d{1,2})\\s+[+-]?[\\d,.]+\\s+([+-]?[\\d.]+)%');const m=text.match(re);if(m){const p=parseFloat(m[1].replace(',',''));const c=parseFloat(m[2]);if(p>0&&!isNaN(p)){obj.price=p;obj.chgPct=c;matched++;}}}
-  return{updated,matched};
-}
-
 async function refreshPrices() {
   // Yahoo Finance v7 JSON API — CORS-enabled from any origin including Cowork artifacts
   const btn=document.getElementById('prices-btn');
@@ -2092,7 +2082,7 @@ function estimateSoc(d){
   const m=d.getMonth()+1,h=d.getHours()+d.getMinutes()/60,isSummer=m>=5&&m<=8,isWinter=m<=2||m>=11;
   if(isWinter){if(h<6)return Math.min(.95,.2+(h/6)*.75);return Math.max(.1,.95-.85*(h-6)/17);} // winter = overnight grid charging, unchanged
   const sw=_todaySw();
-  const pvKwh=sw!=null?13.44*(sw/3.6)*0.8:(isSummer?50:35); // 13.44kWp × kWh/m² × PR0.8
+  const pvKwh=sw!=null?SYSTEM_KWP*(sw/3.6)*PERF_RATIO:(isSummer?50:35); // kWp × kWh/m² × PR
   const peak=Math.min(isSummer?.98:.88, Math.max(.18,.05+(pvKwh*0.7)/54)); // ~70% of PV reaches battery after house load
   const base=.12, rise=5.5, full=isSummer?14:15;
   if(h<rise)return base;
@@ -2772,7 +2762,7 @@ const AWN_DATA={
   asOf:"2026-06-21T06:05:00Z", localTime:"21 Jun 2026, 07:05 BST",
   current:{tempC:20.2, feelsC:20.4, humidity:80, windMph:0.0, gustMph:0.0, maxGustMph:1, windDir:"SSE", rainTodayMm:0.0, pressInHg:30.32, uv:0, solarWm2:83, indoorC:23.5},
   solar:{insolation_kwh_m2:0.1, peakWm2:101, mj_so_far:0.35, hourly:[0,0,0,0,1,17,63,88,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-  perf:{refPR:0.80, sysKwp:13.44, expectedKwhSoFar:1.1, actualKwh:null, realizedPR:null},
+  perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:1.1, actualKwh:null, realizedPR:null},
   summary:"Warm, near-windless and humid start at Gerrards Cross — 20.2°C (feels 20.4°), almost calm SSE air, humidity 80%, high pressure 30.32 inHg. Solar is climbing through early haze to ~101 W/m² so far (~0.1 kWh/m² by 07:05); with a Met Office heat-health day pushing the low-30s, strong PV is expected once the murk burns off."
 };
 function renderLocalWeather(){
@@ -3137,7 +3127,7 @@ async function loadAll(){
     bc.innerHTML=`<div class="sec" style="color:${sig.color};border-color:${sig.border};">🔋 Battery Dispatch Signal <span id="ts-battery" class="ts comp">Computed ${fmtTime(now)}</span></div>
       <div class="sig-badge" style="background:${sig.color};">${sig.emoji} ${sig.label}</div>
       <div class="sig-detail" style="color:${sig.color};">
-        <strong>System:</strong> SigenStor 54 kWh · 13.44kWp Aiko 480Wp · 28 modules (11 S + 17 W)<br>
+        <strong>System:</strong> SigenStor 54 kWh · 13.44kWp Aiko 480Wp · 28 modules (11 S · 9 E · 8 W)<br>
         <strong>Season:</strong> ${sig.season}<br>
         <strong>Action:</strong> ${sig.rec}
       </div>`;
