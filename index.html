@@ -298,6 +298,18 @@ table.sh tr:hover td{background:#fafbfc;}
   <div class="fable-text" id="fable-text"></div>
 </div>
 
+<!-- ═══ PAGE TABS ═══ -->
+<style>
+.page-tab{font-size:13px;font-weight:700;padding:8px 16px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;color:#475569;cursor:pointer;transition:all .15s;}
+.page-tab:hover{border-color:#0f766e;color:#0f766e;}
+.page-tab.active{background:linear-gradient(135deg,#0d2137,#0f766e);color:#fff;border-color:#0d2137;box-shadow:0 2px 8px rgba(13,33,55,.18);}
+</style>
+<div id="page-tabs" style="display:flex;gap:7px;margin:6px 0 14px;flex-wrap:wrap;">
+  <button class="page-tab active" data-page="energy" onclick="switchPage('energy')">⚡ Energy &amp; Grid</button>
+  <button class="page-tab" data-page="markets" onclick="switchPage('markets')">🌍 Markets</button>
+  <button class="page-tab" data-page="news" onclick="switchPage('news')">📰 News</button>
+</div>
+
 <!-- ═══ UK GENERATION MIX + WEATHER + IRRADIATION ═══ -->
 <div class="row">
   <div class="card">
@@ -653,7 +665,7 @@ table.sh tr:hover td{background:#fafbfc;}
 </div>
 
 <!-- ═══ UK MACRO + GLOBAL COMMODITIES ═══ -->
-<div class="row">
+<div class="row page-markets">
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🏦 UK Macro Indicators</span><div class="sec-r"><span id="macro-asof" class="ts">–</span><a href="https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate" target="_blank">BoE ↗</a><a href="https://www.ons.gov.uk/economy/inflationandpriceindices" target="_blank">ONS ↗</a></div></div>
     <div id="macro-body"></div>
@@ -667,7 +679,7 @@ table.sh tr:hover td{background:#fafbfc;}
 </div>
 
 <!-- ═══ GLOBAL MARKETS HEATMAP — INDICES 24h ═══ -->
-<div class="row">
+<div class="row page-markets">
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
       <span>🌍 Global Markets — 24h Pulse</span>
@@ -711,7 +723,7 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
-<div class="news-section">
+<div class="news-section page-news">
   <h2>📰 Energy News — Policy · Tech · M&amp;A · Markets · AI <span id="news-status" onclick="fetchLiveNews()" title="Click to refresh headlines" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved headlines</span></h2>
   <div class="news-chips" id="news-chips"></div>
   <div class="news-grid" id="news-grid">
@@ -3021,6 +3033,23 @@ function renderIndices(){
     '<div style="font-size:10px;color:#94a3b8;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">24-hour moves — ranked (best → worst)</div>'+bars+
     '<div class="tfoot" style="margin-top:9px;">Live index levels &amp; 24h change · Yahoo Finance · '+new Date(INDICES_DATA.asOf).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'. Tile colour = size of the move; VIX is the volatility gauge (rising = more market fear).</div>';
 }
+// ═══ TOP-LEVEL PAGE TABS (Energy / Markets / News) ═══
+function switchPage(name){
+  try{document.querySelectorAll('.page-tab').forEach(b=>b.classList.toggle('active',b.dataset.page===name));}catch(e){}
+  const bar=document.getElementById('page-tabs'); if(!bar)return;
+  let el=bar.nextElementSibling;
+  while(el && !(el.classList&&el.classList.contains('footer'))){
+    if(el.classList&&(el.classList.contains('row')||el.classList.contains('news-section'))){
+      const p=el.classList.contains('page-markets')?'markets':(el.classList.contains('page-news')?'news':'energy');
+      el.style.display=(p===name)?'':'none';
+    }
+    el=el.nextElementSibling;
+  }
+  try{localStorage.setItem('dash_page',name);}catch(e){}
+  setTimeout(function(){ try{window.dispatchEvent(new Event('resize'));}catch(e){}
+    if(name==='energy'){['renderGridCharts','renderIrrChart','renderPowerMarkets','renderEnergyDays','renderDCTracker','renderLongTermForecast'].forEach(function(f){try{if(typeof window[f]==='function')window[f]();}catch(e){}});}
+  },50);
+}
 const MACRO_DATA={asOf:"2026-06-21",rows:[
   {l:"BoE base rate",v:"3.75%",sub:"held at 17 Jun MPC (7–2; two voted +25bp) — markets price ~1 hike by year-end",dir:0},
   {l:"CPI inflation (May)",v:"2.8%",sub:"unchanged from Apr; BoE sees a little over 3¼% by Q4 on energy",dir:0},
@@ -3126,6 +3155,7 @@ async function loadAll(){
   try{renderFableTake();}catch(e){console.error('[loadAll] fable take:',e.message);}
   try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
   try{renderIndices();}catch(e){console.error('[loadAll] indices:',e.message);}
+  try{switchPage((function(){try{return localStorage.getItem('dash_page')||'energy';}catch(e){return 'energy';}})());}catch(e){console.error('[loadAll] tabs:',e.message);}
   try{renderFwdCarbon();}catch(e){console.error('[loadAll] fwd/carbon:',e.message);}
   try{renderLocalWeather();}catch(e){console.error('[loadAll] local weather:',e.message);}
   try{renderPRPanel();}catch(e){console.error('[loadAll] PR panel:',e.message);}
