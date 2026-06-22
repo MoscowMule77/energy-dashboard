@@ -2759,11 +2759,11 @@ function renderDCTracker(){
 // ═══════════════════════════════════════════════
 const AWN_DATA={
   station:"GX Weather Station", loc:"Gerrards Cross, Bucks (SL9 8AY)", lat:51.58,
-  asOf:"2026-06-21T06:05:00Z", localTime:"21 Jun 2026, 07:05 BST",
-  current:{tempC:20.2, feelsC:20.4, humidity:80, windMph:0.0, gustMph:0.0, maxGustMph:1, windDir:"SSE", rainTodayMm:0.0, pressInHg:30.32, uv:0, solarWm2:83, indoorC:23.5},
-  solar:{insolation_kwh_m2:0.1, peakWm2:101, mj_so_far:0.35, hourly:[0,0,0,0,1,17,63,88,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-  perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:1.1, actualKwh:null, realizedPR:null},
-  summary:"Warm, near-windless and humid start at Gerrards Cross — 20.2°C (feels 20.4°), almost calm SSE air, humidity 80%, high pressure 30.32 inHg. Solar is climbing through early haze to ~101 W/m² so far (~0.1 kWh/m² by 07:05); with a Met Office heat-health day pushing the low-30s, strong PV is expected once the murk burns off."
+  asOf:"2026-06-22T12:40:00Z", localTime:"22 Jun 2026, 13:40 BST",
+  current:{tempC:30.4, feelsC:31.5, humidity:49, windMph:1.8, gustMph:1.8, maxGustMph:7, windDir:"E", rainTodayMm:0.0, pressInHg:30.35, uv:7, solarWm2:749, indoorC:30.5},
+  solar:{insolation_kwh_m2:3.47, peakWm2:759, mj_so_far:12.5, hourly:[0,0,0,0,1,21,74,132,305,447,586,670,733,752,0,0,0,0,0,0,0,0,0,0]},
+  perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:42, actualKwh:null, realizedPR:null},
+  summary:"Hot, sunny and near-still at Gerrards Cross — 30.4°C (feels 31.5°), light easterly air, humidity down to 49%, UV high at 7. Strong PV: irradiance peaked around 750 W/m² with ~3.5 kWh/m² banked by early afternoon, so the array should be running hard. A classic high-pressure summer day."
 };
 function renderLocalWeather(){
   const el=document.getElementById('awn-body'); if(!el||typeof AWN_DATA==='undefined')return;
