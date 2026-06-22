@@ -2,7 +2,7 @@
 {
   "name": "Energy Markets Dashboard",
   "schemaVersion": 1,
-  "description": "Daily energy markets dashboard for SigenStor 54kWh / 13.44kWp system (28 × 480Wp, 11 South + 17 West). Generates a battery dispatch signal (Solar Charging / Export Opportunity / Charge Overnight / Self-Consumption) based on today's date and season, shows indicative forward power and carbon prices, sector watchlist, and a live AI-generated market briefing covering UK renewable ITs, UK and European utilities, and UK BESS market.",
+  "description": "Daily energy markets dashboard for SigenStor 54kWh / 13.44kWp system (28 × 480Wp, 14 South + 6 East + 8 West). Generates a battery dispatch signal (Solar Charging / Export Opportunity / Charge Overnight / Self-Consumption) based on today's date and season, shows indicative forward power and carbon prices, sector watchlist, and a live AI-generated market briefing covering UK renewable ITs, UK and European utilities, and UK BESS market.",
   "mcpTools": [
     "mcp__Claude_in_Chrome__tabs_context_mcp",
     "mcp__Claude_in_Chrome__javascript_tool"
@@ -369,7 +369,7 @@ table.sh tr:hover td{background:#fafbfc;}
         <canvas id="chart-irr"></canvas>
       </div>
       <div class="tfoot" style="margin-top:8px;">
-        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 11 South + 17 West · 35° tilt · 51.5°N · PR 0.90 (Aiko ABC + Sigen 97% inverter, cool UK climate). Verify actual output in SigenStor app.
+        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 14 South + 6 East + 8 West (4 strings, per Sigen) · 35° tilt · 51.5°N · PR 0.90 (Aiko ABC + Sigen 97% inverter, cool UK climate). Verify actual output in SigenStor app.
         <br>Location: London (51.5°N, 0.1°W) — adjust for your actual site if needed.
       </div>
     </div>
@@ -441,6 +441,17 @@ table.sh tr:hover td{background:#fafbfc;}
     </div>
     <div style="height:210px;"><canvas id="chart-energy-days"></canvas></div>
     <div class="tfoot" style="margin-top:8px;">Daily energy supplied by <strong style="color:#f59e0b;">Solar</strong> (direct) / <strong style="color:#16a34a;">Battery</strong> (discharge) / <strong style="color:#94a3b8;">Grid import</strong>, from mySigen. Backfills toward 30 days as daily readings accumulate — or in one shot via the Sigen API.</div>
+  </div>
+</div>
+
+<!-- ═══ PER-STRING PV PERFORMANCE (Sigen) ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🔆 Per-String PV Performance — live (Sigen inverter)</span>
+      <div class="sec-r"><span class="ts live">Sigen OpenAPI</span></div>
+    </div>
+    <div id="strings-body"><div class="shimmer w75"></div><div class="shimmer w100"></div><div class="shimmer w50"></div></div>
   </div>
 </div>
 
@@ -805,13 +816,15 @@ const FUEL_ORDER = ['wind','solar','nuclear','gas','biomass','imports','hydro','
 // ═══════════════════════════════════════════════
 const SYSTEM_KWP = 13.44;          // 28 × Aiko 480Wp
 const PERF_RATIO = 0.90;   // system PR — Aiko Neostar ABC (24.5% eff, −0.26%/°C) + Sigen 10kW (97% Euro eff) in the cool UK climate ≈ 0.90
-// ── Array orientation (added Jun 2026) ──
-//   South-facing: 11 × 480Wp = 5.28 kWp   ·   West-facing: 17 × 480Wp = 8.16 kWp
-//   Tilt 35° (assumed UK pitch) · London 51.5°N.
+// ── Array orientation (corrected 21 Jun 2026 from Sigen per-string config) ──
+//   String 1: 9 South (4.32 kWp) · String 2: 5 South (2.40) · String 3: 6 East (2.88) · String 4: 8 West (3.84)
+//   → South 14 panels (6.72 kWp) · East 6 (2.88) · West 8 (3.84) = 28 × 480Wp = 13.44 kWp.
+//   Tilt 35° (assumed UK pitch) · London 51.5°N. (Was wrongly modelled as 11 South / 17 West.)
 const ARRAY_LAT = 51.5, ARRAY_TILT = 35;
 const SOLAR_ARRAYS = [
-  {name:'South', kwp:5.28, az:0},   // surface azimuth measured from south, +west
-  {name:'West',  kwp:8.16, az:90}
+  {name:'South', kwp:6.72, az:0},    // surface azimuth measured from south, +west
+  {name:'East',  kwp:2.88, az:-90},
+  {name:'West',  kwp:3.84, az:90}
 ];
 const _D2R = Math.PI/180;
 function _solarDecl(date){
@@ -893,12 +906,12 @@ const INITIAL_GRID_DATA = {
   currentIrr:110, currentDirect:50, currentDiffuse:60, // W/m² at ~07:05 BST (humid haze, ramping)
 };
 
-// Last confirmed reading from system (user-provided via mySigen → Device)
+// Last reading from the SigenStor — now live via the Sigen OpenAPI (inverter realtimeInfo → batSoc)
 const LAST_KNOWN_SOLAR = {
-  solarKw: 1.5,     // fallback only — live "solar now" comes from Open-Meteo / AW Net
-  soc: 0.052,       // user-confirmed 5.2% — 21 Jun 2026 ~07:55 BST (mySigen → Device → SOC)
-  ts: '2026-06-21T06:55:00.000Z',
-  source: 'User-confirmed (mySigen)'
+  solarKw: 3.56,    // live PV power (Sigen pVPower) — also overridden by Open-Meteo/AW Net intraday
+  soc: 0.055,       // LIVE 5.5% — 21 Jun 2026 ~08:14 BST (Sigen OpenAPI inverter realtimeInfo batSoc)
+  ts: '2026-06-21T07:14:00.000Z',
+  source: 'Live · Sigen OpenAPI'
 };
 let GRID_DATA = INITIAL_GRID_DATA;
 
@@ -2889,6 +2902,41 @@ function renderEnergyDays(){
         y:{stacked:true,grid:{color:'#f8fafc'},ticks:{font:{size:9},callback:v=>v+' kWh'},beginAtZero:true,title:{display:true,text:'Energy supplied by source (kWh/day)',font:{size:9}}}}}
   });
 }
+// ═══════════════════════════════════════════════
+//  PER-STRING PERFORMANCE — live V/I per PV string from the Sigen inverter.
+//  Normalised to W/panel so strings of different sizes/orientations compare fairly.
+// ═══════════════════════════════════════════════
+const STRING_DATA={ asOf:"2026-06-21T07:14:00.000Z", ghiWm2:325,
+  note:"Strings 1 & 2 are both South, yet String 2 is making only ~46 W/panel versus String 1's ~311 — a big gap on identical orientation, worth checking for shading or soiling on the 5-panel south string. East/West read low simply because the morning sun hasn't swung onto them yet.",
+  strings:[
+    {id:1,panels:9,orient:'South',kwp:4.32,powerKw:2.80,v:363.5,a:7.7},
+    {id:2,panels:5,orient:'South',kwp:2.40,powerKw:0.23,v:193.6,a:1.16},
+    {id:3,panels:6,orient:'East', kwp:2.88,powerKw:0.30,v:257.2,a:1.16},
+    {id:4,panels:8,orient:'West', kwp:3.84,powerKw:0.11,v:95.5, a:1.11}
+  ]
+};
+function renderStrings(){
+  const el=document.getElementById('strings-body'); if(!el||typeof STRING_DATA==='undefined')return;
+  const ss=STRING_DATA.strings;
+  const oc={South:'#f59e0b',East:'#fbbf24',West:'#fb923c'};
+  ss.forEach(s=>{s.perPanelW=Math.round(s.powerKw*1000/s.panels); s.utilPct=Math.round(s.powerKw/s.kwp*100);});
+  const best=Math.max(...ss.map(s=>s.perPanelW),1);
+  const southMax=Math.max(...ss.filter(s=>s.orient==='South').map(s=>s.perPanelW),1);
+  const rows=ss.map(s=>{
+    const rel=Math.round(s.perPanelW/best*100);
+    const flag=s.orient==='South' && s.perPanelW < southMax*0.6;
+    return '<div style="margin-bottom:9px;">'+
+      '<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:2px;color:#334155;">'+
+        '<span><strong>String '+s.id+'</strong> · '+s.panels+'×'+s.orient+(flag?' <span style="color:#ef4444;font-weight:700;">⚠ low</span>':'')+'</span>'+
+        '<span style="font-weight:700;">'+s.powerKw.toFixed(2)+' kW · '+s.perPanelW+' W/panel · '+s.utilPct+'%</span>'+
+      '</div>'+
+      '<div style="height:14px;background:#f1f5f9;border-radius:7px;overflow:hidden;"><div style="width:'+Math.min(100,rel)+'%;height:100%;background:'+(flag?'#ef4444':oc[s.orient])+';border-radius:7px;"></div></div>'+
+    '</div>';
+  }).join('');
+  el.innerHTML=rows+
+    '<div style="font-size:11px;color:#475569;background:#f8fafc;border-radius:8px;padding:8px 10px;line-height:1.5;margin-top:8px;">Bars are each string’s output <strong>per panel</strong> (W/panel), so size and orientation are normalised out. '+STRING_DATA.note+'</div>'+
+    '<div class="tfoot" style="margin-top:6px;">Live per-string V/I from the Sigen inverter · snapshot '+new Date(STRING_DATA.asOf).toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'})+'. A string lagging others of the same orientation points to shading, soiling or a fault — most diagnostic at midday.</div>';
+}
 const MACRO_DATA={asOf:"2026-06-21",rows:[
   {l:"BoE base rate",v:"3.75%",sub:"held at 17 Jun MPC (7–2; two voted +25bp) — markets price ~1 hike by year-end",dir:0},
   {l:"CPI inflation (May)",v:"2.8%",sub:"unchanged from Apr; BoE sees a little over 3¼% by Q4 on energy",dir:0},
@@ -2997,6 +3045,7 @@ async function loadAll(){
   try{renderLocalWeather();}catch(e){console.error('[loadAll] local weather:',e.message);}
   try{renderPRPanel();}catch(e){console.error('[loadAll] PR panel:',e.message);}
   try{renderEnergyDays();}catch(e){console.error('[loadAll] energy days:',e.message);}
+  try{renderStrings();}catch(e){console.error('[loadAll] strings:',e.message);}
   fetchLiveFx();
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
