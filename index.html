@@ -2801,7 +2801,7 @@ function renderLocalWeather(){
 // ── AW Net live refresh (Cowork + Chrome only) ─────────────────────────────
 //  Keys live in the LOCAL copy only; build-share.py blanks them for the public
 //  page (where COWORK is false anyway, so it just keeps the baked AWN_DATA).
-const AWN_CFG={appKey:"",apiKey:"",mac:"48:E7:29:5F:98:91"}; // LOCAL ONLY — stripped from publish
+const AWN_CFG={appKey:"",apiKey:"",mac:"48:E7:29:5F:98:91"}; // LOCAL ONLY — stripped from publish (rotated 22 Jun)
 function _awnJs(){
   const mac=encodeURIComponent(AWN_CFG.mac);
   return `(async()=>{
