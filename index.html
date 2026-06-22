@@ -2802,6 +2802,7 @@ function renderLocalWeather(){
 //  Keys live in the LOCAL copy only; build-share.py blanks them for the public
 //  page (where COWORK is false anyway, so it just keeps the baked AWN_DATA).
 const AWN_CFG={appKey:"",apiKey:"",mac:"48:E7:29:5F:98:91"}; // LOCAL ONLY — stripped from publish (rotated 22 Jun)
+const WEATHER_PROXY_URL="";   // OPTIONAL: set to your Cloudflare worker's /weather route → fetches AW Net with NO key in the page (works on the public copy too). e.g. "https://ask-ai-worker.<acct>.workers.dev/weather"
 // AW Net request URLs (direct) and a raw-fetch IIFE (Chrome bridge) — both return {dev,hist}; one shared parser.
 function _awnUrls(){ const B='https://api.ambientweather.net/v1/devices', q='?applicationKey='+AWN_CFG.appKey+'&apiKey='+AWN_CFG.apiKey; return {dev:B+q, hist:B+'/'+encodeURIComponent(AWN_CFG.mac)+q+'&limit=200'}; }
 function _awnFetchJs(){
@@ -2833,17 +2834,23 @@ function _awnParse(dev,hist){
   };
 }
 async function fetchAWNLive(){
-  if(typeof AWN_CFG==='undefined'||!AWN_CFG.apiKey) return;   // keys stripped (public build) — keep baked
+  if(typeof AWN_CFG==='undefined') return;
   const ts=document.getElementById('ts-awn'); if(ts){ts.className='ts';ts.textContent='AW Net · fetching…';}
-  let parsed=null, via='direct';
-  // Tier 1 — direct fetch (AW Net API is CORS-open; no Chrome bridge needed)
-  try{
-    const u=_awnUrls();
-    const dev=await fetch(u.dev).then(r=>r.json());
-    await new Promise(r=>setTimeout(r,1300));
-    const hist=await fetch(u.hist).then(r=>r.json());
-    parsed=_awnParse(dev,hist);
-  }catch(e){ /* blocked by CSP/network — fall through to the Chrome bridge */ }
+  let parsed=null, via='';
+  // Tier 0 — worker proxy (no key in the page; works everywhere, incl. the public copy)
+  if(typeof WEATHER_PROXY_URL!=='undefined' && WEATHER_PROXY_URL){
+    try{ const j=await fetch(WEATHER_PROXY_URL).then(r=>r.json()); if(j&&j.dev){ parsed=_awnParse(j.dev,j.hist); via='worker'; } }catch(e){}
+  }
+  // Tier 1 — direct fetch (AW Net API is CORS-open; needs the local key)
+  if((!parsed||!parsed.current) && AWN_CFG.apiKey){
+    try{
+      const u=_awnUrls();
+      const dev=await fetch(u.dev).then(r=>r.json());
+      await new Promise(r=>setTimeout(r,1300));
+      const hist=await fetch(u.hist).then(r=>r.json());
+      parsed=_awnParse(dev,hist); via='direct';
+    }catch(e){ /* blocked by CSP/network — fall through to the Chrome bridge */ }
+  }
   // Tier 2 — Chrome bridge fallback (Cowork only)
   if((!parsed||!parsed.current) && COWORK){
     via='chrome';
