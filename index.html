@@ -3058,11 +3058,11 @@ function renderEnergyDays(){
 //  Normalised to W/panel so strings of different sizes/orientations compare fairly.
 // ═══════════════════════════════════════════════
 const STRING_DATA={ asOf:"2026-06-24T13:22:00.000Z", ghiWm2:702,
-  note:"Orientation re-derived 24 Jun 2026 from two live snapshots (14:22 & 19:31 BST). String 1 hit 3.83 kW at 14:22 — right on the 8×480 W ceiling — so it is 8 panels and faces SOUTH (midday champion). String 2 was the clear evening leader (still 0.88 kW at 19:31 once the others had collapsed) → 6 panels WEST. String 3 ran strong midday then faded to near-zero by evening → 8 panels EAST (morning-biased). String 4 is chronically low with a depressed ~90 V string voltage — the textbook signature of a mismatched SPLIT string (3 South / 3 West) whose bypass diodes clamp the weaker-lit half; it will always trail and is the candidate for re-stringing. Faces ≈ 11 S / 8 E / 9 W = 28 panels. A dawn (08–10 BST) reading would lock down the E/S split on strings 1 & 3.",
+  note:"Orientation set to the owner's confirmed roof layout (24 Jun): String 1 = 9× EAST, String 2 = 5× WEST, String 3 = 8× SOUTH, String 4 = 6× SPLIT (3 South / 3 East). Live data backs two of these directly — String 2 was the clear evening leader (0.88 kW at 19:31, the West signature) and String 4 carries the depressed ~90 V string voltage of a mismatched split (bypass diodes clamping the weaker-lit half — it will always trail and is the prime re-stringing candidate). Per-panel voltages also fit the orientations (cool East highest V/panel, hot South lowest). Panel counts are estimated from string voltage (∝ panels in series) + the power ceiling, summing to 28 / 13.44 kWp. Caveat: String 1 peaked 3.83 kW at 14:22 then collapsed by evening — a South-like shape rather than the morning peak a due-East array gives — so a dawn (08–10 BST) snapshot is worth taking to confirm String 1's count and face. Faces ≈ 12 E / 11 S / 5 W.",
   strings:[
-    {id:1,panels:8,orient:'South',kwp:3.84,powerKw:3.83,v:336.6,a:11.39},
-    {id:2,panels:6,orient:'West', kwp:2.88,powerKw:2.15,v:179.9,a:11.95},
-    {id:3,panels:8,orient:'East', kwp:3.84,powerKw:2.90,v:243.2,a:11.91},
+    {id:1,panels:9,orient:'East', kwp:4.32,powerKw:3.83,v:336.6,a:11.39},
+    {id:2,panels:5,orient:'West', kwp:2.40,powerKw:2.15,v:179.9,a:11.95},
+    {id:3,panels:8,orient:'South',kwp:3.84,powerKw:2.90,v:243.2,a:11.91},
     {id:4,panels:6,orient:'Split',kwp:2.88,powerKw:1.07,v:89.8, a:11.93}
   ]
 };
