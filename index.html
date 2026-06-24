@@ -437,6 +437,17 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
+<!-- ═══ LOCALISED 7-DAY FORECAST + PV NOWCAST (bias-corrected to GX station) ═══ -->
+<div class="row">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🛰️ Localised 7-Day Forecast &amp; PV Nowcast — Gerrards Cross</span>
+      <div class="sec-r"><span id="ts-localf" class="ts comp">UKMO · bias-corrected</span><a href="https://open-meteo.com/" target="_blank">Open-Meteo ↗</a></div>
+    </div>
+    <div id="local-fcst-body"><div class="shimmer w75"></div><div class="shimmer w100"></div><div class="shimmer w50"></div></div>
+  </div>
+</div>
+
 <!-- ═══ DAILY PERFORMANCE RATIO + 30-DAY ENERGY BY SOURCE ═══ -->
 <div class="row col2">
   <div class="card">
@@ -2869,6 +2880,90 @@ async function fetchAWNLive(){
   } else if(ts){ ts.className='ts comp'; ts.textContent='AW Net · baked (live fetch unavailable)'; }
 }
 // ═══════════════════════════════════════════════
+//  LOCALISED 7-DAY FORECAST + PV NOWCAST
+//  Public model (UKMO via Open-Meteo, no key → live on open everywhere) bias-corrected
+//  to the on-site GX station using a 5-day calibration (19–24 Jun 2026):
+//    temp  +0.9°C  (site runs warmer in sun/low wind)
+//    wind  −5.6 mph (sheltered siting / sub-10m anemometer)
+//    press +2.7 hPa (station gauge offset)   humidity: unbiased, left as-is
+//  PV: day-ahead = yieldModel(10.9)×model insol (±8%); intraday on-site nowcast
+//  = yieldStation(12.6)×on-site insol (±1%) — the station tracks actual PV ~8× tighter
+//  than the models day-to-day, so once the day is logging we project from it.
+//  ghiScale 0.85 = on-site GHI ÷ model GHI (station reads ~15% low in absolute terms).
+// ═══════════════════════════════════════════════
+const LOCAL_CORR={
+  asOf:"2026-06-24",
+  basis:"5-day on-site calibration (19–24 Jun, heatwave regime); widens as more days log",
+  tempC:0.9, windMph:-5.6, pressHpa:2.7, humPct:0,
+  ghiScale:0.85, yieldModel:10.9, yieldStation:12.6,
+  modelLabel:"UK Met Office (Open-Meteo)"
+};
+const LOCALF_DATA={
+  asOf:"2026-06-24T13:30:00Z", live:false,
+  daily:{
+    time:["2026-06-24","2026-06-25","2026-06-26","2026-06-27","2026-06-28","2026-06-29","2026-06-30"],
+    tmax:[34.1,33.0,36.6,28.9,23.3,22.0,21.7],
+    tmin:[18.9,20.0,20.9,19.7,15.8,13.2,15.3],
+    code:[0,3,53,61,51,3,3],
+    swMJ:[28.04,27.89,28.83,24.12,22.10,25.47,19.31],
+    windMax:[8.9,14.3,11.4,8.7,13.9,9.6,8.3],
+    precip:[0,0,0.7,4.5,0.9,0,0],
+    sunSec:[56208,45268,55927,55024,53027,57162,39736]
+  }
+};
+function _localDayKey(d){ try{return new Date(d).toLocaleDateString('en-CA',{timeZone:'Europe/London'});}catch(e){return '';} }
+function renderLocalForecast(){
+  const el=document.getElementById('local-fcst-body'); if(!el||typeof LOCALF_DATA==='undefined')return;
+  const D=LOCALF_DATA.daily, C=LOCAL_CORR, n=D.time.length;
+  const todayKey=_localDayKey(new Date());
+  const cards=[];
+  for(let i=0;i<n;i++){
+    const dt=new Date(D.time[i]+'T12:00:00');
+    const isToday=D.time[i]===todayKey;
+    const lbl=isToday?'Today':dt.toLocaleDateString('en-GB',{weekday:'short'});
+    const tmax=Math.round(D.tmax[i]+C.tempC), tmin=Math.round(D.tmin[i]+C.tempC);
+    const wind=Math.max(0,Math.round(D.windMax[i]+C.windMph));
+    const wx=(typeof wxSymbol==='function')?wxSymbol(D.code[i]):{sym:'·'};
+    const pv=Math.round(C.yieldModel*(D.swMJ[i]/3.6));
+    const rain=D.precip[i]||0;
+    cards.push('<div style="flex:1 0 76px;text-align:center;background:'+(isToday?'#eff6ff':'#f8fafc')+';border:1px solid '+(isToday?'#bfdbfe':'#eef2f7')+';border-radius:10px;padding:8px 4px;">'+
+      '<div style="font-size:11px;font-weight:700;color:#334155;">'+lbl+'</div>'+
+      '<div style="font-size:22px;line-height:1.35;">'+wx.sym+'</div>'+
+      '<div style="font-size:12px;font-weight:700;color:#0f172a;">'+tmax+'°<span style="color:#94a3b8;font-weight:400;">/'+tmin+'°</span></div>'+
+      '<div style="font-size:9px;color:#64748b;margin-top:2px;">💨 '+wind+'</div>'+
+      (rain>=0.2?'<div style="font-size:9px;color:#0ea5e9;">🌧 '+rain.toFixed(1)+'mm</div>':'<div style="font-size:9px;color:#cbd5e1;">dry</div>')+
+      '<div style="font-size:11px;font-weight:700;color:#f59e0b;margin-top:3px;">☀ '+pv+'<span style="font-size:8px;color:#94a3b8;font-weight:400;">kWh</span></div>'+
+    '</div>');
+  }
+  const modelInsolToday=D.swMJ[0]/3.6, modelPVToday=Math.round(C.yieldModel*modelInsolToday);
+  let projLine='Day-ahead model estimate: <strong>~'+modelPVToday+' kWh</strong> (±8%).';
+  try{
+    if(typeof AWN_DATA!=='undefined' && AWN_DATA.solar && AWN_DATA.perf && _localDayKey(AWN_DATA.asOf)===todayKey){
+      const onsiteSoFar=AWN_DATA.solar.insolation_kwh_m2, onsiteFull=modelInsolToday*C.ghiScale;
+      const frac=Math.max(0.05,Math.min(1,onsiteSoFar/onsiteFull)), banked=AWN_DATA.perf.actualKwh;
+      if(banked!=null){
+        const proj=Math.round(banked/frac);
+        projLine='On-site nowcast (refined, ±1%): <strong>~'+proj+' kWh</strong> today — <strong>'+banked.toFixed(1)+' kWh</strong> banked, day ~'+Math.round(frac*100)+'% through its sun. <span style="color:#b45309;">Day-ahead model: ~'+modelPVToday+' kWh.</span>';
+      }
+    }
+  }catch(e){}
+  const nowcast='<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:9px 11px;margin-top:11px;font-size:11.5px;color:#92400e;line-height:1.5;">⚡ <strong>Today’s PV nowcast.</strong> '+projLine+'</div>';
+  el.innerHTML='<div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:2px;">'+cards.join('')+'</div>'+nowcast+
+    '<div class="tfoot" style="margin-top:8px;">7-day '+C.modelLabel+' forecast, <strong>bias-corrected to your GX station</strong>: temp '+(C.tempC>=0?'+':'')+C.tempC+'°C, wind '+C.windMph+' mph, humidity as-is (already unbiased). ☀ = expected daily PV (model yield '+C.yieldModel+'× on-site irradiance). '+C.basis+'.</div>';
+  const ts=document.getElementById('ts-localf');
+  if(ts){ if(LOCALF_DATA.live){ts.className='ts live';ts.textContent='Live · Open-Meteo · '+fmtTime(new Date());} else {ts.className='ts comp';ts.textContent='UKMO · baked';} }
+}
+async function fetchLocalForecast(){
+  try{
+    const u='https://api.open-meteo.com/v1/forecast?latitude=51.58&longitude=-0.55&daily=temperature_2m_max,temperature_2m_min,weather_code,shortwave_radiation_sum,wind_speed_10m_max,precipitation_sum,sunshine_duration&wind_speed_unit=mph&timezone=Europe%2FLondon&forecast_days=7';
+    const r=await fetch(u); if(!r.ok)throw new Error('http '+r.status);
+    const j=await r.json(); const d=j.daily; if(!d||!d.time)throw new Error('no daily');
+    LOCALF_DATA.daily={time:d.time,tmax:d.temperature_2m_max,tmin:d.temperature_2m_min,code:d.weather_code,swMJ:d.shortwave_radiation_sum,windMax:d.wind_speed_10m_max,precip:d.precipitation_sum,sunSec:d.sunshine_duration};
+    LOCALF_DATA.asOf=new Date().toISOString(); LOCALF_DATA.live=true;
+    renderLocalForecast();
+  }catch(e){ console.warn('[localf]',e.message); }
+}
+// ═══════════════════════════════════════════════
 //  DAILY PERFORMANCE RATIO + ENERGY BY SOURCE
 //  PR = actual PV (mySigen) ÷ (on-site insolation kWh/m² × SYSTEM_KWP).
 //  Expected @ reference PR 0.90 for comparison. History grows as daily
@@ -2963,18 +3058,18 @@ function renderEnergyDays(){
 //  Normalised to W/panel so strings of different sizes/orientations compare fairly.
 // ═══════════════════════════════════════════════
 const STRING_DATA={ asOf:"2026-06-24T13:22:00.000Z", ghiWm2:702,
-  note:"Early-afternoon heatwave snapshot (14:22 BST, just past solar noon). The two South strings read ~430 and ~483 W/panel — near-identical, as they should be — while the 9-panel East string is still strong at ~426 W/panel an hour past noon. The West string (134 W/panel) is the laggard for now but ramps through the late afternoon as the sun swings west. No fault indicated.",
+  note:"Orientation re-derived 24 Jun 2026 from two live snapshots (14:22 & 19:31 BST). String 1 hit 3.83 kW at 14:22 — right on the 8×480 W ceiling — so it is 8 panels and faces SOUTH (midday champion). String 2 was the clear evening leader (still 0.88 kW at 19:31 once the others had collapsed) → 6 panels WEST. String 3 ran strong midday then faded to near-zero by evening → 8 panels EAST (morning-biased). String 4 is chronically low with a depressed ~90 V string voltage — the textbook signature of a mismatched SPLIT string (3 South / 3 West) whose bypass diodes clamp the weaker-lit half; it will always trail and is the candidate for re-stringing. Faces ≈ 11 S / 8 E / 9 W = 28 panels. A dawn (08–10 BST) reading would lock down the E/S split on strings 1 & 3.",
   strings:[
-    {id:1,panels:9,orient:'East', kwp:4.32,powerKw:3.83,v:336.6,a:11.39},
-    {id:2,panels:5,orient:'South',kwp:2.40,powerKw:2.15,v:179.9,a:11.95},
-    {id:3,panels:6,orient:'South',kwp:2.88,powerKw:2.90,v:243.2,a:11.91},
-    {id:4,panels:8,orient:'West', kwp:3.84,powerKw:1.07,v:89.8, a:11.93}
+    {id:1,panels:8,orient:'South',kwp:3.84,powerKw:3.83,v:336.6,a:11.39},
+    {id:2,panels:6,orient:'West', kwp:2.88,powerKw:2.15,v:179.9,a:11.95},
+    {id:3,panels:8,orient:'East', kwp:3.84,powerKw:2.90,v:243.2,a:11.91},
+    {id:4,panels:6,orient:'Split',kwp:2.88,powerKw:1.07,v:89.8, a:11.93}
   ]
 };
 function renderStrings(){
   const el=document.getElementById('strings-body'); if(!el||typeof STRING_DATA==='undefined')return;
   const ss=STRING_DATA.strings;
-  const oc={South:'#f59e0b',East:'#fbbf24',West:'#fb923c'};
+  const oc={South:'#f59e0b',East:'#fbbf24',West:'#fb923c',Split:'#c084fc'};
   ss.forEach(s=>{s.perPanelW=Math.round(s.powerKw*1000/s.panels); s.utilPct=Math.round(s.powerKw/s.kwp*100);});
   const best=Math.max(...ss.map(s=>s.perPanelW),1);
   const southMax=Math.max(...ss.filter(s=>s.orient==='South').map(s=>s.perPanelW),1);
@@ -3169,6 +3264,7 @@ async function loadAll(){
   try{renderPRPanel();}catch(e){console.error('[loadAll] PR panel:',e.message);}
   try{renderEnergyDays();}catch(e){console.error('[loadAll] energy days:',e.message);}
   try{renderStrings();}catch(e){console.error('[loadAll] strings:',e.message);}
+  try{renderLocalForecast();}catch(e){console.error('[loadAll] local forecast:',e.message);}
   fetchLiveFx();
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
@@ -3217,6 +3313,9 @@ async function loadAll(){
 
   // 8b. Background: live power markets (GB via Elexon everywhere; DE/ES in Cowork)
   setTimeout(()=>fetchPowerMarkets().catch(e=>console.error('[loadAll] power markets:',e.message)), 1600);
+
+  // 8b2. Background: localised 7-day forecast (Open-Meteo UKMO, CORS-open → works everywhere)
+  setTimeout(()=>fetchLocalForecast().catch(e=>console.error('[loadAll] local forecast fetch:',e.message)), 1200);
 
   // 8c. GB 30-year outlook — guaranteed render, decoupled from the RAF chain
   setTimeout(()=>{try{renderLongTermForecast();}catch(e){console.error('[loadAll] LTF:',e.message);}}, 700);
