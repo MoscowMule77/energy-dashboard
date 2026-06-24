@@ -755,7 +755,7 @@ if (!COWORK) {
 //  DATA TIMESTAMPS
 // ═══════════════════════════════════════════════
 const DATA_TS = {
-  prices:   {ts:'2026-06-23T06:30:00', source:'Yahoo Finance / LSE / Investing.com (saved 22 Jun closes; live-refreshed on open)', isLive:true},
+  prices:   {ts:'2026-06-24T06:30:00', source:'Yahoo Finance / LSE / Investing.com (saved 23 Jun closes; live-refreshed on open)', isLive:true},
   grid:     {ts:null, source:'Carbon Intensity API + Open-Meteo', isLive:true},
   battery:  {ts:null, source:'Computed from date/time/season', isLive:true},
   solar:    {ts:null, source:'Computed from date/time/season', isLive:true},
@@ -899,34 +899,34 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 23 Jun 2026 — Met Office (London): heatwave building, hot & sunny, Red Extreme Heat Warning issued for Wed/Thu; today max ~30°C / min 16°C, clear skies, <5% rain
-    time:["2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-20","2026-06-21","2026-06-22","2026-06-23"],
-    temperature_2m_max:[27.0,28.0,28.0,29.0,26.0,31.0,31.0,30.0],
-    temperature_2m_min:[14.0,15.0,16.0,17.0,18.0,20.0,17.0,16.0],
-    weathercode:[2,1,1,0,2,2,1,1],
-    shortwave_radiation_sum:[26.0,27.0,27.0,29.0,23.0,27.0,28.0,29.0]
+    // Updated 24 Jun 2026 — Met Office (London): heatwave PEAK, hot & widely sunny, Red Extreme Heat Warning in force; today max ~38°C / min 19°C, clear skies, ~9h sunshine, <5% rain
+    time:["2026-06-17","2026-06-18","2026-06-19","2026-06-20","2026-06-21","2026-06-22","2026-06-23","2026-06-24"],
+    temperature_2m_max:[28.0,28.0,29.0,26.0,31.0,31.0,33.0,38.0],
+    temperature_2m_min:[15.0,16.0,17.0,18.0,20.0,17.0,16.0,19.0],
+    weathercode:[1,1,0,2,2,1,1,0],
+    shortwave_radiation_sum:[27.0,27.0,29.0,23.0,27.0,28.0,29.0,30.0]
   },
   daily:[
-    // Daily averages — energymix.uk (Elexon/NESO) past-day through 22 Jun; 23 Jun = live snapshot so far
-    {date:"2026-06-16",mix:{wind:20.0,solar:13.0,nuclear:10.5,gas:33.0,biomass:6.2,imports:15.0,hydro:1.0,coal:0,other:1.3},n:48},
+    // Daily averages — energymix.uk (Elexon/NESO) past-day through 23 Jun; 24 Jun = live snapshot so far
     {date:"2026-06-17",mix:{wind:24.0,solar:15.0,nuclear:10.5,gas:28.0,biomass:6.0,imports:14.5,hydro:1.0,coal:0,other:1.0},n:48},
     {date:"2026-06-18",mix:{wind:28.1,solar:17.2,nuclear:9.6,gas:29.2,biomass:5.7,imports:8.0,hydro:1.1,coal:0,other:1.1},n:48},
     {date:"2026-06-19",mix:{wind:30.0,solar:15.0,nuclear:10.5,gas:27.0,biomass:6.0,imports:9.5,hydro:1.0,coal:0,other:1.0},n:48},
     {date:"2026-06-20",mix:{wind:13.8,solar:19.4,nuclear:10.9,gas:31.7,biomass:6.0,imports:17.0,hydro:1.2,coal:0,other:0.0},n:48},
     {date:"2026-06-21",mix:{wind:12.0,solar:17.0,nuclear:14.0,gas:35.0,biomass:8.0,imports:12.0,hydro:1.0,coal:0,other:1.0},n:48},
     {date:"2026-06-22",mix:{wind:20.3,solar:17.3,nuclear:11.2,gas:37.6,biomass:6.4,imports:6.0,hydro:1.0,coal:0,other:0.2},n:48},
-    {date:"2026-06-23",mix:{wind:15.0,solar:18.0,nuclear:13.0,gas:36.0,biomass:7.0,imports:9.0,hydro:1.0,coal:0,other:1.0},n:20}
+    {date:"2026-06-23",mix:{wind:15.9,solar:16.9,nuclear:11.6,gas:44.9,biomass:5.9,imports:3.6,hydro:1.0,coal:0,other:0.2},n:48},
+    {date:"2026-06-24",mix:{wind:10.0,solar:15.0,nuclear:11.0,gas:44.0,biomass:5.5,imports:13.0,hydro:1.2,coal:0,other:0.3},n:20}
   ],
-  // Live snapshot 23 Jun 2026 ~07:10 BST — hot, sunny, low-wind heatwave morning: gas on the margin ~36%, solar ramping toward a strong midday peak, wind subdued; CI ~180g
-  currentMix:{wind:15.0,solar:18.0,nuclear:13.0,gas:36.0,biomass:7.0,imports:9.0,hydro:1.0,coal:0,other:1.0},
-  carbonIntensity:180,  // gCO₂/kWh — 23 Jun ~07:10 BST (low wind, gas firmly on the margin; falls as solar climbs)
-  todayStr:"2026-06-23",
-  fetchedAt:"2026-06-23T06:10:00.000Z",
-  // Hourly irradiance today (W/m²) — estimated curve for a hot, clear-sky June heatwave day, peak ~880
-  hourlyIrr:   [0,0,0,0,70,190,360,540,690,800,860,880,850,760,640,500,360,230,120,40,5,0,0,0],
-  hourlyDirect:[0,0,0,0,40,110,230,360,470,560,610,620,600,530,440,330,230,140,60,18,0,0,0,0],
+  // Live snapshot 24 Jun 2026 ~08:05 BST (energymix.uk) — heatwave peak, hot & still: gas firmly on the margin ~46%, solar ramping (13.6%→ strong midday), wind subdued ~10%; CI ~197g, falls as solar climbs
+  currentMix:{wind:10.0,solar:14.0,nuclear:11.0,gas:46.0,biomass:5.5,imports:12.0,hydro:1.2,coal:0,other:0.3},
+  carbonIntensity:192,  // gCO₂/kWh — 24 Jun ~08:05 BST (low wind, gas on the margin in the heat; eases through the solar peak)
+  todayStr:"2026-06-24",
+  fetchedAt:"2026-06-24T07:20:00.000Z",
+  // Hourly irradiance today (W/m²) — estimated curve for a hot, clear-sky June heatwave-peak day, peak ~900
+  hourlyIrr:   [0,0,0,0,75,200,380,560,710,820,880,900,870,780,660,510,370,235,120,40,5,0,0,0],
+  hourlyDirect:[0,0,0,0,45,120,250,380,490,580,630,640,615,545,455,340,235,145,62,18,0,0,0,0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:400, currentDirect:240, currentDiffuse:160, // W/m² at ~07:10 BST (clear sky, ramping fast)
+  currentIrr:430, currentDirect:260, currentDiffuse:170, // W/m² at ~08:20 BST (clear sky, ramping fast)
 };
 
 // Last reading from the SigenStor — now live via the Sigen OpenAPI (inverter realtimeInfo → batSoc)
@@ -1630,10 +1630,10 @@ function updateSectionTs() {
   if(!DATA_TS.grid.ts){const el=document.getElementById('ts-grid');if(el){el.className='ts';el.textContent='Not yet fetched';}}
 }
 
-const PM_DATA={dates:["2026-05-24","2026-05-25","2026-05-26","2026-05-27","2026-05-28","2026-05-29","2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06","2026-06-07","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13","2026-06-14","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-20","2026-06-21","2026-06-22"],
-  gb:{base:[66,32,103.6,99.6,97.8,96.0,91.8,91.7,95.3,92.2,70,58,101.9,86.0,88,92,101,111.4,95,60,50,45,95,105,100,102,100,95.0,103,100],wind:[36,2,92.6,91.9,89.3,86.3,79.6,79.0,85.4,82.6,58.9,28,89.7,78.4,78,82,91,101.4,85,48,35,33,85,97,91,90,88,85.0,93,90],solar:[49.5,-8.6,87.4,83.1,78.6,63.6,61.5,74.5,74.6,73.2,49.9,41.6,79.5,64.9,68,72,81,91.4,75,36,28,23,73,83,79,80,78,72.0,75,76],bess:[75.0,110.1,54.3,56.5,59.3,66.0,60.0,55.1,53.4,56.1,62.4,75.8,56.9,52.3,51,51,51,51,51,55,56,56,52,52,51,52,52,52,55,53],neg:[4,17,0,0,0,0,0,1,0,0,2,3,0,1,0,0,0,0,0,1,2,2,0,0,0,0,0,0,0,0]},
-  de:{base:[64.7,77.7,78.3,75.1,70.8,67.1,52.2,46.2,64.3,73.3,68.8,72.0,65.6,45.8,58,64,66,122.5,70,42,27,27,74.3,110,125,140,108,87.5,70,82],wind:[52.2,69.2,69.7,64.3,59.5,58.4,39.2,33.6,50.8,62.2,60.6,63.1,54.5,36.7,47,53,55,111.5,59,29,14,16,63.3,99,114,129,97,76.0,59,71],solar:[26.9,43.3,51.7,43.6,38.5,28.6,11.1,3.9,35.8,40.0,39.4,45.6,35.0,12.4,28,34,36,92.5,40,9,-6,-3,44,80,95,110,76,54.5,32,50],bess:[90.1,85.0,70.2,85.7,83.4,87.4,94.2,101.0,83.7,81.9,80.3,75.9,83.4,86.5,85.6,79.2,79,76,79,84,91,87,78,79,79,78,81,86,91,81],neg:[6,4,2,4,1,4,9,11,4,2,2,1,1,5,6,2,2,0,2,4,8,7,1,2,2,1,2,5,6,2]},
-  es:{base:[35.1,48.2,45.3,52.6,45.3,51.2,33.5,32.6,56.6,53.4,58.5,53.0,59.0,43.7,50,55,56,44.3,50,48,46,46,86.1,85,90,93,85,63.4,50,55],wind:[30.4,41.0,40.8,46.1,40.6,45.1,28.1,26.6,52.1,45.9,53.2,48.7,53.3,38.6,44,49,50,38.3,44,42,40,40,80.1,79,84,87,79,57.0,44,49],solar:[-0.8,26.4,24.2,31.1,23.8,28.2,6.3,-4.1,27.4,22.7,29.2,30.7,37.5,14.3,24,29,30,17.3,24,20,18,18,60,59,64,67,57,34.4,18,29],bess:[93.2,73.3,72.3,71.8,74.6,73.4,75.4,91.1,80.2,80.4,74.5,70.1,76.7,71.7,75.8,74.4,74,75.2,74,77,79,79,73,74,74,73,76,78,82,74],neg:[8,8,6,7,3,5,8,10,5,4,3,2,5,4,5,4,4,4,4,5,6,6,3,4,4,3,4,5,6,4]}};
+const PM_DATA={dates:["2026-05-25","2026-05-26","2026-05-27","2026-05-28","2026-05-29","2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06","2026-06-07","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13","2026-06-14","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-20","2026-06-21","2026-06-22","2026-06-23"],
+  gb:{base:[32,103.6,99.6,97.8,96.0,91.8,91.7,95.3,92.2,70,58,101.9,86.0,88,92,101,111.4,95,60,50,45,95,105,100,102,100,95.0,103,100,102],wind:[2,92.6,91.9,89.3,86.3,79.6,79.0,85.4,82.6,58.9,28,89.7,78.4,78,82,91,101.4,85,48,35,33,85,97,91,90,88,85.0,93,90,95],solar:[-8.6,87.4,83.1,78.6,63.6,61.5,74.5,74.6,73.2,49.9,41.6,79.5,64.9,68,72,81,91.4,75,36,28,23,73,83,79,80,78,72.0,75,76,82],bess:[110.1,54.3,56.5,59.3,66.0,60.0,55.1,53.4,56.1,62.4,75.8,56.9,52.3,51,51,51,51,51,55,56,56,52,52,51,52,52,52,55,53,52],neg:[17,0,0,0,0,0,1,0,0,2,3,0,1,0,0,0,0,0,1,2,2,0,0,0,0,0,0,0,0,0]},
+  de:{base:[77.7,78.3,75.1,70.8,67.1,52.2,46.2,64.3,73.3,68.8,72.0,65.6,45.8,58,64,66,122.5,70,42,27,27,74.3,110,125,140,108,87.5,70,82,78],wind:[69.2,69.7,64.3,59.5,58.4,39.2,33.6,50.8,62.2,60.6,63.1,54.5,36.7,47,53,55,111.5,59,29,14,16,63.3,99,114,129,97,76.0,59,71,67],solar:[43.3,51.7,43.6,38.5,28.6,11.1,3.9,35.8,40.0,39.4,45.6,35.0,12.4,28,34,36,92.5,40,9,-6,-3,44,80,95,110,76,54.5,32,50,48],bess:[85.0,70.2,85.7,83.4,87.4,94.2,101.0,83.7,81.9,80.3,75.9,83.4,86.5,85.6,79.2,79,76,79,84,91,87,78,79,79,78,81,86,91,81,79],neg:[4,2,4,1,4,9,11,4,2,2,1,1,5,6,2,2,0,2,4,8,7,1,2,2,1,2,5,6,2,2]},
+  es:{base:[48.2,45.3,52.6,45.3,51.2,33.5,32.6,56.6,53.4,58.5,53.0,59.0,43.7,50,55,56,44.3,50,48,46,46,86.1,85,90,93,85,63.4,50,55,52],wind:[41.0,40.8,46.1,40.6,45.1,28.1,26.6,52.1,45.9,53.2,48.7,53.3,38.6,44,49,50,38.3,44,42,40,40,80.1,79,84,87,79,57.0,44,49,46],solar:[26.4,24.2,31.1,23.8,28.2,6.3,-4.1,27.4,22.7,29.2,30.7,37.5,14.3,24,29,30,17.3,24,20,18,18,60,59,64,67,57,34.4,18,29,26],bess:[73.3,72.3,71.8,74.6,73.4,75.4,91.1,80.2,80.4,74.5,70.1,76.7,71.7,75.8,74.4,74,75.2,74,77,79,79,73,74,74,73,76,78,82,74,74],neg:[8,6,7,3,5,8,10,5,4,3,2,5,4,5,4,4,4,4,5,6,6,3,4,4,3,4,5,6,4,4]}};
 const PM_CFG={gb:{cur:'£'},de:{cur:'€'},es:{cur:'€'}};
 let pmCharts={};
 function renderPowerMarkets(){
@@ -2531,7 +2531,7 @@ async function runSelfCheck() {
 //  stay correct after live refreshes and daily data swaps.
 // ═══════════════════════════════════════════════
 // Editor's note — refreshed by the daily task alongside the data blocks:
-const FABLE_NOTE = "The first day of a building heatwave — Met Office has a Red Extreme Heat Warning out for Wednesday/Thursday — and with wind subdued under the high, gas is firmly on the margin at ~36% with carbon intensity near 180g until the clear-sky solar peak bites this afternoon. Cross-Channel the picture is calmer than last week: German day-ahead near €82 and Spain ~€55 leave GB the cheapest of the three at ~£100, so the interconnectors should keep importing into the evening ramp. The read to watch is demand-side: each degree of this heat adds cooling load just as solar fades after 5pm, so the still-air evening is where gas earns its keep — and Brent firming back to ~$78 keeps the gas-power floor sticky into Wednesday's peak.";
+const FABLE_NOTE = "Heatwave peak: London is headed for ~38°C under a near-cloudless sky, and with the high pressure killing the wind (under 10% of the mix at 8am) gas is doing the heavy lifting at ~46% — carbon intensity near 197g and N2EX anchored around £100. The solar paradox is on full display: 13.6% and climbing fast at breakfast, it will gladly crater the midday price, but it abandons the system precisely when 38°C cooling load peaks in the still 6–8pm window, handing the evening ramp back to gas. GB is still the cheapest of the three majors (DE ~€78, ES ~€52), so imports stay maxed — but watch tomorrow: as the heat breaks and a little wind returns, expect the gas share to slip and intensity to follow it down.";
 function _fchip(label,val,delta,unit,invert){
   let cls='fneut',arrow='·',txt='—';
   if(delta!==null&&!isNaN(delta)){
@@ -3055,17 +3055,17 @@ function switchPage(name){
     if(name==='energy'){['renderGridCharts','renderIrrChart','renderPowerMarkets','renderEnergyDays','renderDCTracker','renderLongTermForecast'].forEach(function(f){try{if(typeof window[f]==='function')window[f]();}catch(e){}});}
   },50);
 }
-const MACRO_DATA={asOf:"2026-06-23",rows:[
+const MACRO_DATA={asOf:"2026-06-24",rows:[
   {l:"BoE base rate",v:"3.75%",sub:"held at 17 Jun MPC (7–2; two voted +25bp) — markets price ~1 hike by year-end",dir:0},
   {l:"CPI inflation (May)",v:"2.8%",sub:"unchanged from Apr; BoE sees a little over 3¼% by Q4 on energy",dir:0},
   {l:"RPI inflation (Apr)",v:"3.0%",sub:"prev 4.1% · May RPI awaited",dir:0},
-  {l:"10-yr gilt yield",v:"4.80%",sub:"backed up toward ~4.8% (19 Jun 4.84%) as sticky inflation & heat-driven demand lift term premium",dir:1},
+  {l:"10-yr gilt yield",v:"4.80%",sub:"holding ~4.8% as sticky inflation & heat-driven demand keep term premium firm; reviewed 24 Jun",dir:0},
   {l:"Unemployment",v:"5.0%",sub:"3m to Mar · eased from 5.1%; wage growth ~4.5%",dir:0},
-  {l:"GBP/USD",v:"1.324",sub:"softer — week range 1.317–1.344",dir:-1,fx:"USD"},
+  {l:"GBP/USD",v:"1.345",sub:"firmer on softer dollar — week range 1.32–1.35",dir:1,fx:"USD"},
   {l:"GBP/EUR",v:"1.158",sub:"week range 1.156–1.160",dir:0,fx:"EUR"}
 ]};
-const CMDTY_DATA={asOf:"2026-06-23",rows:[
-  {l:"Brent crude",v:"$78/bbl",sub:"firmed to ~$78 (22 Jun) but well below mid-June war-premium spike",dir:1},
+const CMDTY_DATA={asOf:"2026-06-24",rows:[
+  {l:"Brent crude",v:"$78/bbl",sub:"~$78 (firm 23 Jun) but well below mid-June war-premium spike",dir:0},
   {l:"TTF gas (front-month)",v:"€26/MWh",sub:"~€26; soft on ample storage — last verified 20 Jun",dir:0},
   {l:"UK NBP gas",v:"≈68p/th",sub:"tracking softer TTF; verified 20 Jun",dir:0},
   {l:"Gold",v:"$4,240/oz",sub:"~$4,240 haven bid steady; last verified 20 Jun",dir:0},
@@ -3081,15 +3081,15 @@ function renderMacroCmdty(){
   if(cb){cb.innerHTML=CMDTY_DATA.rows.map(r=>row(r,carrow)).join('');try{document.getElementById('cmdty-asof').textContent='Updated '+new Date(CMDTY_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
 }
 // ═══ POWER FORWARDS + CARBON — baked daily by the 7am task (was hard-coded HTML) ═══
-const FWD_DATA={asOf:"2026-06-23",rows:[
-  {l:"UK Win-26",v:"£101/MWh",sub:"~£101 fwd; reviewed 23 Jun"},
+const FWD_DATA={asOf:"2026-06-24",rows:[
+  {l:"UK Win-26",v:"£101/MWh",sub:"~£101 fwd; reviewed 24 Jun"},
   {l:"UK Sum-27",v:"£88/MWh",sub:"last verified 28 May"},
   {l:"UK Cal-27",v:"£94/MWh",sub:"last verified 28 May"},
-  {l:"Germany Cal-27",v:"€90/MWh",sub:"last verified 28 May; DE spot ~€82 on 22 Jun"},
+  {l:"Germany Cal-27",v:"€90/MWh",sub:"last verified 28 May; DE spot ~€78 on 23 Jun"},
   {l:"TTF Gas Win-26",v:"€38/MWh",sub:"last verified 28 May; front-month ~€26"}
-],note:"Verify on Bloomberg/ICE. Reviewed 23 Jun."};
-const CO2_DATA={asOf:"2026-06-23",rows:[
-  {l:"EU ETS Dec-26",v:"€77/t",sub:"held ~€77 (€77.46, 22 Jun) — highest since April"},
+],note:"Verify on Bloomberg/ICE. Reviewed 24 Jun."};
+const CO2_DATA={asOf:"2026-06-24",rows:[
+  {l:"EU ETS Dec-26",v:"€77/t",sub:"held ~€77 (€77.46, 22 Jun) — highest since April; reviewed 24 Jun"},
   {l:"EU ETS Dec-27",v:"€81/t"},
   {l:"UK ETS Dec-26",v:"£52/t",sub:"slid toward 10-mo lows (~£46 OPIS); EU-UK linkage talks ongoing"},
   {l:"UK ETS Dec-27",v:"£58/t"},
@@ -3184,7 +3184,7 @@ async function loadAll(){
   requestAnimationFrame(()=>{
     try{
       drawIntraday(now);
-      setFeedStatus('n2ex','ok','Modelled · £100/MWh N2EX anchor · hot sunny heatwave, wind subdued · 23 Jun 2026');
+      setFeedStatus('n2ex','ok','Modelled · £100/MWh N2EX anchor · heatwave peak ~38°C, wind subdued · 24 Jun 2026');
     }catch(e){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
