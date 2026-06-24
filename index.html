@@ -931,9 +931,9 @@ const INITIAL_GRID_DATA = {
 
 // Last reading from the SigenStor — now live via the Sigen OpenAPI (inverter realtimeInfo → batSoc)
 const LAST_KNOWN_SOLAR = {
-  solarKw: 3.56,    // live PV power (Sigen pVPower) — also overridden by Open-Meteo/AW Net intraday
-  soc: 0.055,       // LIVE 5.5% — 21 Jun 2026 ~08:14 BST (Sigen OpenAPI inverter realtimeInfo batSoc)
-  ts: '2026-06-21T07:14:00.000Z',
+  solarKw: 10.02,   // live PV power (Sigen pVPower) — also overridden by Open-Meteo/AW Net intraday
+  soc: 0.387,       // LIVE 38.7% — 24 Jun 2026 ~14:22 BST (Sigen OpenAPI inverter realtimeInfo batSoc)
+  ts: '2026-06-24T13:22:00.000Z',
   source: 'Live · Sigen OpenAPI'
 };
 let GRID_DATA = INITIAL_GRID_DATA;
@@ -2759,11 +2759,11 @@ function renderDCTracker(){
 // ═══════════════════════════════════════════════
 const AWN_DATA={
   station:"GX Weather Station", loc:"Gerrards Cross, Bucks (SL9 8AY)", lat:51.58,
-  asOf:"2026-06-22T12:40:00Z", localTime:"22 Jun 2026, 13:40 BST",
-  current:{tempC:30.4, feelsC:31.5, humidity:49, windMph:1.8, gustMph:1.8, maxGustMph:7, windDir:"E", rainTodayMm:0.0, pressInHg:30.35, uv:7, solarWm2:749, indoorC:30.5},
-  solar:{insolation_kwh_m2:3.47, peakWm2:759, mj_so_far:12.5, hourly:[0,0,0,0,1,21,74,132,305,447,586,670,733,752,0,0,0,0,0,0,0,0,0,0]},
-  perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:42, actualKwh:null, realizedPR:null},
-  summary:"Hot, sunny and near-still at Gerrards Cross — 30.4°C (feels 31.5°), light easterly air, humidity down to 49%, UV high at 7. Strong PV: irradiance peaked around 750 W/m² with ~3.5 kWh/m² banked by early afternoon, so the array should be running hard. A classic high-pressure summer day."
+  asOf:"2026-06-24T13:22:00Z", localTime:"24 Jun 2026, 14:22 BST",
+  current:{tempC:35.3, feelsC:40.2, humidity:47, windMph:0.2, gustMph:1.1, maxGustMph:8, windDir:"ESE", rainTodayMm:0.0, pressInHg:30.12, uv:6, solarWm2:702, indoorC:25.1},
+  solar:{insolation_kwh_m2:3.99, peakWm2:736, mj_so_far:14.36, hourly:[0,0,0,0,1,17,44,163,311,455,577,669,725,728,715,0,0,0,0,0,0,0,0,0]},
+  perf:{refPR:0.80, sysKwp:13.44, expectedKwhSoFar:43, actualKwh:44.45, realizedPR:0.83},
+  summary:"Heatwave peak at Gerrards Cross — 35.3°C and feeling like 40° in near-dead air (ESE, sub-1 mph), humidity 47%, UV 6. Irradiance peaked ~736 W/m² with ~4.0 kWh/m² banked by early afternoon; the SigenStor has already made 44.5 kWh today, a realized PR of ~0.83 against the 0.80 station reference. Classic blocking-high conditions — bright, hot and still."
 };
 function renderLocalWeather(){
   const el=document.getElementById('awn-body'); if(!el||typeof AWN_DATA==='undefined')return;
@@ -2897,7 +2897,10 @@ const ENERGY_DAYS=[
   {date:"2026-06-18", solar:26.20, battery:17.01, grid:18.38},
   {date:"2026-06-19", solar:33.22, battery:30.14, grid:1.17},
   {date:"2026-06-20", solar:29.07, battery:45.41, grid:1.51},
-  {date:"2026-06-21", solar:29.86, battery:27.71, grid:3.66}
+  {date:"2026-06-21", solar:29.86, battery:27.71, grid:3.66},
+  {date:"2026-06-22", solar:23.97, battery:46.65, grid:0.52},
+  {date:"2026-06-23", solar:36.78, battery:38.94, grid:0.04},
+  {date:"2026-06-24", solar:29.46, battery:25.35, grid:0.03}
 ];
 function renderPRPanel(){
   const el=document.getElementById('pr-body'); if(!el||typeof PR_DATA==='undefined')return;
@@ -2959,13 +2962,13 @@ function renderEnergyDays(){
 //  PER-STRING PERFORMANCE — live V/I per PV string from the Sigen inverter.
 //  Normalised to W/panel so strings of different sizes/orientations compare fairly.
 // ═══════════════════════════════════════════════
-const STRING_DATA={ asOf:"2026-06-21T07:14:00.000Z", ghiWm2:325,
-  note:"Corrected orientation: the 9-panel string is East (the strong morning producer), the 6-panel is South. With that, the two South strings (5 & 6 panels) read ~46 and ~50 W/panel — near-identical, as they should be — and the East string leads in the morning. No fault: the earlier mismatch was a mislabelled string.",
+const STRING_DATA={ asOf:"2026-06-24T13:22:00.000Z", ghiWm2:702,
+  note:"Early-afternoon heatwave snapshot (14:22 BST, just past solar noon). The two South strings read ~430 and ~483 W/panel — near-identical, as they should be — while the 9-panel East string is still strong at ~426 W/panel an hour past noon. The West string (134 W/panel) is the laggard for now but ramps through the late afternoon as the sun swings west. No fault indicated.",
   strings:[
-    {id:1,panels:9,orient:'East', kwp:4.32,powerKw:2.80,v:363.5,a:7.7},
-    {id:2,panels:5,orient:'South',kwp:2.40,powerKw:0.23,v:193.6,a:1.16},
-    {id:3,panels:6,orient:'South',kwp:2.88,powerKw:0.30,v:257.2,a:1.16},
-    {id:4,panels:8,orient:'West', kwp:3.84,powerKw:0.11,v:95.5, a:1.11}
+    {id:1,panels:9,orient:'East', kwp:4.32,powerKw:3.83,v:336.6,a:11.39},
+    {id:2,panels:5,orient:'South',kwp:2.40,powerKw:2.15,v:179.9,a:11.95},
+    {id:3,panels:6,orient:'South',kwp:2.88,powerKw:2.90,v:243.2,a:11.91},
+    {id:4,panels:8,orient:'West', kwp:3.84,powerKw:1.07,v:89.8, a:11.93}
   ]
 };
 function renderStrings(){
@@ -2994,20 +2997,20 @@ function renderStrings(){
 //  GLOBAL MARKETS — index levels + 24h change (Yahoo v8 chart, same-origin via Chrome).
 //  Baked daily; the dashboard re-fetches live when Chrome is open.
 // ═══════════════════════════════════════════════
-const INDICES_DATA={ asOf:"2026-06-22T07:30:00.000Z",
-  pulse:"Risk-on tilt — Wall Street leads (Nasdaq +1.9%, S&P +1.1%) with Tokyo +1.6%, while Europe and the UK drift flat-to-soft. VIX up 4% but still calm at ~17, so no fear, just rotation into US tech.",
+const INDICES_DATA={ asOf:"2026-06-24T13:22:00.000Z",
+  pulse:"Risk-off — US tech leads the retreat (Nasdaq −2.2%, S&P −1.4%) and the VIX jumps 11% to ~19. The UK is the haven of the day (FTSE 100 flat, FTSE 250 +0.1%); Europe softer (DAX −1.1%), Tokyo −0.9%, while Hong Kong bucks the trend at +0.3%.",
   items:[
-    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10362.14,chg:-0.01},
-    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:23064.95,chg:-0.59},
-    {sym:'^GSPC',name:'S&P 500',region:'US',price:7500.58,chg:1.08},
-    {sym:'^IXIC',name:'Nasdaq',region:'US',price:26517.93,chg:1.91},
-    {sym:'^DJI',name:'Dow Jones',region:'US',price:51564.70,chg:0.14},
-    {sym:'^GDAXI',name:'DAX',region:'DE',price:24947.15,chg:-0.15},
-    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8384.73,chg:-0.43},
-    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6294.72,chg:0.03},
-    {sym:'^N225',name:'Nikkei 225',region:'JP',price:72353.96,chg:1.55},
-    {sym:'^HSI',name:'Hang Seng',region:'HK',price:23768.52,chg:-0.65},
-    {sym:'^VIX',name:'VIX',region:'Vol',price:17.47,chg:4.11}
+    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10428.15,chg:-0.01},
+    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:22948.39,chg:0.10},
+    {sym:'^GSPC',name:'S&P 500',region:'US',price:7365.46,chg:-1.44},
+    {sym:'^IXIC',name:'Nasdaq',region:'US',price:25587.04,chg:-2.21},
+    {sym:'^DJI',name:'Dow Jones',region:'US',price:51666.84,chg:-0.09},
+    {sym:'^GDAXI',name:'DAX',region:'DE',price:24628.56,chg:-1.06},
+    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8374.47,chg:0.40},
+    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6209.40,chg:-0.34},
+    {sym:'^N225',name:'Nikkei 225',region:'JP',price:69174.97,chg:-0.88},
+    {sym:'^HSI',name:'Hang Seng',region:'HK',price:23412.18,chg:0.33},
+    {sym:'^VIX',name:'VIX',region:'Vol',price:19.21,chg:11.17}
   ]
 };
 function renderIndices(){
