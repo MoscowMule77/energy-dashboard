@@ -856,9 +856,13 @@ const PERF_RATIO = 0.90;   // system PR — Aiko Neostar ABC (24.5% eff, −0.26
 //   Tilt 35° nominal · London 51.5°N. NB the main-roof West string (PV3) is shaded in the late afternoon,
 //   so real evening output runs BELOW this clear-sky geometry — the model is an unshaded upper bound for the west face.
 const ARRAY_LAT = 51.5, ARRAY_TILT = 35;
+// shade = fractional annual generation loss applied to that face (installer/owner shade factor).
+// The main-roof West string (PV3) is clipped by a mature tree to its west (confirmed on aerial +
+// in the live data: PV3 collapses in the evening); owner's shade factor ≈ 0.12. Pitch 35° = standard UK.
 const SOLAR_ARRAYS = [
-  {name:'South', kwp:5.28, az:0,  tilt:35},   // surface azimuth from south, +west · 8 (PV1) + 3 (split) = 11 panels
-  {name:'West',  kwp:8.16, az:90, tilt:35}    // 6 garage (PV2) + 8 main roof (PV3) + 3 split = 17 panels
+  {name:'South',        kwp:5.28, az:0,  tilt:35, shade:0},     // 8 (PV1) + 3 (split) = 11 panels
+  {name:'West (clear)', kwp:4.32, az:90, tilt:35, shade:0},     // 6 garage (PV2) + 3 split = 9 panels, unshaded
+  {name:'West (shaded)',kwp:3.84, az:90, tilt:35, shade:0.12}   // 8 main roof (PV3) — tree to W ⇒ ~12% loss
 ];
 const _D2R = Math.PI/180;
 function _solarDecl(date){
@@ -889,7 +893,7 @@ function expectedKwOrientation(localHour, ghi, bhi, date){
       + Math.cos(decl)*Math.sin(ph)*Math.sin(b)*Math.cos(g)*Math.cos(H)
       + Math.cos(decl)*Math.sin(b)*Math.sin(g)*Math.sin(H);
     const poa=dni*Math.max(cosAOI,0) + diffH*(1+Math.cos(b))/2; // plane-of-array W/m²
-    kw += (poa/1000)*a.kwp*PERF_RATIO;
+    kw += (poa/1000)*a.kwp*PERF_RATIO*(1-(a.shade||0));         // apply per-face shade factor
   }
   return +kw.toFixed(2);
 }
