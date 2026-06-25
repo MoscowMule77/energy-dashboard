@@ -2,7 +2,7 @@
 {
   "name": "Energy Markets Dashboard",
   "schemaVersion": 1,
-  "description": "Daily energy markets dashboard for SigenStor 54kWh / 13.44kWp system (28 × 480Wp, 11 South + 9 East + 8 West). Generates a battery dispatch signal (Solar Charging / Export Opportunity / Charge Overnight / Self-Consumption) based on today's date and season, shows indicative forward power and carbon prices, sector watchlist, and a live AI-generated market briefing covering UK renewable ITs, UK and European utilities, and UK BESS market.",
+  "description": "Daily energy markets dashboard for SigenStor 54kWh / 13.44kWp system (28 × 480Wp, 11 South + 17 West). Generates a battery dispatch signal (Solar Charging / Export Opportunity / Charge Overnight / Self-Consumption) based on today's date and season, shows indicative forward power and carbon prices, sector watchlist, and a live AI-generated market briefing covering UK renewable ITs, UK and European utilities, and UK BESS market.",
   "mcpTools": [
     "mcp__Claude_in_Chrome__tabs_context_mcp",
     "mcp__Claude_in_Chrome__javascript_tool"
@@ -381,7 +381,7 @@ table.sh tr:hover td{background:#fafbfc;}
         <canvas id="chart-irr"></canvas>
       </div>
       <div class="tfoot" style="margin-top:8px;">
-        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 11 South + 9 East + 8 West (4 strings, per Sigen) · 35° tilt · 51.5°N · PR 0.90 (Aiko ABC + Sigen 97% inverter, cool UK climate). Verify actual output in SigenStor app.
+        Solar irradiation: Open-Meteo <code>shortwave_radiation_sum</code> (MJ/m² ÷ 3.6 = kWh/m²). Intraday expected curve transposes global + beam irradiance onto each roof face (orientation-aware). System: 28 × Aiko 480Wp = 13.44kWp · 11 South + 17 West (4 strings, per Sigen) · 35° tilt · 51.5°N · PR 0.90 (Aiko ABC + Sigen 97% inverter, cool UK climate). Verify actual output in SigenStor app.
         <br>Location: London (51.5°N, 0.1°W) — adjust for your actual site if needed.
       </div>
     </div>
@@ -850,15 +850,15 @@ const FUEL_ORDER = ['wind','solar','nuclear','gas','biomass','imports','hydro','
 // ═══════════════════════════════════════════════
 const SYSTEM_KWP = 13.44;          // 28 × Aiko 480Wp
 const PERF_RATIO = 0.90;   // system PR — Aiko Neostar ABC (24.5% eff, −0.26%/°C) + Sigen 10kW (97% Euro eff) in the cool UK climate ≈ 0.90
-// ── Array orientation (corrected 21 Jun 2026 from Sigen per-string config) ──
-//   String 1: 9 East (4.32 kWp) · String 2: 5 South (2.40) · String 3: 6 South (2.88) · String 4: 8 West (3.84)
-//   → South 11 panels (5.28 kWp) · East 9 (4.32) · West 8 (3.84) = 28 × 480Wp = 13.44 kWp.
-//   Tilt 35° (assumed UK pitch) · London 51.5°N. (9-panel string corrected South→East 22 Jun.)
+// ── Array orientation (corrected 24 Jun 2026 from live Sigen per-string + owner roof layout) ──
+//   PV1 = 8 South (3.84 kWp) · PV2 = 6 West, garage (2.88) · PV3 = 8 West, main roof — shaded & shallower (3.84) · PV4 = 6 split 3S/3W (1.44 S + 1.44 W)
+//   → South 11 panels (5.28 kWp) · West 17 (8.16) · East 0 = 28 × 480Wp = 13.44 kWp.
+//   Tilt 35° nominal · London 51.5°N. NB the main-roof West string (PV3) is shaded in the late afternoon,
+//   so real evening output runs BELOW this clear-sky geometry — the model is an unshaded upper bound for the west face.
 const ARRAY_LAT = 51.5, ARRAY_TILT = 35;
 const SOLAR_ARRAYS = [
-  {name:'South', kwp:5.28, az:0},    // surface azimuth measured from south, +west
-  {name:'East',  kwp:4.32, az:-90},
-  {name:'West',  kwp:3.84, az:90}
+  {name:'South', kwp:5.28, az:0,  tilt:35},   // surface azimuth from south, +west · 8 (PV1) + 3 (split) = 11 panels
+  {name:'West',  kwp:8.16, az:90, tilt:35}    // 6 garage (PV2) + 8 main roof (PV3) + 3 split = 17 panels
 ];
 const _D2R = Math.PI/180;
 function _solarDecl(date){
@@ -881,7 +881,7 @@ function expectedKwOrientation(localHour, ghi, bhi, date){
   const dni=Math.min(beamH/Math.max(sinAlt,0.05),1000); // beam normal (clamped)
   let kw=0;
   for(const a of SOLAR_ARRAYS){
-    const b=ARRAY_TILT*_D2R, g=a.az*_D2R;
+    const b=(a.tilt||ARRAY_TILT)*_D2R, g=a.az*_D2R;
     const cosAOI=
         Math.sin(decl)*Math.sin(ph)*Math.cos(b)
       - Math.sin(decl)*Math.cos(ph)*Math.sin(b)*Math.cos(g)
@@ -3240,7 +3240,7 @@ async function loadAll(){
     bc.innerHTML=`<div class="sec" style="color:${sig.color};border-color:${sig.border};">🔋 Battery Dispatch Signal <span id="ts-battery" class="ts comp">Computed ${fmtTime(now)}</span></div>
       <div class="sig-badge" style="background:${sig.color};">${sig.emoji} ${sig.label}</div>
       <div class="sig-detail" style="color:${sig.color};">
-        <strong>System:</strong> SigenStor 54 kWh · 13.44kWp Aiko 480Wp · 28 modules (11 S · 9 E · 8 W)<br>
+        <strong>System:</strong> SigenStor 54 kWh · 13.44kWp Aiko 480Wp · 28 modules (11 S · 17 W)<br>
         <strong>Season:</strong> ${sig.season}<br>
         <strong>Action:</strong> ${sig.rec}
       </div>`;
