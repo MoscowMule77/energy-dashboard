@@ -3058,11 +3058,11 @@ function renderEnergyDays(){
 //  Normalised to W/panel so strings of different sizes/orientations compare fairly.
 // ═══════════════════════════════════════════════
 const STRING_DATA={ asOf:"2026-06-24T13:22:00.000Z", ghiWm2:702,
-  note:"IDs match the inverter's MPPT inputs (PV1-PV4); roof is SOUTH + WEST only. PV1 = 8 SOUTH, main roof (midday champion - 3.83 kW at 14:22, right on its 8x480 ceiling, gone by evening); PV2 = 6 WEST, garage roof (evening leader, 0.88 kW at 19:31); PV3 = 8 SOUTH (also midday-peaking and dead by evening, so not West - but only 2.90 kW / 363 W-per-panel vs PV1's 479, and a lower string voltage too); PV4 = 6 SPLIT 3 S / 3 W (depressed ~90 V, mismatched string clamped by bypass diodes - always trails, the re-stringing candidate). 28 panels / 13.44 kWp; faces 19 S / 9 W. WATCH ITEM: PV3 runs ~24% below its identical South twin PV1 - the lower power AND voltage together point to partial shading, soiling or a sub-string fault on PV3, worth investigating.",
+  note:"IDs match the inverter's MPPT inputs (PV1-PV4); roof is SOUTH + WEST (two separate West strings, owner-confirmed). PV1 = 8 SOUTH, main roof (midday champion - 3.83 kW at 14:22, right on its 8x480 ceiling); PV2 = 6 WEST, garage roof - UNSHADED, the textbook West evening leader (holds 41% of its midday output at 19:31); PV3 = 8 WEST, main roof - SHADED + shallower pitch: it peaks at midday and falls to ~9% by evening (vs the garage's 41%) because late-afternoon shade steals its best West hours, masking the normal West evening peak; PV4 = 6 SPLIT 3 S / 3 W (depressed ~90 V, bypass-clamped mismatched string - always trails, the re-stringing candidate). 28 panels / 13.44 kWp; faces 11 S / 17 W. WATCH ITEM: the PV2-vs-PV3 evening gap (41% vs 9% retained) quantifies the west-roof shading loss - worth identifying what casts the late shadow, as PV3 should out-produce the smaller garage string but doesn't in the evening.",
   strings:[
     {id:1,panels:8,orient:'South',kwp:3.84,powerKw:3.83,v:336.6,a:11.39},
     {id:2,panels:6,orient:'West', kwp:2.88,powerKw:2.15,v:179.9,a:11.95},
-    {id:3,panels:8,orient:'South',kwp:3.84,powerKw:2.90,v:243.2,a:11.91},
+    {id:3,panels:8,orient:'West', kwp:3.84,powerKw:2.90,v:243.2,a:11.91},
     {id:4,panels:6,orient:'Split',kwp:2.88,powerKw:1.07,v:89.8, a:11.93}
   ]
 };
