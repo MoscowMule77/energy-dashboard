@@ -914,41 +914,41 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 26 Jun 2026 — Met Office (London): heat RETURNING, exceptionally hot & sunny; today max ~34°C / min 18°C, near-cloudless, ~9h sunshine, isolated thundery showers in the west late
-    time:["2026-06-19","2026-06-20","2026-06-21","2026-06-22","2026-06-23","2026-06-24","2026-06-25","2026-06-26"],
-    temperature_2m_max:[29.0,26.0,31.0,31.0,33.0,38.0,25.0,34.0],
-    temperature_2m_min:[17.0,18.0,20.0,17.0,16.0,19.0,16.0,18.0],
-    weathercode:[0,2,2,1,1,0,2,0],
-    shortwave_radiation_sum:[29.0,23.0,27.0,28.0,29.0,30.0,24.0,30.0]
+    // Updated 27 Jun 2026 — Met Office (London): early showers clearing, becoming fine with sunshine, cooler than Fri; max ~33°C / min 19°C
+    time:["2026-06-20","2026-06-21","2026-06-22","2026-06-23","2026-06-24","2026-06-25","2026-06-26","2026-06-27"],
+    temperature_2m_max:[26.0,31.0,31.0,33.0,38.0,25.0,34.0,33.0],
+    temperature_2m_min:[18.0,20.0,17.0,16.0,19.0,16.0,18.0,19.0],
+    weathercode:[2,2,1,1,0,2,0,2],
+    shortwave_radiation_sum:[23.0,27.0,28.0,29.0,30.0,24.0,30.0,22.0]
   },
   daily:[
-    // Daily averages — energymix.uk (Elexon/NESO) past-day through 25 Jun; 26 Jun = live snapshot so far
-    {date:"2026-06-19",mix:{wind:30.0,solar:15.0,nuclear:10.5,gas:27.0,biomass:6.0,imports:9.5,hydro:1.0,coal:0,other:1.0},n:48},
+    // Daily averages — energymix.uk (Elexon/NESO) past-day through 26 Jun; 27 Jun = live snapshot 08:15 BST
     {date:"2026-06-20",mix:{wind:13.8,solar:19.4,nuclear:10.9,gas:31.7,biomass:6.0,imports:17.0,hydro:1.2,coal:0,other:0.0},n:48},
     {date:"2026-06-21",mix:{wind:12.0,solar:17.0,nuclear:14.0,gas:35.0,biomass:8.0,imports:12.0,hydro:1.0,coal:0,other:1.0},n:48},
     {date:"2026-06-22",mix:{wind:20.3,solar:17.3,nuclear:11.2,gas:37.6,biomass:6.4,imports:6.0,hydro:1.0,coal:0,other:0.2},n:48},
     {date:"2026-06-23",mix:{wind:15.9,solar:16.9,nuclear:11.6,gas:44.9,biomass:5.9,imports:3.6,hydro:1.0,coal:0,other:0.2},n:48},
     {date:"2026-06-24",mix:{wind:11.0,solar:17.0,nuclear:11.0,gas:43.0,biomass:5.5,imports:11.0,hydro:1.0,coal:0,other:0.5},n:48},
     {date:"2026-06-25",mix:{wind:26.7,solar:16.7,nuclear:11.1,gas:37.3,biomass:5.8,imports:1.6,hydro:0.8,coal:0,other:0.0},n:48},
-    {date:"2026-06-26",mix:{wind:20.0,solar:9.0,nuclear:12.0,gas:47.0,biomass:6.0,imports:5.0,hydro:1.0,coal:0,other:0.0},n:20}
+    {date:"2026-06-26",mix:{wind:21.4,solar:16.3,nuclear:9.7,gas:39.7,biomass:5.9,imports:6.0,hydro:1.0,coal:0,other:0.0},n:48},
+    {date:"2026-06-27",mix:{wind:20.3,solar:15.4,nuclear:11.5,gas:15.4,biomass:6.6,imports:30.3,hydro:1.0,coal:0,other:0.0},n:20}
   ],
-  // Live snapshot 26 Jun 2026 ~07:00 BST (energymix.uk) — heat returning, near-cloudless; gas sets the morning margin ~47%, wind ~20%, solar still ramping (8%); CI ~202g, should ease hard through the solar peak (GB hit a record 14.8GW solar on 23 Jun)
-  currentMix:{wind:20.3,solar:7.7,nuclear:12.2,gas:46.9,biomass:6.6,imports:4.1,hydro:1.3,coal:0,other:0.9},
-  carbonIntensity:202,  // gCO₂/kWh — 26 Jun ~07:00 BST (gas on the morning margin; eases as solar climbs through a hot, sunny day)
-  todayStr:"2026-06-26",
-  fetchedAt:"2026-06-26T06:10:00.000Z",
-  // Hourly irradiance today (W/m²) — estimated curve for a hot, near-cloudless June day, peak ~910
-  hourlyIrr:   [0,0,0,0,70,200,400,580,720,820,890,910,890,820,710,560,400,240,110,30,3,0,0,0],
-  hourlyDirect:[0,0,0,0,45,130,270,400,510,590,650,670,650,600,510,390,270,150,65,15,0,0,0,0],
+  // Live snapshot 27 Jun 2026 ~08:15 BST (energymix.uk) — showers clearing, solar ramping; big import surge (30%) as gas stays low; CI down to 109g
+  currentMix:{wind:20.3,solar:15.4,nuclear:11.5,gas:15.4,biomass:6.6,imports:30.3,hydro:1.0,coal:0,other:0.0},
+  carbonIntensity:109,  // gCO₂/kWh — 27 Jun ~08:15 BST (interconnectors + wind keeping gas low)
+  todayStr:"2026-06-27",
+  fetchedAt:"2026-06-27T08:15:00.000Z",
+  // Hourly irradiance today (W/m²) — partly cloudy AM (early showers) then clearing, peak ~830 W/m²
+  hourlyIrr:   [0,0,0,0,50,170,350,550,700,760,810,830,840,820,750,610,440,260,120,35,5,0,0,0],
+  hourlyDirect:[0,0,0,0,30,110,240,380,500,550,590,610,620,610,540,430,290,160,70,18,0,0,0,0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:280, currentDirect:175, currentDiffuse:105, // W/m² at ~07:00 BST (clear sky, ramping)
+  currentIrr:658, currentDirect:480, currentDiffuse:178, // W/m² at ~09:04 BST (from AWN live station)
 };
 
 // Last reading from the SigenStor — now live via the Sigen OpenAPI (inverter realtimeInfo → batSoc)
 const LAST_KNOWN_SOLAR = {
-  solarKw: 10.02,   // live PV power (Sigen pVPower) — also overridden by Open-Meteo/AW Net intraday
-  soc: 0.387,       // LIVE 38.7% — 24 Jun 2026 ~14:22 BST (Sigen OpenAPI inverter realtimeInfo batSoc)
-  ts: '2026-06-24T13:22:00.000Z',
+  solarKw: 7.346,   // live PV power (Sigen pVPower) — 27 Jun 2026 ~09:05 BST
+  soc: 0.233,       // LIVE 23.3% — 27 Jun 2026 ~09:05 BST (Sigen OpenAPI inverter realtimeInfo batSoc)
+  ts: '2026-06-27T08:05:00.000Z',
   source: 'Live · Sigen OpenAPI'
 };
 let GRID_DATA = INITIAL_GRID_DATA;
@@ -1645,10 +1645,10 @@ function updateSectionTs() {
   if(!DATA_TS.grid.ts){const el=document.getElementById('ts-grid');if(el){el.className='ts';el.textContent='Not yet fetched';}}
 }
 
-const PM_DATA={dates:["2026-05-27","2026-05-28","2026-05-29","2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06","2026-06-07","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13","2026-06-14","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-20","2026-06-21","2026-06-22","2026-06-23","2026-06-24","2026-06-25"],
-  gb:{base:[99.6,97.8,96.0,91.8,91.7,95.3,92.2,70,58,101.9,86.0,88,92,101,111.4,95,60,50,45,95,105,100,102,100,95.0,103,100,102,125,102],wind:[91.9,89.3,86.3,79.6,79.0,85.4,82.6,58.9,28,89.7,78.4,78,82,91,101.4,85,48,35,33,85,97,91,90,88,85.0,93,90,95,117,92],solar:[83.1,78.6,63.6,61.5,74.5,74.6,73.2,49.9,41.6,79.5,64.9,68,72,81,91.4,75,36,28,23,73,83,79,80,78,72.0,75,76,82,97,80],bess:[56.5,59.3,66.0,60.0,55.1,53.4,56.1,62.4,75.8,56.9,52.3,51,51,51,51,51,55,56,56,52,52,51,52,52,52,55,53,52,55,52],neg:[0,0,0,0,1,0,0,2,3,0,1,0,0,0,0,0,1,2,2,0,0,0,0,0,0,0,0,0,0,0]},
-  de:{base:[75.1,70.8,67.1,52.2,46.2,64.3,73.3,68.8,72.0,65.6,45.8,58,64,66,122.5,70,42,27,27,74.3,110,125,140,108,87.5,70,82,78,208,134],wind:[64.3,59.5,58.4,39.2,33.6,50.8,62.2,60.6,63.1,54.5,36.7,47,53,55,111.5,59,29,14,16,63.3,99,114,129,97,76.0,59,71,67,199,123],solar:[43.6,38.5,28.6,11.1,3.9,35.8,40.0,39.4,45.6,35.0,12.4,28,34,36,92.5,40,9,-6,-3,44,80,95,110,76,54.5,32,50,48,168,100],bess:[85.7,83.4,87.4,94.2,101.0,83.7,81.9,80.3,75.9,83.4,86.5,85.6,79.2,79,76,79,84,91,87,78,79,79,78,81,86,91,81,79,86,81],neg:[4,1,4,9,11,4,2,2,1,1,5,6,2,2,0,2,4,8,7,1,2,2,1,2,5,6,2,2,2,2]},
-  es:{base:[52.6,45.3,51.2,33.5,32.6,56.6,53.4,58.5,53.0,59.0,43.7,50,55,56,44.3,50,48,46,46,86.1,85,90,93,85,63.4,50,55,52,94,80],wind:[46.1,40.6,45.1,28.1,26.6,52.1,45.9,53.2,48.7,53.3,38.6,44,49,50,38.3,44,42,40,40,80.1,79,84,87,79,57.0,44,49,46,89,74],solar:[31.1,23.8,28.2,6.3,-4.1,27.4,22.7,29.2,30.7,37.5,14.3,24,29,30,17.3,24,20,18,18,60,59,64,67,57,34.4,18,29,26,60,50],bess:[71.8,74.6,73.4,75.4,91.1,80.2,80.4,74.5,70.1,76.7,71.7,75.8,74.4,74,75.2,74,77,79,79,73,74,74,73,76,78,82,74,74,81,78],neg:[7,3,5,8,10,5,4,3,2,5,4,5,4,4,4,4,5,6,6,3,4,4,3,4,5,6,4,4,4,4]}};
+const PM_DATA={dates:["2026-05-28","2026-05-29","2026-05-30","2026-05-31","2026-06-01","2026-06-02","2026-06-03","2026-06-04","2026-06-05","2026-06-06","2026-06-07","2026-06-08","2026-06-09","2026-06-10","2026-06-11","2026-06-12","2026-06-13","2026-06-14","2026-06-15","2026-06-16","2026-06-17","2026-06-18","2026-06-19","2026-06-20","2026-06-21","2026-06-22","2026-06-23","2026-06-24","2026-06-25","2026-06-26"],
+  gb:{base:[97.8,96.0,91.8,91.7,95.3,92.2,70,58,101.9,86.0,88,92,101,111.4,95,60,50,45,95,105,100,102,100,95.0,103,100,102,125,102,105],wind:[89.3,86.3,79.6,79.0,85.4,82.6,58.9,28,89.7,78.4,78,82,91,101.4,85,48,35,33,85,97,91,90,88,85.0,93,90,95,117,92,92],solar:[78.6,63.6,61.5,74.5,74.6,73.2,49.9,41.6,79.5,64.9,68,72,81,91.4,75,36,28,23,73,83,79,80,78,72.0,75,76,82,97,80,81],bess:[59.3,66.0,60.0,55.1,53.4,56.1,62.4,75.8,56.9,52.3,51,51,51,51,51,55,56,56,52,52,51,52,52,52,55,53,52,55,52,53],neg:[0,0,0,1,0,0,2,3,0,1,0,0,0,0,0,1,2,2,0,0,0,0,0,0,0,0,0,0,0,0]},
+  de:{base:[70.8,67.1,52.2,46.2,64.3,73.3,68.8,72.0,65.6,45.8,58,64,66,122.5,70,42,27,27,74.3,110,125,140,108,87.5,70,82,78,208,134,135],wind:[59.5,58.4,39.2,33.6,50.8,62.2,60.6,63.1,54.5,36.7,47,53,55,111.5,59,29,14,16,63.3,99,114,129,97,76.0,59,71,67,199,123,124],solar:[38.5,28.6,11.1,3.9,35.8,40.0,39.4,45.6,35.0,12.4,28,34,36,92.5,40,9,-6,-3,44,80,95,110,76,54.5,32,50,48,168,100,100],bess:[83.4,87.4,94.2,101.0,83.7,81.9,80.3,75.9,83.4,86.5,85.6,79.2,79,76,79,84,91,87,78,79,79,78,81,86,91,81,79,86,81,83],neg:[1,4,9,11,4,2,2,1,1,5,6,2,2,0,2,4,8,7,1,2,2,1,2,5,6,2,2,2,2,2]},
+  es:{base:[45.3,51.2,33.5,32.6,56.6,53.4,58.5,53.0,59.0,43.7,50,55,56,44.3,50,48,46,46,86.1,85,90,93,85,63.4,50,55,52,94,80,95],wind:[40.6,45.1,28.1,26.6,52.1,45.9,53.2,48.7,53.3,38.6,44,49,50,38.3,44,42,40,40,80.1,79,84,87,79,57.0,44,49,46,89,74,89],solar:[23.8,28.2,6.3,-4.1,27.4,22.7,29.2,30.7,37.5,14.3,24,29,30,17.3,24,20,18,18,60,59,64,67,57,34.4,18,29,26,60,50,65],bess:[74.6,73.4,75.4,91.1,80.2,80.4,74.5,70.1,76.7,71.7,75.8,74.4,74,75.2,74,77,79,79,73,74,74,73,76,78,82,74,74,81,78,78],neg:[3,5,8,10,5,4,3,2,5,4,5,4,4,4,4,5,6,6,3,4,4,3,4,5,6,4,4,4,4,4]}};
 const PM_CFG={gb:{cur:'£'},de:{cur:'€'},es:{cur:'€'}};
 let pmCharts={};
 function renderPowerMarkets(){
@@ -1869,7 +1869,7 @@ async function openPMDay(c,idx){
 //  Policy · Technology · M&A · Markets · AI. Keep to 12 (4×3 grid).
 // ═══════════════════════════════════════════════
 const NEWS_CATS={"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Technology":{bg:"#92400e",fg:"#fde68a"},"M&A":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#065f46",fg:"#a7f3d0"},"AI":{bg:"#0e7490",fg:"#a5f3fc"}};
-const NEWS_ITEMS=[{"cat":"M&A","title":"ContourGlobal enters UK with 500MW/2,000MWh Scottish BESS buy","desc":"IPP ContourGlobal makes its first UK move, buying the 500MW/2,000MWh Wallace battery project in Ayr, Scotland — one of the UK's largest BESS in development, with Gate 2 status secured.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/battery-storage/contourglobal-enters-uk-market-with-500mw-2-000mwh-scottish-bess-acquisition","date":"2026-06-25"},{"cat":"Markets","title":"European power prices jump as late-June heatwave grips Continent","desc":"Cooling demand drove Germany's day-ahead to ~€134/MWh and Spain to ~€80 on 25 Jun while GB's past day sat near £102, keeping Britain the relative value play.","src":"euenergy","url":"https://euenergy.live/","date":"2026-06-26"},{"cat":"Policy","title":"Government to trial discounted power for households on windy days","desc":"A government-backed scheme will let suppliers pass curtailed wind through as cheaper electricity in constrained regions, with a launch targeted before winter.","src":"RenewableUK","url":"https://www.renewableuk.com/news-and-resources/press-releases/renewableuk-welcomes-trial-scheme-to-offer-consumers-lower-electricity-bills-on-windy-days/","date":"2026-06-24"},{"cat":"Markets","title":"BoE holds Bank Rate at 3.75%, warns CPI tops 3¼% by Q4 on energy","desc":"The MPC voted 7–2 to hold at 3.75% on 17 June; two members sought a hike, and the Bank expects inflation a little over 3¼% in Q4 driven by energy.","src":"Bank of England","url":"https://www.bankofengland.co.uk/monetary-policy-summary-and-minutes/2026/june-2026","date":"2026-06-18"},{"cat":"Policy","title":"NESO issues 713 Gate 2 offers — ~37GW, 58% of CP2030 pipeline","desc":"More than half of Gate 2 grid-connection offers are now issued: 713 of 1,223 projects (~37GW) have updated agreements aligned with the Clean Power 2030 plan.","src":"reNEWS","url":"https://www.renews.biz/other-news/grid/neso-hits-gate-2-grid-offers-milestone/","date":"2026-06-22"},{"cat":"Technology","title":"UK battery storage tops 7GW, overtaking the nuclear fleet","desc":"Installed BESS capacity has climbed to nearly 7GW — exceeding Britain's operating nuclear fleet for the first time — helping shore up winter 2026-27 power margins.","src":"reNEWS","url":"https://renews.biz/112236/storage-growth-to-help-uk-power-margins/","date":"2026-06-25"},{"cat":"Technology","title":"Rolls-Royce SMR names key suppliers for Wylfa programme","desc":"Rolls-Royce SMR appoints two strategic suppliers of nuclear-island components for Britain's first three small modular reactors at Wylfa, targeting grid power in the mid-2030s.","src":"World Nuclear News","url":"https://www.world-nuclear-news.org/articles/rolls-royce-smr-named-as-uks-selected-technology","date":"2026-06-22"},{"cat":"AI","title":"140 data-centre proposals seek 50GW — more than GB peak demand","desc":"Developers want about 50GW of connections for new AI data centres, above Britain's ~45GW peak, straining a grid already struggling to connect renewables.","src":"Commons Library","url":"https://commonslibrary.parliament.uk/research-briefings/cbp-10315/","date":"2026-06-20"},{"cat":"M&A","title":"Matrix Renewables & BW ESS secure finance for 2.2GWh UK batteries","desc":"Matrix Renewables and BW ESS lock in finance and offtake for over 2.2GWh of UK battery storage, underscoring continued capital flow into GB BESS.","src":"Energy-Storage.News","url":"https://www.energy-storage.news/matrix-renewables-bw-ess-secure-finance-and-offtake-for-over-2-2gwh-of-uk-bess/","date":"2026-06-23"},{"cat":"Policy","title":"Renewables windfall tax (EGL) to rise to 55% from 1 July","desc":"DESNZ confirms the Electricity Generator Levy climbs from 45% to 55% on 1 July 2026, raising the tax take on low-carbon generators' excess revenues.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/energy-policy/desnz-to-increase-renewables-windfall-tax-to-55-in-july-2026","date":"2026-06-23"},{"cat":"AI","title":"Data centres now ~6% of UK & US power, set to quadruple by 2030","desc":"UK data centres consume around 2.5% of electricity today (≈6% incl. the US); the IEA expects consumption to double — and AI-specific demand to triple — by 2030.","src":"E&T","url":"https://eandt.theiet.org/2026/05/15/uk-and-us-data-centres-now-consume-around-6-national-electricity","date":"2026-06-15"},{"cat":"Markets","title":"N2EX hits record negative-hour streak as renewables flood grid","desc":"Britain's N2EX day-ahead market matched a record run of negative-price hours this month; Modo forecasts ~1,000 negative hours by 2027 without faster grid build-out.","src":"Argus Media","url":"https://www.argusmedia.com/en/news-and-insights/latest-market-news/2692698-uk-n2ex-hits-record-negative-hour-streak","date":"2026-06-17"}];
+const NEWS_ITEMS=[{"cat":"Policy","title":"Starmer eyes DESNZ's £63bn net-zero fund to plug defence gap","desc":"No 10 is targeting larger cuts from the energy department than other Whitehall budgets, with CCS's £9.4bn among assets eyed as Starmer boosts defence to 2.5% of GDP.","src":"GB News","url":"https://www.gbnews.com/politics/keir-starmer-slash-net-zero-defence-budget-nato","date":"2026-06-26"},{"cat":"Markets","title":"Brent falls to $72 as US-Iran deal reopens Strait of Hormuz","desc":"Crude dropped ~$3 on Friday after vessels resumed open transit of the Strait of Hormuz following a US-Iran communication deal, restoring Persian Gulf exports to ~75% of pre-conflict levels.","src":"Trading Economics","url":"https://tradingeconomics.com/commodity/brent-crude-oil","date":"2026-06-27"},{"cat":"M&A","title":"ContourGlobal enters UK with 500MW/2,000MWh Scottish BESS buy","desc":"IPP ContourGlobal makes its first UK move, buying the 500MW/2,000MWh Wallace battery project in Ayr, Scotland — one of the UK's largest BESS in development, with Gate 2 status secured.","src":"Energy Global","url":"https://www.energyglobal.com/energy-storage/25062026/contourglobal-enters-uk-through-500-mw-bess-acquisition/amp/","date":"2026-06-25"},{"cat":"Markets","title":"Ofgem cap up 13% from 1 July; BoE warns CPI tops 3¼% Q4","desc":"The price cap rises to £1,862/yr from 1 July as energy-driven inflation is set to push CPI above 3.25% by Q4. BoE held at 3.75% on 17 June (7–2 vote).","src":"Ofgem","url":"https://www.ofgem.gov.uk/news/changes-energy-price-cap-between-1-july-and-30-september-2026","date":"2026-06-27"},{"cat":"Policy","title":"NESO issues 713 Gate 2 offers — ~37GW, 58% of CP2030 pipeline","desc":"More than half of Gate 2 grid-connection offers are now issued: 713 of 1,223 projects (~37GW) have updated agreements aligned with the Clean Power 2030 plan.","src":"reNEWS","url":"https://www.renews.biz/other-news/grid/neso-hits-gate-2-grid-offers-milestone/","date":"2026-06-22"},{"cat":"Technology","title":"UK battery storage tops 7GW, overtaking the nuclear fleet","desc":"Installed BESS capacity has climbed to nearly 7GW — exceeding Britain's operating nuclear fleet for the first time — helping shore up winter 2026-27 power margins.","src":"reNEWS","url":"https://renews.biz/112236/storage-growth-to-help-uk-power-margins/","date":"2026-06-25"},{"cat":"Technology","title":"Rolls-Royce SMR names key suppliers for Wylfa programme","desc":"Rolls-Royce SMR appoints two strategic suppliers of nuclear-island components for Britain's first three small modular reactors at Wylfa, targeting grid power in the mid-2030s.","src":"World Nuclear News","url":"https://www.world-nuclear-news.org/articles/rolls-royce-smr-named-as-uks-selected-technology","date":"2026-06-22"},{"cat":"AI","title":"140 data-centre proposals seek 50GW — more than GB peak demand","desc":"Developers want about 50GW of connections for new AI data centres, above Britain's ~45GW peak, straining a grid already struggling to connect renewables.","src":"Commons Library","url":"https://commonslibrary.parliament.uk/research-briefings/cbp-10315/","date":"2026-06-20"},{"cat":"AI","title":"Ofgem launches grid-connection review as datacentre demand surges","desc":"Ofgem begins a sweeping review of how grid connections are prioritised as the surge in AI data-centre applications — many requesting hundreds of MW each — strains the system.","src":"Computing","url":"https://www.computing.co.uk/news/2026/ofgem-grid-connection-review-datacentre","date":"2026-06-25"},{"cat":"M&A","title":"Matrix Renewables & BW ESS secure £245m finance for 2.2GWh BESS","desc":"Matrix Renewables and BW ESS lock in £245m financing and offtake for over 2.2GWh of UK battery storage across two Scottish sites, underscoring continued capital flow into GB BESS.","src":"Energy-Storage.News","url":"https://www.energy-storage.news/matrix-renewables-bw-ess-secure-finance-and-offtake-for-over-2-2gwh-of-uk-bess/","date":"2026-06-23"},{"cat":"Policy","title":"Renewables windfall tax (EGL) rises to 55% from 1 July 2026","desc":"DESNZ confirms the Electricity Generator Levy climbs from 45% to 55% on 1 July 2026, raising the tax take on low-carbon generators' excess revenues above the strike price.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/energy-policy/desnz-to-increase-renewables-windfall-tax-to-55-in-july-2026","date":"2026-06-23"},{"cat":"Markets","title":"European heatwave: Germany day-ahead €135, Spain €95, UK £105","desc":"Friday's cooling demand drove Germany's EPEX spot to €135/MWh and Spain's OMIE to €95; GB N2EX's past-day averaged £105, keeping Britain the relative value as interconnectors leaned toward export.","src":"euenergy","url":"https://euenergy.live/","date":"2026-06-26"}];
 function _newsDate(iso){const d=new Date((iso||"").length>10?iso:iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
 // LIVE_NEWS is populated by fetchLiveNews() on page open; falls back to baked NEWS_ITEMS.
 let LIVE_NEWS=null;
@@ -2546,7 +2546,7 @@ async function runSelfCheck() {
 //  stay correct after live refreshes and daily data swaps.
 // ═══════════════════════════════════════════════
 // Editor's note — refreshed by the daily task alongside the data blocks:
-const FABLE_NOTE = "The heat is back with a vengeance — London pushes toward 34°C under near-cloudless skies, so solar should run hard toward record territory by midday (GB hit 14.8GW on 23 Jun) even as gas still sets the 7am margin near 47% with carbon intensity around 202g. The Continental heatwave has markets diverging sharply: Germany's day-ahead averaged ~€134 and Spain ~€80 yesterday while GB's past day sat near £102, keeping Britain the relative value play and interconnectors leaning toward export. Watch the evening peaks across CWE as air-conditioning load bites after sundown — and whether light GB wind (~20% this morning) stays out of the way of the solar run.";
+const FABLE_NOTE = "Early Saturday showers are already clearing at Gerrards Cross — solar at 658 W/m² by 9am with the system at 23% SoC, as Friday's fierce 38°C heatwave gives way to a still-warm 33°C. The grid tells the real story: carbon intensity at just 109g (the cleanest morning all week) as 30% interconnector flow plus 20% wind holds gas below 16% — a complete reversal from yesterday's 40% gas share under heatwave load. European spreads peaked on Friday: Germany's spot hit €135 and Spain €95 as AC demand surged, while UK at £105 remained the value play. Watch Brent today — already down to ~$72 after the US-Iran Hormuz deal — which feeds directly into gas forward curves and the UK Winter-26 contract currently at ~£96.";
 function _fchip(label,val,delta,unit,invert){
   let cls='fneut',arrow='·',txt='—';
   if(delta!==null&&!isNaN(delta)){
@@ -2774,11 +2774,11 @@ function renderDCTracker(){
 // ═══════════════════════════════════════════════
 const AWN_DATA={
   station:"GX Weather Station", loc:"Gerrards Cross, Bucks (SL9 8AY)", lat:51.58,
-  asOf:"2026-06-24T13:22:00Z", localTime:"24 Jun 2026, 14:22 BST",
-  current:{tempC:35.3, feelsC:40.2, humidity:47, windMph:0.2, gustMph:1.1, maxGustMph:8, windDir:"ESE", rainTodayMm:0.0, pressInHg:30.12, uv:6, solarWm2:702, indoorC:25.1},
-  solar:{insolation_kwh_m2:3.99, peakWm2:736, mj_so_far:14.36, hourly:[0,0,0,0,1,17,44,163,311,455,577,669,725,728,715,0,0,0,0,0,0,0,0,0]},
-  perf:{refPR:0.80, sysKwp:13.44, expectedKwhSoFar:43, actualKwh:44.45, realizedPR:0.83},
-  summary:"Heatwave peak at Gerrards Cross — 35.3°C and feeling like 40° in near-dead air (ESE, sub-1 mph), humidity 47%, UV 6. Irradiance peaked ~736 W/m² with ~4.0 kWh/m² banked by early afternoon; the SigenStor has already made 44.5 kWh today, a realized PR of ~0.83 against the 0.80 station reference. Classic blocking-high conditions — bright, hot and still."
+  asOf:"2026-06-27T08:04:00Z", localTime:"27 Jun 2026, 09:04 BST",
+  current:{tempC:28.1, feelsC:28.5, humidity:49, windMph:0, gustMph:0, maxGustMph:6, windDir:"SE", rainTodayMm:0.0, pressInHg:30.12, uv:6, solarWm2:658, indoorC:28.5},
+  solar:{insolation_kwh_m2:0.92, peakWm2:677, mj_so_far:3.3, hourly:[0,0,0,0,1,11,48,78,141,274,485,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  perf:{refPR:0.80, sysKwp:13.44, expectedKwhSoFar:9.9, actualKwh:13.09, realizedPR:1.06},
+  summary:"At Gerrards Cross this morning: 28.1°C (feels 28.5°), SE breeze near-calm, humidity 49%, UV 6. Solar ramping well at 658 W/m² — the early showers forecast have not materialised at the station. With 0.92 kWh/m² banked and the Sigen already at 13.1 kWh by 9am, today looks like a solid solar day as skies clear and Friday's heatwave gives way to a more comfortable 33°C."
 };
 function renderLocalWeather(){
   const el=document.getElementById('awn-body'); if(!el||typeof AWN_DATA==='undefined')return;
@@ -2976,19 +2976,18 @@ async function fetchLocalForecast(){
 // ═══════════════════════════════════════════════
 const PR_DATA={ refPR:0.90, sysKwp:13.44,
   days:[
-    // {date, insol kWh/m² (AW Net), actual kWh PV (Sigen powerGeneration)}
-    {date:"2026-06-16", insol:5.67, actual:69.40},
-    {date:"2026-06-17", insol:4.67, actual:54.25},
-    {date:"2026-06-18", insol:4.15, actual:54.73},
-    {date:"2026-06-19", insol:6.64, actual:83.68},
-    {date:"2026-06-20", insol:4.33, actual:53.57}
+    // {date, insol kWh/m² (AW Net measured or Open-Meteo×0.82), actual kWh PV (Sigen powerGeneration)}
+    {date:"2026-06-20", insol:5.24, actual:53.57},
+    {date:"2026-06-21", insol:6.15, actual:65.35},
+    {date:"2026-06-22", insol:6.38, actual:77.67},
+    {date:"2026-06-23", insol:6.60, actual:79.97},
+    {date:"2026-06-24", insol:6.83, actual:78.18},
+    {date:"2026-06-25", insol:5.47, actual:79.72},
+    {date:"2026-06-26", insol:6.83, actual:78.72}
   ]
 };
 // Daily consumption by SOURCE (Sigen history, level=Month) — load met by Solar-direct / Battery / Grid (kWh, sums to daily load).
 const ENERGY_DAYS=[
-  {date:"2026-06-11", solar:16.63, battery:0.10, grid:105.49},
-  {date:"2026-06-12", solar:35.43, battery:12.67, grid:38.94},
-  {date:"2026-06-13", solar:42.67, battery:14.10, grid:24.18},
   {date:"2026-06-14", solar:44.82, battery:46.36, grid:10.84},
   {date:"2026-06-15", solar:34.31, battery:15.55, grid:32.68},
   {date:"2026-06-16", solar:27.36, battery:20.32, grid:13.64},
@@ -2999,7 +2998,9 @@ const ENERGY_DAYS=[
   {date:"2026-06-21", solar:29.86, battery:27.71, grid:3.66},
   {date:"2026-06-22", solar:23.97, battery:46.65, grid:0.52},
   {date:"2026-06-23", solar:36.78, battery:38.94, grid:0.04},
-  {date:"2026-06-24", solar:29.46, battery:25.35, grid:0.03}
+  {date:"2026-06-24", solar:53.31, battery:44.07, grid:0.05},
+  {date:"2026-06-25", solar:45.89, battery:31.42, grid:14.03},
+  {date:"2026-06-26", solar:34.56, battery:25.52, grid:12.72}
 ];
 function renderPRPanel(){
   const el=document.getElementById('pr-body'); if(!el||typeof PR_DATA==='undefined')return;
@@ -3061,13 +3062,13 @@ function renderEnergyDays(){
 //  PER-STRING PERFORMANCE — live V/I per PV string from the Sigen inverter.
 //  Normalised to W/panel so strings of different sizes/orientations compare fairly.
 // ═══════════════════════════════════════════════
-const STRING_DATA={ asOf:"2026-06-24T13:22:00.000Z", ghiWm2:702,
-  note:"IDs match the inverter's MPPT inputs (PV1-PV4); roof is SOUTH + WEST (two separate West strings, owner-confirmed). PV1 = 8 SOUTH, main roof (midday champion - 3.83 kW at 14:22, right on its 8x480 ceiling); PV2 = 6 WEST, garage roof - UNSHADED, the textbook West evening leader (holds 41% of its midday output at 19:31); PV3 = 8 WEST, main roof - SHADED + shallower pitch: it peaks at midday and falls to ~9% by evening (vs the garage's 41%) because late-afternoon shade steals its best West hours, masking the normal West evening peak; PV4 = 6 SPLIT 3 S / 3 W (depressed ~90 V, bypass-clamped mismatched string - always trails, the re-stringing candidate). 28 panels / 13.44 kWp; faces 11 S / 17 W. WATCH ITEM: the PV2-vs-PV3 evening gap (41% vs 9% retained) quantifies the west-roof shading loss - worth identifying what casts the late shadow, as PV3 should out-produce the smaller garage string but doesn't in the evening.",
+const STRING_DATA={ asOf:"2026-06-27T08:05:00.000Z", ghiWm2:658,
+  note:"IDs match the inverter's MPPT inputs (PV1-PV4). PV1 = 8 SOUTH (main roof) — at 09:05 BST producing 4.13 kW, near its 8×480W ceiling; PV2 = 6 WEST (garage, unshaded) — 1.11 kW at this morning hour (West still ramping); PV3 = 8 WEST (main roof, shaded PM + shallower pitch) — 1.52 kW; PV4 = 6 SPLIT 3S/3W (depressed ~98V, bypass-clamped — the re-stringing candidate, always trails). 28 panels / 13.44 kWp; faces 11 S / 17 W. WATCH ITEM: the PV2-vs-PV3 evening gap quantifies the west-roof shading loss — PV3 should out-produce the smaller garage string but rarely does in the evening hours.",
   strings:[
-    {id:1,panels:8,orient:'South',kwp:3.84,powerKw:3.83,v:336.6,a:11.39},
-    {id:2,panels:6,orient:'West', kwp:2.88,powerKw:2.15,v:179.9,a:11.95},
-    {id:3,panels:8,orient:'West', kwp:3.84,powerKw:2.90,v:243.2,a:11.91},
-    {id:4,panels:6,orient:'Split',kwp:2.88,powerKw:1.07,v:89.8, a:11.93}
+    {id:1,panels:8,orient:'South',kwp:3.84,powerKw:4.13,v:349.70,a:11.80},
+    {id:2,panels:6,orient:'West', kwp:2.88,powerKw:1.11,v:194.30,a:5.73},
+    {id:3,panels:8,orient:'West', kwp:3.84,powerKw:1.52,v:260.00,a:5.85},
+    {id:4,panels:6,orient:'Split',kwp:2.88,powerKw:0.56,v:97.90, a:5.69}
   ]
 };
 function renderStrings(){
@@ -3096,20 +3097,20 @@ function renderStrings(){
 //  GLOBAL MARKETS — index levels + 24h change (Yahoo v8 chart, same-origin via Chrome).
 //  Baked daily; the dashboard re-fetches live when Chrome is open.
 // ═══════════════════════════════════════════════
-const INDICES_DATA={ asOf:"2026-06-24T13:22:00.000Z",
-  pulse:"Risk-off — US tech leads the retreat (Nasdaq −2.2%, S&P −1.4%) and the VIX jumps 11% to ~19. The UK is the haven of the day (FTSE 100 flat, FTSE 250 +0.1%); Europe softer (DAX −1.1%), Tokyo −0.9%, while Hong Kong bucks the trend at +0.3%.",
+const INDICES_DATA={ asOf:"2026-06-27T08:05:00.000Z",
+  pulse:"Asia leads the sell-off — Nikkei drops 4.2% as JPY strengthens, Hang Seng -1.8%. Europe also weak (DAX -1.3%, Euro Stoxx -0.7%). FTSE 100 the relative haven at -0.2%; US futures flat. VIX easing to 18.4 as Brent falls $3 on US-Iran Hormuz deal.",
   items:[
-    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10428.15,chg:-0.01},
-    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:22948.39,chg:0.10},
-    {sym:'^GSPC',name:'S&P 500',region:'US',price:7365.46,chg:-1.44},
-    {sym:'^IXIC',name:'Nasdaq',region:'US',price:25587.04,chg:-2.21},
-    {sym:'^DJI',name:'Dow Jones',region:'US',price:51666.84,chg:-0.09},
-    {sym:'^GDAXI',name:'DAX',region:'DE',price:24628.56,chg:-1.06},
-    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8374.47,chg:0.40},
-    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6209.40,chg:-0.34},
-    {sym:'^N225',name:'Nikkei 225',region:'JP',price:69174.97,chg:-0.88},
-    {sym:'^HSI',name:'Hang Seng',region:'HK',price:23412.18,chg:0.33},
-    {sym:'^VIX',name:'VIX',region:'Vol',price:19.21,chg:11.17}
+    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10508.02,chg:-0.21},
+    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:23147.19,chg:-0.06},
+    {sym:'^GSPC',name:'S&P 500',region:'US',price:7354.02,chg:-0.05},
+    {sym:'^IXIC',name:'Nasdaq',region:'US',price:25297.62,chg:-0.24},
+    {sym:'^DJI',name:'Dow Jones',region:'US',price:51876.11,chg:-0.09},
+    {sym:'^GDAXI',name:'DAX',region:'DE',price:24671.22,chg:-1.29},
+    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8384.87,chg:-0.55},
+    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6221.55,chg:-0.73},
+    {sym:'^N225',name:'Nikkei 225',region:'JP',price:69360.88,chg:-4.15},
+    {sym:'^HSI',name:'Hang Seng',region:'HK',price:22671.86,chg:-1.76},
+    {sym:'^VIX',name:'VIX',region:'Vol',price:18.41,chg:-2.54}
   ]
 };
 function renderIndices(){
@@ -3157,22 +3158,22 @@ function switchPage(name){
     if(name==='energy'){['renderGridCharts','renderIrrChart','renderPowerMarkets','renderEnergyDays','renderDCTracker','renderLongTermForecast'].forEach(function(f){try{if(typeof window[f]==='function')window[f]();}catch(e){}});}
   },50);
 }
-const MACRO_DATA={asOf:"2026-06-26",rows:[
+const MACRO_DATA={asOf:"2026-06-27",rows:[
   {l:"BoE base rate",v:"3.75%",sub:"held at 17 Jun MPC (7–2; two voted +25bp) — markets price ~1 hike by year-end",dir:0},
   {l:"CPI inflation (May)",v:"2.8%",sub:"unchanged from Apr; BoE sees a little over 3¼% by Q4 on energy",dir:0},
   {l:"RPI inflation (Apr)",v:"3.0%",sub:"prev 4.1% · May RPI awaited",dir:0},
-  {l:"10-yr gilt yield",v:"4.78%",sub:"hovering near a two-month low (~4.75%) as energy-driven inflation fears ease; reviewed 26 Jun",dir:-1},
-  {l:"Unemployment",v:"4.9%",sub:"Feb–Apr · up 0.3pp on year, down 0.3pp on quarter; youth 16.2%",dir:-1},
-  {l:"GBP/USD",v:"1.340",sub:"softer as the dollar firms — week range 1.32–1.35",dir:-1,fx:"USD"},
+  {l:"10-yr gilt yield",v:"4.81%",sub:"slipped to 4.81% post-Starmer; energy inflation risk keeps the curve elevated vs early 2026; reviewed 27 Jun",dir:-1},
+  {l:"Unemployment",v:"4.9%",sub:"Feb–Apr · down 0.2pp on quarter; payrolled employees May +2k m/m",dir:-1},
+  {l:"GBP/USD",v:"1.340",sub:"softer as dollar firms on Middle East de-escalation; H2 base-case 1.32–1.41",dir:-1,fx:"USD"},
   {l:"GBP/EUR",v:"1.154",sub:"week range 1.153–1.160",dir:-1,fx:"EUR"}
 ]};
-const CMDTY_DATA={asOf:"2026-06-26",rows:[
-  {l:"Brent crude",v:"$75/bbl",sub:"rose ~2% to ~$75 as traders watch Strait of Hormuz shipping; reviewed 26 Jun",dir:1},
-  {l:"TTF gas (front-month)",v:"€40/MWh",sub:"firmer on heatwave cooling demand (ICE front-month ~€40); reviewed 26 Jun",dir:1},
-  {l:"UK NBP gas",v:"≈98p/th",sub:"tracking firmer TTF; reviewed 26 Jun",dir:1},
-  {l:"Gold",v:"$4,008/oz",sub:"edged back above $4,000 after dipping below on 25 Jun (first since Nov '25); firmer dollar caps gains",dir:1},
-  {l:"Copper",v:"$6.02/lb",sub:"≈$13,270/t (COMEX HG); reviewed 26 Jun",dir:-1},
-  {l:"Lithium carbonate",v:"CN¥154k/t",sub:"≈$21.4/kg LCE (NE Asia, Jun) · steady; reviewed 26 Jun",dir:0}
+const CMDTY_DATA={asOf:"2026-06-27",rows:[
+  {l:"Brent crude",v:"$72/bbl",sub:"fell ~$3 Friday on US-Iran Hormuz deal; Strait of Hormuz shipping accelerating to ~75% pre-war levels",dir:-1},
+  {l:"TTF gas (front-month)",v:"€42/MWh",sub:"eased from €43 high earlier in week as ME tensions cool; heatwave cooling demand still supportive",dir:-1},
+  {l:"UK NBP gas",v:"≈103p/th",sub:"tracking TTF direction; reviewed 27 Jun",dir:-1},
+  {l:"Gold",v:"$3,988/oz",sub:"near $4,000 — firmer dollar caps gains after dipping below $4k on 25 Jun (first since Nov '25)",dir:0},
+  {l:"Copper",v:"$6.0/lb",sub:"≈$13,230/t (COMEX HG); fell 3%+ Fri on stronger dollar & rate expectations",dir:-1},
+  {l:"Lithium carbonate",v:"CN¥169k/t",sub:"≈$23.5/kg LCE (NE Asia, Jun) · seasonal inventory rebuild lifting bids",dir:1}
 ]};
 function renderMacroCmdty(){
   const arrow=d=>d>0?'<span style="color:#dc2626;font-size:9px;">▲</span>':d<0?'<span style="color:#16a34a;font-size:9px;">▼</span>':'';
@@ -3183,20 +3184,20 @@ function renderMacroCmdty(){
   if(cb){cb.innerHTML=CMDTY_DATA.rows.map(r=>row(r,carrow)).join('');try{document.getElementById('cmdty-asof').textContent='Updated '+new Date(CMDTY_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
 }
 // ═══ POWER FORWARDS + CARBON — baked daily by the 7am task (was hard-coded HTML) ═══
-const FWD_DATA={asOf:"2026-06-26",rows:[
-  {l:"UK Win-26",v:"£101/MWh",sub:"~£101 fwd; reviewed 26 Jun"},
+const FWD_DATA={asOf:"2026-06-27",rows:[
+  {l:"UK Win-26",v:"£96/MWh",sub:"~£96 fwd (24 Jun report ~£95.79); lower drift as gas/carbon ease on Hormuz deal; reviewed 27 Jun"},
   {l:"UK Sum-27",v:"£88/MWh",sub:"last verified 28 May"},
   {l:"UK Cal-27",v:"£94/MWh",sub:"last verified 28 May"},
-  {l:"Germany Cal-27",v:"€90/MWh",sub:"last verified 28 May; DE spot averaged ~€134 on 25 Jun (heatwave cooling demand)"},
-  {l:"TTF Gas Win-26",v:"€38/MWh",sub:"last verified 28 May; front-month firmer ~€40"}
-],note:"Verify on Bloomberg/ICE. Reviewed 26 Jun."};
-const CO2_DATA={asOf:"2026-06-26",rows:[
-  {l:"EU ETS Dec-26",v:"€81/t",sub:"rose to ~€81 — highest since Feb on firmer gas & heat demand; reviewed 26 Jun"},
+  {l:"Germany Cal-27",v:"€90/MWh",sub:"last verified 28 May; DE spot hit €135 on 26 Jun (heatwave AC demand)"},
+  {l:"TTF Gas Win-26",v:"€40/MWh",sub:"front-month ~€42 this week; Win-26 slightly below spot on normalising supply outlook"}
+],note:"Verify on Bloomberg/ICE. Reviewed 27 Jun."};
+const CO2_DATA={asOf:"2026-06-27",rows:[
+  {l:"EU ETS Dec-26",v:"€82/t",sub:"avg 2026F revised to €82 (weaker demand + geopolitical volatility); reviewed 27 Jun"},
   {l:"EU ETS Dec-27",v:"€85/t"},
-  {l:"UK ETS Dec-26",v:"£52/t",sub:"near 10-mo lows (~£46-53); EU-UK linkage talks ongoing"},
-  {l:"UK ETS Dec-27",v:"£58/t"},
-  {l:"UK/EU spread",v:"-£18/t"}
-],note:"EU-UK ETS linkage to narrow spread <€10/t by year-end."};
+  {l:"UK ETS Dec-26",v:"£58/t",sub:"week of £57.67–58.73; rising ahead of Jul EU-UK linkage talks; reviewed 27 Jun"},
+  {l:"UK ETS Dec-27",v:"£62/t"},
+  {l:"UK/EU spread",v:"-£13/t",sub:"EUA €82 ≈ £71 at current FX; spread narrowing toward linkage"}
+],note:"EU-UK ETS linkage discussions in Jul 2026 expected to narrow spread to <€10/t by year-end."};
 const NAV_ASOF="2026-05-28"; // bump when NAVs in PRICES are re-verified against AIC
 function renderFwdCarbon(){
   const row=r=>'<div class="fr"><span class="fl">'+r.l+(r.sub?'<br><span style="font-size:9px;color:#94a3b8;font-weight:400;">'+r.sub+'</span>':'')+'</span><span class="fval">'+r.v+'</span></div>';
@@ -3287,7 +3288,7 @@ async function loadAll(){
   requestAnimationFrame(()=>{
     try{
       drawIntraday(now);
-      setFeedStatus('n2ex','ok','Modelled · £110/MWh N2EX anchor · heat returning ~34°C, solar surging, gas on the AM margin · 26 Jun 2026');
+      setFeedStatus('n2ex','ok','Modelled · £105/MWh N2EX anchor · showers clearing, solar at 658 W/m², gas 15%, CI 109g · 27 Jun 2026');
     }catch(e){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
