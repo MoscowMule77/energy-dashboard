@@ -117,6 +117,7 @@ table.sh{width:100%;border-collapse:collapse;font-size:12px;}
 table.sh th{color:#94a3b8;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.4px;padding:4px 4px;border-bottom:1px solid #f1f5f9;text-align:right;}
 table.sh th:first-child{text-align:left;}
 table.sh td{padding:5px 4px;border-bottom:1px solid #f8fafc;vertical-align:middle;}
+table.sh td.mc{text-align:right;font-size:11px;color:#475569;font-weight:600;white-space:nowrap;}
 table.sh tr:last-child td{border-bottom:none;}
 table.sh tr:hover td{background:#fafbfc;}
 .tk{font-weight:700;color:#0d2137;font-size:11px;}
@@ -648,10 +649,10 @@ table.sh tr:hover td{background:#fafbfc;}
       <div class="sec-r"><span id="ts-rit" class="ts">–</span><a href="https://uk.finance.yahoo.com/quotes/UKW.L,TRIG.L,BSIF.L,NESF.L,FSFL.L,ORIT.L,SEIT.L,GSF.L,GRID.L,FEN.L" target="_blank">Yahoo Finance ↗</a></div>
     </div>
     <table class="sh">
-      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (p)</th><th>1d</th><th>NAV est.</th><th>Discount</th><th style="min-width:80px;">52-wk</th><th title="Within 52-week range?">✓</th></tr></thead>
+      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (p)</th><th>1d</th><th>Mkt cap</th><th>NAV est.</th><th>Discount</th><th style="min-width:80px;">52-wk</th><th title="Within 52-week range?">✓</th></tr></thead>
       <tbody id="rit-tbody"></tbody>
     </table>
-    <div class="tfoot">Prices: Yahoo Finance (live). NAV: indicative — verify at <a href="https://www.theaic.co.uk/investment-companies" target="_blank" style="color:#0f766e;">AIC ↗</a>. ✓ = within 52-week range.</div>
+    <div class="tfoot">Prices: Yahoo Finance (live). NAV: indicative — verify at <a href="https://www.theaic.co.uk/investment-companies" target="_blank" style="color:#0f766e;">AIC ↗</a>. ✓ = within 52-week range. Mkt cap = shares in issue × live price (share counts verified 19 Jul 2026).</div>
   </div>
 </div>
 
@@ -660,18 +661,18 @@ table.sh tr:hover td{background:#fafbfc;}
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🇬🇧 UK Utilities</span><span id="ts-uk" class="ts">–</span></div>
     <table class="sh">
-      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (p)</th><th>1d</th><th>52-wk</th><th>✓</th></tr></thead>
+      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (p)</th><th>1d</th><th>Mkt cap</th><th>52-wk</th><th>✓</th></tr></thead>
       <tbody id="uk-tbody"></tbody>
     </table>
-    <div class="tfoot">Source: Yahoo Finance via browser.</div>
+    <div class="tfoot">Source: Yahoo Finance via browser. Mkt cap = shares in issue × live price.</div>
   </div>
   <div class="card">
     <div class="sec" style="color:#0d2137;border-color:#cbd5e1;"><span>🇪🇺 European Utilities</span><span id="ts-eu" class="ts">–</span></div>
     <table class="sh">
-      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (€)</th><th>1d</th><th>52-wk</th><th>✓</th></tr></thead>
+      <thead><tr><th style="text-align:left;">Ticker</th><th>Price (€)</th><th>1d</th><th>Mkt cap</th><th>52-wk</th><th>✓</th></tr></thead>
       <tbody id="eu-tbody"></tbody>
     </table>
-    <div class="tfoot">Source: Yahoo Finance via browser.</div>
+    <div class="tfoot">Source: Yahoo Finance via browser. Mkt cap = shares in issue × live price.</div>
   </div>
 </div>
 
@@ -1996,47 +1997,55 @@ async function fetchLiveNews(){
 // Levels are most-recent verified closes (early Jun 2026); 1-day % is indicative. TRIG/SEIT/FEN: no fresh quote, last value retained.
 let PRICES = {
   rit:[
-    {tk:'UKW', name:'Greencoat UK Wind',         price:100.10,chgPct:+1.90,wkLo:92.20, wkHi:128.00,nav:140,yt:'UKW.L'},
-    {tk:'TRIG',name:'Renewables Infrastructure', price:73.40, chgPct:0.00, wkLo:63.20, wkHi:90.50, nav:108,yt:'TRIG.L'},
-    {tk:'BSIF',name:'Bluefield Solar Income',    price:91.40, chgPct:+2.50,wkLo:65.89, wkHi:99.00, nav:107,yt:'BSIF.L'},
-    {tk:'NESF',name:'NextEnergy Solar',          price:48.45, chgPct:+0.50,wkLo:43.00, wkHi:78.77, nav:65, yt:'NESF.L'},
-    {tk:'FSFL',name:'Foresight Solar',           price:76.20, chgPct:+1.00,wkLo:59.60, wkHi:92.90, nav:99, yt:'FSFL.L'},
-    {tk:'ORIT',name:'Octopus Renewables',        price:74.80, chgPct:+1.50,wkLo:52.60, wkHi:76.70, nav:90, yt:'ORIT.L'},
-    {tk:'SEIT',name:'Ecofin US Renewables',      price:44.00, chgPct:0.00, wkLo:33.81, wkHi:63.90, nav:68, yt:'SEIT.L'},
-    {tk:'GSF', name:'Gore Street Energy Stor.',  price:59.20, chgPct:+1.20,wkLo:46.87, wkHi:69.00, nav:87, yt:'GSF.L'},
-    {tk:'GRID',name:'Gresham House Energy Stor.',price:78.00, chgPct:-1.00,wkLo:66.00, wkHi:83.30, nav:120,yt:'GRID.L'},
-    {tk:'FEN', name:'Foresight Env. Infra.',     price:48.50, chgPct:0.00, wkLo:40.00, wkHi:50.94, nav:62, yt:'FEN.L'},
+    {tk:'UKW', name:'Greencoat UK Wind',         price:100.10,chgPct:+1.90,wkLo:92.20, wkHi:128.00,nav:140,yt:'UKW.L',shares:2158.7},
+    {tk:'TRIG',name:'Renewables Infrastructure', price:73.40, chgPct:0.00, wkLo:63.20, wkHi:90.50, nav:108,yt:'TRIG.L',shares:2340.0},
+    {tk:'BSIF',name:'Bluefield Solar Income',    price:91.40, chgPct:+2.50,wkLo:65.89, wkHi:99.00, nav:107,yt:'BSIF.L',shares:592.1},
+    {tk:'NESF',name:'NextEnergy Solar',          price:48.45, chgPct:+0.50,wkLo:43.00, wkHi:78.77, nav:65, yt:'NESF.L',shares:575.2},
+    {tk:'FSFL',name:'Foresight Solar',           price:76.20, chgPct:+1.00,wkLo:59.60, wkHi:92.90, nav:99, yt:'FSFL.L',shares:504.3},
+    {tk:'ORIT',name:'Octopus Renewables',        price:74.80, chgPct:+1.50,wkLo:52.60, wkHi:76.70, nav:90, yt:'ORIT.L',shares:458.5},
+    {tk:'SEIT',name:'Ecofin US Renewables',      price:44.00, chgPct:0.00, wkLo:33.81, wkHi:63.90, nav:68, yt:'SEIT.L',shares:1085.4},
+    {tk:'GSF', name:'Gore Street Energy Stor.',  price:59.20, chgPct:+1.20,wkLo:46.87, wkHi:69.00, nav:87, yt:'GSF.L',shares:411.2},
+    {tk:'GRID',name:'Gresham House Energy Stor.',price:78.00, chgPct:-1.00,wkLo:66.00, wkHi:83.30, nav:120,yt:'GRID.L',shares:569.1},
+    {tk:'FEN', name:'Foresight Env. Infra.',     price:48.50, chgPct:0.00, wkLo:40.00, wkHi:50.94, nav:62, yt:'FEN.L',shares:623.0},
   ],
   ukUtil:[
-    {tk:'SSE', name:'SSE plc',      price:2296.0,chgPct:-0.80,wkLo:1597,  wkHi:2767.5,note:'RIIO/offshore wind'},
-    {tk:'NG.', name:'National Grid',price:1199.0,chgPct:-0.50,wkLo:1000,  wkHi:1428.5,note:'RIIO-T3 capex'},
-    {tk:'CNA', name:'Centrica',     price:188.25,chgPct:-0.60,wkLo:152.45,wkHi:220.30,note:'Gas supply/Rough'},
+    {tk:'SSE', name:'SSE plc',      price:2296.0,chgPct:-0.80,wkLo:1597,  wkHi:2767.5,note:'RIIO/offshore wind',shares:1212.4},
+    {tk:'NG.', name:'National Grid',price:1199.0,chgPct:-0.50,wkLo:1000,  wkHi:1428.5,note:'RIIO-T3 capex',shares:5118.0},
+    {tk:'CNA', name:'Centrica',     price:188.25,chgPct:-0.60,wkLo:152.45,wkHi:220.30,note:'Gas supply/Rough',shares:4515.0},
   ],
   euUtil:[
-    {tk:'IBE', name:'Iberdrola',price:19.50,chgPct:-0.30,wkLo:15.10,wkHi:20.60},
-    {tk:'RWE', name:'RWE AG',   price:56.15,chgPct:+1.10,wkLo:32.94,wkHi:62.00},
-    {tk:'EOAN',name:'E.ON SE',  price:18.19,chgPct:+0.60,wkLo:14.60,wkHi:20.39},
-    {tk:'ENEL',name:'Enel SpA', price:9.63, chgPct:+0.10,wkLo:7.58, wkHi:10.31},
-    {tk:'ENGI',name:'Engie SA', price:26.67,chgPct:-0.70,wkLo:17.20,wkHi:29.89},
+    {tk:'IBE', name:'Iberdrola',price:19.50,chgPct:-0.30,wkLo:15.10,wkHi:20.60,shares:6960.0},
+    {tk:'RWE', name:'RWE AG',   price:56.15,chgPct:+1.10,wkLo:32.94,wkHi:62.00,shares:713.6},
+    {tk:'EOAN',name:'E.ON SE',  price:18.19,chgPct:+0.60,wkLo:14.60,wkHi:20.39,shares:2610.0},
+    {tk:'ENEL',name:'Enel SpA', price:9.63, chgPct:+0.10,wkLo:7.58, wkHi:10.31,shares:10170.0},
+    {tk:'ENGI',name:'Engie SA', price:26.67,chgPct:-0.70,wkLo:17.20,wkHi:29.89,shares:2540.0},
   ]
 };
 
 function verify(p,lo,hi){if(!p||isNaN(p)||p<=0)return{cls:'ver',icon:'✗',tip:'Invalid'};const buf=(hi-lo)*.05;if(p<lo-buf)return{cls:'vwn',icon:'⚠',tip:`Below 52wk low (${lo})`};if(p>hi*1.15)return{cls:'vwn',icon:'⚠',tip:`Above 52wk high (${hi})`};return{cls:'vok',icon:'✓',tip:'Within 52-wk range'};}
 function wkBar(p,lo,hi){const pct=Math.min(100,Math.max(0,((p-lo)/(hi-lo))*100));const c=pct<25?'#ef4444':pct<60?'#f59e0b':'#22c55e';return`<div class="bw" title="${lo}–${hi}"><div class="bf" style="width:${pct}%;background:${c};"></div></div><div style="font-size:9px;color:#94a3b8;text-align:right;">${lo}–${hi}</div>`;}
 function chg(p){if(p===0)return`<span class="cpn">0.00%</span>`;return`<span class="${p>0?'cpg':'cpr'}">${p>0?'+':''}${p.toFixed(2)}%</span>`;}
+// Market cap = shares in issue x current price, so it stays correct when prices live-refresh.
+// GBp tickers quote in pence (£m = price/100 x shares); EUR tickers quote in euros (€m = price x shares).
+// Share counts are baked - they move only on issuance/buybacks - and were verified 19 Jul 2026.
+function mcap(s,cur){
+  if(!s||!s.shares||!s.price||isNaN(s.price))return'—';
+  const m=(cur==='EUR'?s.price:s.price/100)*s.shares, sym=(cur==='EUR'?'€':'£');
+  return m>=1000?sym+(m/1000).toFixed(1)+'bn':sym+Math.round(m)+'m';
+}
 
 function renderShares() {
   document.getElementById('rit-tbody').innerHTML = PRICES.rit.map(s=>{
     const disc=((s.price-s.nav)/s.nav*100).toFixed(1),v=verify(s.price,s.wkLo,s.wkHi);
-    return`<tr><td><div class="tk"><a href="https://uk.finance.yahoo.com/quote/${s.yt}" target="_blank" style="color:#0d2137;text-decoration:none;">${s.tk}</a></div><div class="tn">${s.name}</div></td><td class="pr">${s.price.toFixed(2)}p</td><td style="text-align:right;">${chg(s.chgPct)}</td><td style="text-align:right;font-size:11px;color:#64748b;">${s.nav}p<span class="nav-est"> est.</span></td><td style="text-align:right;"><span class="disc ${+disc<0?'neg':'pos'}">${disc}%</span></td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" title="${v.tip}" style="text-align:center;">${v.icon}</td></tr>`;
+    return`<tr><td><div class="tk"><a href="https://uk.finance.yahoo.com/quote/${s.yt}" target="_blank" style="color:#0d2137;text-decoration:none;">${s.tk}</a></div><div class="tn">${s.name}</div></td><td class="pr">${s.price.toFixed(2)}p</td><td style="text-align:right;">${chg(s.chgPct)}</td><td class="mc">${mcap(s,'GBp')}</td><td style="text-align:right;font-size:11px;color:#64748b;">${s.nav}p<span class="nav-est"> est.</span></td><td style="text-align:right;"><span class="disc ${+disc<0?'neg':'pos'}">${disc}%</span></td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" title="${v.tip}" style="text-align:center;">${v.icon}</td></tr>`;
   }).join('');
   document.getElementById('uk-tbody').innerHTML = PRICES.ukUtil.map(s=>{
     const v=verify(s.price,s.wkLo,s.wkHi);
-    return`<tr><td><div class="tk">${s.tk}</div><div class="tn">${s.name}</div></td><td class="pr">${s.price.toLocaleString()}p</td><td style="text-align:right;">${chg(s.chgPct)}</td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" style="text-align:center;" title="${v.tip}">${v.icon}</td></tr>`;
+    return`<tr><td><div class="tk">${s.tk}</div><div class="tn">${s.name}</div></td><td class="pr">${s.price.toLocaleString()}p</td><td style="text-align:right;">${chg(s.chgPct)}</td><td class="mc">${mcap(s,'GBp')}</td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" style="text-align:center;" title="${v.tip}">${v.icon}</td></tr>`;
   }).join('');
   document.getElementById('eu-tbody').innerHTML = PRICES.euUtil.map(s=>{
     const v=verify(s.price,s.wkLo,s.wkHi);
-    return`<tr><td><div class="tk">${s.tk}</div><div class="tn">${s.name}</div></td><td class="pr">€${s.price.toFixed(2)}</td><td style="text-align:right;">${chg(s.chgPct)}</td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" style="text-align:center;" title="${v.tip}">${v.icon}</td></tr>`;
+    return`<tr><td><div class="tk">${s.tk}</div><div class="tn">${s.name}</div></td><td class="pr">€${s.price.toFixed(2)}</td><td style="text-align:right;">${chg(s.chgPct)}</td><td class="mc">${mcap(s,'EUR')}</td><td style="text-align:right;">${wkBar(s.price,s.wkLo,s.wkHi)}</td><td class="${v.cls}" style="text-align:center;" title="${v.tip}">${v.icon}</td></tr>`;
   }).join('');
   buildFreshnessPanel();
 }
