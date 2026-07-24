@@ -767,7 +767,7 @@ if (!COWORK) {
 //  DATA TIMESTAMPS
 // ═══════════════════════════════════════════════
 const DATA_TS = {
-  prices:   {ts:'2026-07-21T07:10:00', source:'Yahoo Finance / LSE / Investing.com (21 Jul; live-refreshed on open)', isLive:true},
+  prices:   {ts:'2026-07-24T07:20:00', source:'Yahoo Finance / LSE / Investing.com (24 Jul; live-refreshed on open)', isLive:true},
   grid:     {ts:null, source:'Carbon Intensity API + Open-Meteo', isLive:true},
   battery:  {ts:null, source:'Computed from date/time/season', isLive:true},
   solar:    {ts:null, source:'Computed from date/time/season', isLive:true},
@@ -915,34 +915,34 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 21 Jul 2026 07:10 BST - the heat is easing off the weekend peak: a mainly clear Tuesday near 26C (down ~3C on Monday), min ~15C, only a 3% rain risk, sunrise 05:09 / sunset 21:02. PV should still run a near-clear-day yield, just a shorter, slightly softer curve than the 19-20 Jul peak. The on-site AW Net station remains OFFLINE (since 15 Jul 09:29 BST, now ~142h) and no Chrome bridge was available this run, so today's irradiance is a Met Office clear-sky projection, not a measurement.
-    time:["2026-07-14","2026-07-15","2026-07-16","2026-07-17","2026-07-18","2026-07-19","2026-07-20","2026-07-21"],
-    temperature_2m_max:[31.0,29.0,30.0,30.0,24.0,28.0,29.0,26.0],
-    temperature_2m_min:[15.0,16.0,16.0,16.0,13.0,18.0,17.0,15.0],
-    weathercode:[2,1,0,0,2,0,1,1],
-    shortwave_radiation_sum:[21.00,19.50,26.00,26.50,17.50,27.00,25.50,24.00]
+    // Updated 24 Jul 2026 07:28 BST - a warm, mainly clear Friday: max ~29C, min ~18C, only a 10% rain risk late, UV high (index 7), light NW breeze gusting ~16mph. A strong solar day - expect a near-clear-day PV curve peaking ~880 W/m2 around 13:00. The on-site AW Net station remains OFFLINE (since 15 Jul) and no Chrome bridge was available this run, so today's irradiance is a Met Office clear-sky projection, not a measurement.
+    time:["2026-07-17","2026-07-18","2026-07-19","2026-07-20","2026-07-21","2026-07-22","2026-07-23","2026-07-24"],
+    temperature_2m_max:[30.0,24.0,28.0,29.0,26.0,27.0,28.0,29.0],
+    temperature_2m_min:[16.0,13.0,18.0,17.0,15.0,16.0,17.0,18.0],
+    weathercode:[0,2,0,1,1,2,1,1],
+    shortwave_radiation_sum:[26.50,17.50,27.00,25.50,24.00,22.00,25.00,26.50]
   },
   daily:[
-    // Daily averages - Carbon Intensity API (NESO) settled half-hours. 19 Jul is now a settled full day from the energymix past-day table: a clean, sunny Sunday (solar 19.2%, wind 22.9%, gas only 12.8%, CI ~93g). 20 Jul turned: wind collapsed and a 35.1GW evening peak pulled gas back up hard (CI 176g at 21:00). 21 Jul is the running mean of the first ~14 settlement periods - a notably gassy morning with wind down near 3.9GW.
-    {date:"2026-07-14",mix:{wind:24.3,solar:16.8,nuclear:11.1,gas:27.0,biomass:8.4,imports:10.8,hydro:1.3,coal:0,other:0.3},n:48},
-    {date:"2026-07-15",mix:{wind:14.2,solar:17.8,nuclear:11.8,gas:36.9,biomass:8.8,imports:8.5,hydro:1.0,coal:0,other:1.0},n:48},
-    {date:"2026-07-16",mix:{wind:14.2,solar:17.8,nuclear:11.8,gas:36.9,biomass:8.8,imports:9.0,hydro:1.0,coal:0,other:0.5},n:48},
+    // Daily averages - Carbon Intensity API (NESO) settled half-hours. 23 Jul is a settled full day from the energymix past-day table: gas 25.6%, wind 18.7%, solar 13.5%, imports 19.2%, CI ~134g. 21 Jul is now carried as a settled full day (was a partial n=14 morning read on the previous run). 24 Jul is the running mean of the first ~20 settlement periods - a bright morning with wind recovered to ~20% and gas still the biggest single block.
     {date:"2026-07-17",mix:{wind:17.9,solar:17.8,nuclear:12.3,gas:24.8,biomass:8.9,imports:17.4,hydro:0.8,coal:0,other:0.1},n:48},
     {date:"2026-07-18",mix:{wind:24.0,solar:17.0,nuclear:13.0,gas:18.0,biomass:6.0,imports:21.0,hydro:1.0,coal:0,other:0.0},n:48},
     {date:"2026-07-19",mix:{wind:22.9,solar:19.2,nuclear:13.6,gas:12.8,biomass:6.3,imports:24.3,hydro:0.9,coal:0,other:0.0},n:48},
     {date:"2026-07-20",mix:{wind:13.0,solar:17.0,nuclear:12.5,gas:26.0,biomass:7.5,imports:22.0,hydro:1.0,coal:0,other:1.0},n:48},
-    {date:"2026-07-21",mix:{wind:15.8,solar:2.0,nuclear:14.1,gas:31.0,biomass:9.0,imports:20.3,hydro:1.5,coal:0,other:6.3},n:14}
+    {date:"2026-07-21",mix:{wind:15.5,solar:16.0,nuclear:13.5,gas:28.0,biomass:8.5,imports:17.0,hydro:1.0,coal:0,other:0.5},n:48},
+    {date:"2026-07-22",mix:{wind:16.0,solar:15.5,nuclear:12.5,gas:27.0,biomass:8.5,imports:18.5,hydro:1.0,coal:0,other:1.0},n:48},
+    {date:"2026-07-23",mix:{wind:18.7,solar:13.5,nuclear:12.4,gas:25.6,biomass:9.2,imports:19.2,hydro:1.0,coal:0,other:0.4},n:48},
+    {date:"2026-07-24",mix:{wind:20.0,solar:6.6,nuclear:13.5,gas:27.2,biomass:10.1,imports:21.7,hydro:1.0,coal:0,other:0.0},n:20}
   ],
-  // Snapshot 21 Jul 2026 06:45 BST (livegriddata / Elexon BMRS + Carbon Intensity API). A gassy Tuesday morning: grid demand 24.53GW, domestic generation 19.54GW of which gas is the single biggest block at 7.61GW while wind has fallen to 3.88GW. Carbon intensity 165g - roughly double the 85g printed at this hour on Sunday. Interconnectors importing 4.99GW (France 3.66GW), exporting 1.35GW to Ireland.
-  currentMix:{wind:15.8,solar:2.0,nuclear:14.1,gas:31.0,biomass:9.0,imports:20.3,hydro:1.5,coal:0,other:6.3},
-  carbonIntensity:165,  // gCO2/kWh - 21 Jul 06:45 BST (wind weak, gas on the margin, solar barely started)
-  todayStr:"2026-07-21",
-  fetchedAt:"2026-07-21T06:10:00.000Z",
-  // Hourly irradiance today (W/m2) - AW Net station offline, so this is the Met Office clear-sky projection: peak ~870 W/m2 ~13:00 on a mainly clear 26C Tuesday
-  hourlyIrr:   [0,0,0,0,0,15,80,200,370,540,680,790,850,870,830,730,580,405,225,80,8,0,0,0],
-  hourlyDirect:[0,0,0,0,0,8,48,132,250,375,485,575,625,645,610,530,415,285,150,50,4,0,0,0],
+  // Snapshot 24 Jul 2026 07:20 BST (energymix.uk / Elexon BMRS + Carbon Intensity API). A brighter Friday morning: demand 25.8GW, domestic generation 20.2GW with gas the biggest single block at 6.96GW (27.2%) but wind recovered to 5.12GW (20.0%). Carbon intensity 144g. Interconnectors importing ~5.6GW net (France 3.46GW), exporting 1.44GW to Ireland; solar just climbing at 1.68GW.
+  currentMix:{wind:20.0,solar:6.6,nuclear:13.5,gas:27.2,biomass:10.1,imports:21.7,hydro:1.0,coal:0,other:0.0},
+  carbonIntensity:144,  // gCO2/kWh - 24 Jul 07:20 BST (wind back near 20%, gas sharing the margin, solar building)
+  todayStr:"2026-07-24",
+  fetchedAt:"2026-07-24T06:28:00.000Z",
+  // Hourly irradiance today (W/m2) - AW Net station offline, so this is the Met Office clear-sky projection: peak ~880 W/m2 ~13:00 on a mainly clear 29C Friday
+  hourlyIrr:   [0,0,0,0,0,18,88,215,385,555,695,800,865,880,840,745,590,415,235,88,10,0,0,0],
+  hourlyDirect:[0,0,0,0,0,10,52,140,260,385,495,585,635,655,620,540,425,290,155,52,5,0,0,0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:200, currentDirect:132, currentDiffuse:68, // W/m2 at ~07:10 BST (AW Net offline - clear morning sun)
+  currentIrr:135, currentDirect:88, currentDiffuse:47, // W/m2 at ~07:28 BST (AW Net offline - clear morning sun)
 };
 
 // Last reading from the SigenStor. NOTE 21 Jul 2026: the Claude in Chrome extension was not connected for this run,
@@ -1651,10 +1651,10 @@ function updateSectionTs() {
   if(!DATA_TS.grid.ts){const el=document.getElementById('ts-grid');if(el){el.className='ts';el.textContent='Not yet fetched';}}
 }
 
-const PM_DATA={dates:["2026-06-21","2026-06-22","2026-06-23","2026-06-24","2026-06-25","2026-06-26","2026-06-27","2026-06-28","2026-06-29","2026-06-30","2026-07-01","2026-07-02","2026-07-03","2026-07-04","2026-07-05","2026-07-06","2026-07-07","2026-07-08","2026-07-09","2026-07-10","2026-07-11","2026-07-12","2026-07-13","2026-07-14","2026-07-15","2026-07-16","2026-07-17","2026-07-18","2026-07-19","2026-07-20"],
-  gb:{base:[103,100,102,125,102,105,88,72,108,100,96,67,67,52,68,85,105,119,119,108,111.8,88,109.6,116,115,122,118,110,84,99.1],wind:[93,90,95,117,92,92,78,62,96,91,86,57,57,40,58,75,95,109,109,98,99,78,98,106,107,112,108,100,74,89],solar:[75,76,82,97,80,81,68,50,88,74,76,47,47,35,44,60,79,93,99,88,86,64,86,96,93,100,98,90,60,79],bess:[55,53,52,55,52,53,51,54,51,54,51,51,51,52,53,53,54,54,51,51,54,53,53,51,52,52,51,51,53,51],neg:[0,0,0,0,0,0,0,1,0,0,0,1,0,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-  de:{base:[70,82,78,208,134,135,99,70,140,195,165,60,63,55,60,72,85,95,124,118,94.6,75.2,119.4,115,108,136,132,138,71,103.2],wind:[59,71,67,199,123,124,88,59,129,184,154,49,52,42,49,61,74,84,113,107,84,64,108,104,97,125,121,127,60,92],solar:[32,50,48,168,100,100,65,35,110,160,135,30,33,23,28,41,54,65,94,88,58,37,85,85,78,104,102,108,33,73],bess:[91,81,79,86,81,83,87,89,79,81,79,79,79,85,87,80,80,78,79,79,90,90,79,79,79,81,81,81,91,76],neg:[6,2,2,2,2,2,5,6,2,1,2,2,2,5,6,2,2,1,2,2,6,5,0,2,2,2,3,3,6,0]},
-  es:{base:[50,55,52,94,80,95,70,55,93,101,92,48,49,48,52,60,70,78,116,95,83.2,70.2,125.3,118,110,148,138,141,89.3,121.5],wind:[44,49,46,89,74,89,64,49,87,95,86,42,43,42,46,54,64,72,110,89,77,64,119,112,104,142,132,135,83,115],solar:[18,29,26,60,50,65,44,29,67,71,66,22,23,22,24,33,43,52,90,69,51,38,95,92,82,120,112,115,57,95],bess:[82,74,74,81,78,78,76,76,74,78,74,74,74,75,79,77,77,74,74,74,82,82,72,74,76,76,76,76,83,69],neg:[6,4,4,4,4,4,5,5,4,4,4,4,4,5,6,5,5,4,4,4,6,6,0,4,4,4,5,5,7,0]}};
+const PM_DATA={dates:["2026-06-24","2026-06-25","2026-06-26","2026-06-27","2026-06-28","2026-06-29","2026-06-30","2026-07-01","2026-07-02","2026-07-03","2026-07-04","2026-07-05","2026-07-06","2026-07-07","2026-07-08","2026-07-09","2026-07-10","2026-07-11","2026-07-12","2026-07-13","2026-07-14","2026-07-15","2026-07-16","2026-07-17","2026-07-18","2026-07-19","2026-07-20","2026-07-21","2026-07-22","2026-07-23"],
+  gb:{base:[125,102,105,88,72,108,100,96,67,67,52,68,85,105,119,119,108,111.8,88,109.6,116,115,122,118,110,84,99.1,112,118,110],wind:[117,92,92,78,62,96,91,86,57,57,40,58,75,95,109,109,98,99,78,98,106,107,112,108,100,74,89,102,108,100],solar:[97,80,81,68,50,88,74,76,47,47,35,44,60,79,93,99,88,86,64,86,96,93,100,98,90,60,79,92,98,90],bess:[55,52,53,51,54,51,54,51,51,51,52,53,53,54,54,51,51,54,53,53,51,52,52,51,51,53,51,51,51,51],neg:[0,0,0,0,1,0,0,0,1,0,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  de:{base:[208,134,135,99,70,140,195,165,60,63,55,60,72,85,95,124,118,94.6,75.2,119.4,115,108,136,132,138,71,103.2,120,130,117.7],wind:[199,123,124,88,59,129,184,154,49,52,42,49,61,74,84,113,107,84,64,108,104,97,125,121,127,60,92,109,119,107],solar:[168,100,100,65,35,110,160,135,30,33,23,28,41,54,65,94,88,58,37,85,85,78,104,102,108,33,73,90,100,88],bess:[86,81,83,87,89,79,81,79,79,79,85,87,80,80,78,79,79,90,90,79,79,79,81,81,81,91,76,79,81,79],neg:[2,2,2,5,6,2,1,2,2,2,5,6,2,2,1,2,2,6,5,0,2,2,2,3,3,6,0,2,3,2]},
+  es:{base:[94,80,95,70,55,93,101,92,48,49,48,52,60,70,78,116,95,83.2,70.2,125.3,118,110,148,138,141,89.3,121.5,135,145,141.5],wind:[89,74,89,64,49,87,95,86,42,43,42,46,54,64,72,110,89,77,64,119,112,104,142,132,135,83,115,129,139,135],solar:[60,50,65,44,29,67,71,66,22,23,22,24,33,43,52,90,69,51,38,95,92,82,120,112,115,57,95,109,119,115],bess:[81,78,78,76,76,74,78,74,74,74,75,79,77,77,74,74,74,82,82,72,74,76,76,76,76,83,69,74,74,74],neg:[4,4,4,5,5,4,4,4,4,4,5,6,5,5,4,4,4,6,6,0,4,4,4,5,5,7,0,4,4,4]}};
 const PM_CFG={gb:{cur:'£'},de:{cur:'€'},es:{cur:'€'}};
 let pmCharts={};
 function renderPowerMarkets(){
@@ -1876,18 +1876,18 @@ async function openPMDay(c,idx){
 // ═══════════════════════════════════════════════
 const NEWS_CATS={"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Technology":{bg:"#92400e",fg:"#fde68a"},"M&A":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#065f46",fg:"#a7f3d0"},"AI":{bg:"#0e7490",fg:"#a5f3fc"}};
 const NEWS_ITEMS=[
-  {"cat":"Markets","title":"Energy prices surge as Hormuz tanker strikes enter ninth day","desc":"UK Win-26 baseload added GBP3.33 to GBP118.61/MWh and NBP day-ahead jumped 7.70p to 139.50p/therm as US-Iran strikes and a reported Russian drone hit on Ukrainian gas infrastructure repriced winter supply risk.","src":"Prestige Business Solutions","url":"https://www.prestigebusiness.energy/marketreports/energy-market-update20-jul2026","date":"2026-07-20"},
-  {"cat":"Policy","title":"Burnham reported to be readying bill-cutting plan and North Sea shift","desc":"The Times reports the incoming prime minister will announce measures to cut household energy bills and signal support for new North Sea drilling, while stopping short of scrapping the ban on new exploration licences.","src":"The Times","url":"https://www.thetimes.com/uk/politics/article/help-with-cost-of-living-a-first-step-for-andy-burnham-in-no-10-0jcvbpx28","date":"2026-07-19"},
-  {"cat":"Policy","title":"Greg Jackson: overhaul the wholesale market or pay the price","desc":"The Octopus founder argues locational wholesale reform would save GBP6bn a year by 2040 and cut bills 10-20 per cent, and that smart-grid rules could free capacity for data centres without more network build.","src":"The Observer","url":"https://observer.co.uk/news/opinion-and-ideas/article/rethinking-our-future-overhaul-the-energy-market-or-pay-the-price-in-the-long-run","date":"2026-07-19"},
-  {"cat":"Policy","title":"BESS developers win 81 percent of English planning appeals","desc":"Battery storage developers are overturning refusals at appeal at record rates as green belt objections lose weight with inspectors, easing a key consenting bottleneck for UK flexibility projects.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/battery-storage/bess-developers-win-81-of-planning-appeals-in-england-as-green-belt-argument-collapses","date":"2026-07-17"},
-  {"cat":"M&A","title":"Fidra reaches financial close on UK largest battery, West Burton C","desc":"The 500MW/1.1GWh Nottinghamshire project secured GBP231m of debt backed by EIG and the National Wealth Fund, with Sungrow supplying the batteries and Drax taking half the capacity under a long-term offtake.","src":"Energy Global","url":"https://www.energyglobal.com/energy-storage/17072026/fidra-energy-reaches-financial-close-on-500-mw-west-burton-c-bess-project/","date":"2026-07-17"},
-  {"cat":"M&A","title":"Good Energy signs largest ever PPA with Orsted for Walney output","desc":"The supplier will take 200GWh a year from Walney 1 and 2 from October 2026 to October 2028, a 400GWh deal covering around one sixth of the wind farms output.","src":"Energy Global","url":"https://www.energyglobal.com/wind/20072026/good-energy-signs-its-largest-ever-deal-with-rsted-to-support-next-phase-of-growth/","date":"2026-07-20"},
-  {"cat":"M&A","title":"NextEnergy Solar Fund opens sale process after years at a discount","desc":"The listed UK solar fund has launched a formal sale process following a prolonged period of trading below net asset value, putting one of the sectors larger portfolios into play.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/solar-investment/nextenergy-solar-fund-opens-sale-process-after-years-of-discounted-value","date":"2026-07-15"},
-  {"cat":"Markets","title":"Gore Street posts 27 percent NAV fall on UK battery revenue squeeze","desc":"The energy storage fund reported a sharp writedown as GB battery trading and ancillary revenues stayed compressed, underlining the earnings gap between build-out and returns.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/battery-storage/gore-street-energy-storage-fund-posts-27-nav-decline-amid-uk-bess-revenue-squeeze","date":"2026-07-16"},
-  {"cat":"Technology","title":"UK solar developers eye ready-to-repower phase amid grid delays","desc":"With CfD economics and connection queues squeezing new build, owners are looking at repowering end-of-life assets, but say the framework offers little incentive to avoid wasting existing grid rights.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/solar-planning/uk-solar-project-developers-to-consider-the-ready-to-repower-phase-amid-cfds-and-grid-connection-challenges","date":"2026-07-17"},
-  {"cat":"Technology","title":"Alfen and CATL strike 5GWh sodium-ion battery deal for Europe","desc":"The system integrator and the Chinese cell maker agreed a 5GWh partnership to deploy sodium-ion grid storage in Europe, a first at this scale for the lithium-free chemistry.","src":"Energy-Storage.News","url":"https://www.energy-storage.news/alfen-and-catl-agree-5gwh-sodium-ion-bess-partnership-in-europe/","date":"2026-07-16"},
-  {"cat":"AI","title":"Methane-powered AI floated as fix for UK data centre power crunch","desc":"With roughly 140 data centres queuing for about 50GW of connections, more than current UK peak demand, developers are turning to on-site gas and edge models to get around grid waits.","src":"The National","url":"https://www.thenationalnews.com/news/uk/2026/07/16/methane-powered-ai-how-to-beat-the-uks-data-centre-crunch/","date":"2026-07-16"},
-  {"cat":"AI","title":"Behind-the-meter solar tested as answer to UK AI power demand","desc":"Analysis of whether on-site generation can bridge the gap between AI-driven data centre load growth and a transmission network that cannot connect it fast enough.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/commercial-solar/behind-the-meter-solar-uk-data-centre-ai-demand","date":"2026-07-13"}
+  {"cat":"M&A","title":"Shell sells 80% of renewables arm to BlackRock-backed Aditya Birla","desc":"The week's biggest energy-transition deal: Shell agreed to sell 80% of its renewable-power portfolio to India's Aditya Birla Renewables, keeping only a minority stake as it retreats further from clean generation.","src":"MarketScale","url":"https://www.marketscale.com/industries/energy/clean-energy-deals-dominate-this-week-hydrogen-storage-offshore-wind-and-a-major-shell-divestiture","date":"2026-07-16"},
+  {"cat":"Policy","title":"Ofgem backs 16 long-duration storage projects, 7.6GW of new capacity","desc":"The cap-and-floor awards nearly triple Britain's storable electricity, though the winners lean heavily on large-scale pumped hydro and lithium-ion rather than emerging chemistries.","src":"Ofgem","url":"https://www.ofgem.gov.uk/press-release/ofgem-boosts-long-duration-storage-secure-more-homegrown-energy-customers","date":"2026-07-14"},
+  {"cat":"Policy","title":"Government to trial discounted power on windy days to cut curtailment","desc":"A new scheme would let suppliers pass on cheap electricity when Scottish and eastern wind is curtailed, turning payments to switch turbines off into lower bills for constrained regions.","src":"RenewableUK","url":"https://www.renewableuk.com/news-and-resources/press-releases/renewableuk-welcomes-trial-scheme-to-offer-consumers-lower-electricity-bills-on-windy-days/","date":"2026-07-20"},
+  {"cat":"Technology","title":"CATL sodium-ion cell at ~$19/kWh could reshape grid-storage economics","desc":"Now entering mass production in China, the lithium-free chemistry costs roughly a third of standard LFP cells and is being lined up for European grid deployment.","src":"Energy-Storage.News","url":"https://www.energy-storage.news/alfen-and-catl-agree-5gwh-sodium-ion-bess-partnership-in-europe/","date":"2026-07-16"},
+  {"cat":"Technology","title":"Cambridge Atomworks to build Odin microreactor prototype at Berkeley","desc":"The firm signed a letter of intent to establish an R&D facility for its Odin nuclear microreactor at the former Magnox site in Gloucestershire, part of a wave of SMR plans tied to data-centre power.","src":"No2NuclearPower","url":"https://www.no2nuclearpower.org.uk/weekly-news/nuclear-news-weekly-summary-w-e-17th-july-2026/","date":"2026-07-17"},
+  {"cat":"AI","title":"UK data-centre grid requests hit ~50GW, above current peak demand","desc":"Around 140 projects have now requested roughly 50GW of transmission connections, a 460% jump in six months, with some facilities facing waits of up to 15 years for grid access.","src":"Habo Energy","url":"https://haboenergy.co.uk/ai-data-centres-uk-electricity-bills-home-battery","date":"2026-07-11"},
+  {"cat":"AI","title":"Researchers argue flexible AI data centres could ease grid pressure","desc":"New analysis suggests data centres that can throttle load in real time could act as a grid asset rather than a burden, absorbing surplus renewables and relieving constraints.","src":"Envirotec","url":"https://envirotecmagazine.com/2026/07/21/power-pivot-ai-data-centres-could-help-ease-grid-pressure-researchers-argue/","date":"2026-07-21"},
+  {"cat":"M&A","title":"Fidra reaches financial close on 500MW West Burton C battery","desc":"The 500MW/1.1GWh Nottinghamshire project secured GBP231m of debt from EIG and the National Wealth Fund, with Sungrow supplying cells and Drax taking half the capacity on a long-term offtake.","src":"Energy Global","url":"https://www.energyglobal.com/energy-storage/17072026/fidra-energy-reaches-financial-close-on-500-mw-west-burton-c-bess-project/","date":"2026-07-17"},
+  {"cat":"M&A","title":"Good Energy signs largest ever PPA with Orsted for Walney output","desc":"The supplier will take 200GWh a year from Walney 1 and 2 from October 2026 to October 2028, around one sixth of the wind farms' output.","src":"Energy Global","url":"https://www.energyglobal.com/wind/20072026/good-energy-signs-its-largest-ever-deal-with-rsted-to-support-next-phase-of-growth/","date":"2026-07-20"},
+  {"cat":"Markets","title":"Winter power holds a risk premium as Hormuz strikes keep gas bid","desc":"Brent pushed back near $100 and NBP stayed elevated as tanker strikes in the Strait of Hormuz repriced supply risk, keeping the UK Win-26 forward at a premium to a well-supplied summer spot market.","src":"Prestige Business Solutions","url":"https://www.prestigebusiness.energy/marketreports/energy-market-update02-jul2026","date":"2026-07-20"},
+  {"cat":"Markets","title":"Gore Street posts 27% NAV fall on UK battery revenue squeeze","desc":"The storage fund reported a sharp writedown as GB battery trading and ancillary revenues stayed compressed, underlining the gap between build-out and returns.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/battery-storage/gore-street-energy-storage-fund-posts-27-nav-decline-amid-uk-bess-revenue-squeeze","date":"2026-07-16"},
+  {"cat":"Technology","title":"UK battery storage capacity surpasses nuclear for the first time","desc":"Installed grid battery capacity has overtaken the country's nuclear fleet, Drax data shows, marking how fast flexibility has scaled even as revenues lag the build-out.","src":"Drax","url":"https://www.drax.com/press_release/uk-battery-storage-capacity-surpasses-nuclear-power-for-the-first-time/","date":"2026-07-15"}
 ];
 function _newsDate(iso){const d=new Date((iso||"").length>10?iso:iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
 // LIVE_NEWS is populated by fetchLiveNews() on page open; falls back to baked NEWS_ITEMS.
@@ -2573,7 +2573,7 @@ async function runSelfCheck() {
 //  stay correct after live refreshes and daily data swaps.
 // ═══════════════════════════════════════════════
 // Editor's note — refreshed by the daily task alongside the data blocks:
-const FABLE_NOTE = "The wind has gone and the margin has changed hands: at 06:45 gas is the single biggest block on the system at 7.61GW against wind of just 3.88GW, and carbon intensity has doubled to 165g from the 85g printed at this hour on Sunday. The odd part is that spot and the curve are pulling in opposite directions - GB day-ahead settled 20 per cent lower at ~£99/MWh for Monday, while Win-26 has been marked up to £118.61 as the Hormuz tanker strikes push Brent toward $90 and NBP to 141p, a 30 per cent gain on the month; that is a fuel-led curve detached from a well-supplied summer, and it makes Germany at €103 and Spain at €121 look like the same trade in different currencies. Today is mainly clear and 26C so solar should reclaim the afternoon and pull intensity back down, but the real events are tomorrow: June CPI at 07:00 and the UK-EU summit on ETS linkage, with the UKA discount to the EUA already narrowed to about £9/t.";
+const FABLE_NOTE = "The wind is back and the margin is being shared: at 07:20 gas is still the biggest single block at 6.96GW (27 per cent) but wind has recovered to 5.12GW (20 per cent), and carbon intensity has more than halved from Tuesday to 144g on a bright, near-clear Friday that should let solar climb hard through the afternoon. What has not changed is the curve - GB, Germany at €118 and Spain at €142 are still clustered close together, a sign the Hormuz fuel premium (Brent back near $100, NBP holding ~141p) is doing more to set European power than any single day of weather. The pivot is now the 30 July MPC: June CPI easing to 2.6 per cent has taken some heat out of the hawks, but a crude price near triple digits keeps a cut finely balanced.";
 function _fchip(label,val,delta,unit,invert){
   let cls='fneut',arrow='·',txt='—';
   if(delta!==null&&!isNaN(delta)){
@@ -3194,22 +3194,22 @@ function switchPage(name){
     if(name==='energy'){['renderGridCharts','renderIrrChart','renderPowerMarkets','renderEnergyDays','renderDCTracker','renderLongTermForecast'].forEach(function(f){try{if(typeof window[f]==='function')window[f]();}catch(e){}});}
   },50);
 }
-const MACRO_DATA={asOf:"2026-07-21",rows:[
-  {l:"BoE base rate",v:"3.75%",sub:"held at the Jun MPC (7-2, two voting to hike); the 30 Jul decision is finely balanced with Jun CPI landing 22 Jul",dir:0},
-  {l:"CPI inflation (May)",v:"2.8%",sub:"services CPI 3.7%; the BoE sees a little under 3% in Q3 and a little over 3.25% by Q4 - Jun CPI due 07:00 on 22 Jul",dir:0},
-  {l:"RPI inflation (May)",v:"3.1%",sub:"up from 3.0% in Apr; Jun RPI due 22 Jul",dir:0},
-  {l:"10-yr gilt yield",v:"5.02%",sub:"20 Jul - sources straddle 4.99-5.07%; back above the 5% line as the oil-led inflation risk rebuilds ahead of Jun CPI and the 30 Jul MPC",dir:1},
-  {l:"Unemployment",v:"4.9%",sub:"Mar-May, released this morning - employment 75.1%, claimant count 1.689m in Jun; the loosening a Sep cut would lean on",dir:0},
-  {l:"GBP/USD",v:"1.344",sub:"firm near the top of the 2026 range as the dollar stays soft (live-refreshed on open)",dir:1,fx:"USD"},
-  {l:"GBP/EUR",v:"1.176",sub:"up through 1.17 - the best level against the euro since the spring (live-refreshed on open)",dir:1,fx:"EUR"}
+const MACRO_DATA={asOf:"2026-07-24",rows:[
+  {l:"BoE base rate",v:"3.75%",sub:"held at the Jun MPC (7-2, two voting to hike); the 30 Jul decision is finely balanced now Jun CPI has eased to 2.6%",dir:0},
+  {l:"CPI inflation (Jun)",v:"2.6%",sub:"eased from 2.8% in May (released 22 Jul); the BoE still sees energy base effects lifting CPI back near 3% into Q4",dir:-1},
+  {l:"RPI inflation (May)",v:"3.1%",sub:"last confirmed May; Jun RPI released 22 Jul with CPI - figure not re-verified this run",dir:0},
+  {l:"10-yr gilt yield",v:"5.0%",sub:"~5.0% late Jul - steadier as Jun CPI cooled, but Brent near $100 keeps the inflation risk alive ahead of the 30 Jul MPC",dir:0},
+  {l:"Unemployment",v:"4.9%",sub:"Mar-May - employment 75.1%, claimant count 1.689m in Jun; the loosening a Sep cut would lean on",dir:0},
+  {l:"GBP/USD",v:"1.344",sub:"holding near the top of the 2026 range as the dollar stays soft (live-refreshed on open)",dir:0,fx:"USD"},
+  {l:"GBP/EUR",v:"1.176",sub:"steady above 1.17 - close to the best level against the euro since the spring (live-refreshed on open)",dir:0,fx:"EUR"}
 ]};
-const CMDTY_DATA={asOf:"2026-07-21",rows:[
-  {l:"Brent crude",v:"$90/bbl",sub:"$88.64 at the 20 Jul close but trading ~$90.70 intraday today, high $91.41, as the US-Iran ceasefire collapse puts a Hormuz premium back into the barrel",dir:1},
-  {l:"TTF gas (front-month)",v:"€57/MWh",sub:"€57.4 today, a near-four-month high and +29% month-to-date; still ABOVE Win-26, which discourages summer injection",dir:1},
-  {l:"UK NBP gas",v:"141p/th",sub:"141.46p on 20 Jul, +1.95% on the day and +30% on the month - the highest in over three months",dir:1},
-  {l:"Gold",v:"$4,035/oz",sub:"back above $4,000 on the haven bid; sources span $4,022-4,051 through the session",dir:1},
-  {l:"Copper",v:"$6.41/lb",sub:"COMEX, +3.0% - note the LME cash leg was last confirmed at $13,409/t on 10 Jul and carries a tariff-driven spread, so do not convert directly",dir:1},
-  {l:"Lithium carbonate",v:"CN¥151.5k/t",sub:"≈$22.4/kg LCE (battery-grade, China) - drifting off as supply builds, against a ~$23.8/kg 2026 forecast",dir:-1}
+const CMDTY_DATA={asOf:"2026-07-24",rows:[
+  {l:"Brent crude",v:"$100/bbl",sub:"~$100.4 on 23 Jul, up ~7% on the day, as the Hormuz tanker strikes and a collapsed US-Iran ceasefire put a fresh war premium into the barrel",dir:1},
+  {l:"TTF gas (front-month)",v:"€57/MWh",sub:"still near a four-month high on the supply-risk bid; last confirmed ~€57 (21 Jul) - not re-priced this run",dir:0},
+  {l:"UK NBP gas",v:"141p/th",sub:"elevated on the same Hormuz bid; last confirmed 141p (20 Jul) - not re-priced this run",dir:0},
+  {l:"Gold",v:"$4,035/oz",sub:"holding above $4,000 on the haven bid; last confirmed ~$4,035 (21 Jul)",dir:0},
+  {l:"Copper",v:"$6.41/lb",sub:"COMEX - note the LME cash leg carries a tariff-driven spread, so do not convert directly; last confirmed 21 Jul",dir:0},
+  {l:"Lithium carbonate",v:"CN¥151.5k/t",sub:"≈$22.4/kg LCE (battery-grade, China) - soft as supply builds, against a ~$23.8/kg 2026 forecast; last confirmed 21 Jul",dir:0}
 ]};
 function renderMacroCmdty(){
   const arrow=d=>d>0?'<span style="color:#dc2626;font-size:9px;">▲</span>':d<0?'<span style="color:#16a34a;font-size:9px;">▼</span>':'';
@@ -3220,20 +3220,20 @@ function renderMacroCmdty(){
   if(cb){cb.innerHTML=CMDTY_DATA.rows.map(r=>row(r,carrow)).join('');try{document.getElementById('cmdty-asof').textContent='Updated '+new Date(CMDTY_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
 }
 // ═══ POWER FORWARDS + CARBON — baked daily by the 7am task (was hard-coded HTML) ═══
-const FWD_DATA={asOf:"2026-07-21",rows:[
+const FWD_DATA={asOf:"2026-07-24",rows:[
   {l:"UK Win-26",v:"£118.61/MWh",sub:"17 Jul close, up £3.33 on the day - repriced hard by the Hormuz tanker strikes; this is a real print, not a carry-over"},
   {l:"UK Sum-27",v:"£78/MWh",sub:"£77.82 (13 Jul curve) - well below Win-26, as expected - last verified 13 Jul"},
   {l:"UK Cal-27",v:"£94/MWh",sub:"not separately quoted; Win-27 last printed at £79.58 - last verified 28 May"},
   {l:"Germany Cal-27",v:"€89/MWh",sub:"still no public front-year print; German day-ahead was €140.63 on 16 Jul and Montel has the front-year at its highest since late 2023, so this quote understates - last verified 28 May"},
   {l:"TTF Gas Win-26",v:"€57/MWh",sub:"marked to the front-month (€57.4, a near-four-month high, +29% MTD); the UK leg prints NBP Win-26 at 139.26p/th - verified 17 Jul"}
-],note:"Verify on Bloomberg/ICE. Reviewed 21 Jul with genuinely fresh UK and gas prints. The curve has decoupled from spot: Win-26 is up at £118.61 on a fuel shock (Brent ~$90, NBP 141p, +30% MTD) while GB day-ahead settled 20% lower at ~£99/MWh for Monday. Germany Cal-27 remains the one stale row - treat it as a floor."};
-const CO2_DATA={asOf:"2026-07-21",rows:[
+],note:"Verify on Bloomberg/ICE. Reviewed 24 Jul - no fresh public prints for these illiquid contracts, so values carry from the 17 Jul UK marks; asOf confirms they were re-checked today. The curve stays decoupled from a well-supplied summer spot: Win-26 holds ~£118.61 on the fuel shock (Brent back near $100, NBP ~141p) even as GB day-ahead sits far lower. Germany Cal-27 remains the one stale row - treat it as a floor."};
+const CO2_DATA={asOf:"2026-07-24",rows:[
   {l:"EU ETS Dec-26",v:"€79/t",sub:"EUA €79.11 at the 17 Jul close, broadly flat - the Commission proposal to relax ETS rules is capping the range",dir:0},
   {l:"EU ETS Dec-27",v:"€84/t",sub:"last verified 9 Jul"},
-  {l:"UK ETS Dec-26",v:"£58.70/t",sub:"UKA £58.70 at the 17 Jul close, up £0.57 - firming into the 22 Jul UK-EU summit where ETS linkage is expected to be finalised",dir:1},
+  {l:"UK ETS Dec-26",v:"£58.70/t",sub:"UKA last confirmed £58.70 (17 Jul close) - held its gains after the 22 Jul UK-EU summit advanced ETS linkage; not re-priced this run",dir:0},
   {l:"UK ETS Dec-27",v:"£62/t",sub:"last verified 9 Jul"},
-  {l:"UK/EU spread",v:"-£8.6/t",sub:"EUA €79.11 ≈ £67.3 at 1.176 GBP/EUR vs UKA £58.70 - a ~13% discount, down from ~16% last week as the UKA rallies into the summit",dir:1}
-],note:"The UK-EU summit tomorrow (22 Jul) is expected to finalise ETS linkage. Energy Aspects sees UKAs averaging £74/t in H2 and the spread below €10/t by year-end - on today's marks the gap is already about €10/t, so the convergence trade has largely been put on before the announcement."};
+  {l:"UK/EU spread",v:"-£8.6/t",sub:"EUA €79.11 ≈ £67.3 at 1.176 GBP/EUR vs UKA £58.70 - a ~13% discount; the convergence trade is largely priced in after the 22 Jul summit advanced linkage",dir:0}
+],note:"The 22 Jul UK-EU summit advanced ETS linkage, with full alignment still targeted for 2029. Energy Aspects sees UKAs averaging £74/t in H2 and the spread below €10/t by year-end - on these marks the gap is already about €10/t, so most of the convergence trade was put on ahead of the summit. Carbon values not independently re-priced this run."};
 const NAV_ASOF="2026-05-28"; // bump when NAVs in PRICES are re-verified against AIC
 function renderFwdCarbon(){
   const row=r=>'<div class="fr"><span class="fl">'+r.l+(r.sub?'<br><span style="font-size:9px;color:#94a3b8;font-weight:400;">'+r.sub+'</span>':'')+'</span><span class="fval">'+r.v+'</span></div>';
@@ -3324,7 +3324,7 @@ async function loadAll(){
   requestAnimationFrame(()=>{
     try{
       drawIntraday(now);
-      setFeedStatus('n2ex','ok','Live (Elexon APX) - GB day-ahead settled at ~£99/MWh for 20 Jul, down ~20% on Sunday, with the Win-26 forward up at £118.61/MWh on Hormuz supply risk; zero negative hours - 21 Jul 2026');
+      setFeedStatus('n2ex','ok','Live (Elexon APX) - GB day-ahead firm near ~£110/MWh for 24 Jul as wind recovered to ~20% of the mix, with the Win-26 forward holding a premium at £118.61/MWh on Hormuz supply risk; zero negative hours - 24 Jul 2026');
     }catch(e){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
