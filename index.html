@@ -945,18 +945,18 @@ const INITIAL_GRID_DATA = {
   currentIrr:250, currentDirect:200, currentDiffuse:50, // W/m2 ~08:20 BST - estimated from the clear-day hourly curve (no live AWN read this run)
 };
 
-// Last reading from the SigenStor. NOTE 1 Aug 2026: the Chrome bridge is connected and the Sigen auth route is
+// Last reading from the SigenStor. NOTE 3 Aug 2026: the Chrome bridge is connected and the Sigen auth route is
 // LIVE (accessToken issued OK), but the realtimeInfo route has now returned "Station not permitted" (code 1111)
-// for 19 straight days since 13 Jul (checked again this run - still down). SOC/PV-power below therefore remain the
-// last good realtime read (30 Jun) and renderSystemGraphic falls back to estimateSoc() (intended behaviour).
-// The history endpoint (level=Month) DOES work despite the realtime block, and was used this run to backfill
-// ENERGY_DAYS through today - see PR_DATA/ENERGY_DAYS comments. Fixing realtime needs the station's OpenAPI
+// for 22 straight days since 13 Jul (checked again this run, both system IDs tried - still down). SOC/PV-power below
+// therefore remain the last good realtime read (30 Jun) and renderSystemGraphic falls back to estimateSoc() (intended
+// behaviour). The history endpoint (level=Month) DOES work despite the realtime block, and was used this run to
+// backfill ENERGY_DAYS through today - see PR_DATA/ENERGY_DAYS comments. Fixing realtime needs the station's OpenAPI
 // permission re-granted in the mySigen portal, not a code change.
 const LAST_KNOWN_SOLAR = {
   solarKw: 12.23,   // live PV power (Sigen pVPower) - 30 Jun 2026 ~14:50 BST
   soc: 0.808,       // 80.8% - 30 Jun 2026 ~14:50 BST (last successful Sigen realtimeInfo read)
   ts: '2026-06-30T13:50:00.000Z',
-  source: 'Sigen OpenAPI - 1 Aug run: auth route LIVE (accessToken issued OK) and the history endpoint works, but realtimeInfo still returns "Station not permitted" (code 1111, 19 days running since 13 Jul), so SOC/PV-power remain the 30 Jun read and the graphic uses estimateSoc()'
+  source: 'Sigen OpenAPI - 3 Aug run: auth route LIVE (accessToken issued OK) and the history endpoint works, but realtimeInfo still returns "Station not permitted" (code 1111, 22 days running since 13 Jul), so SOC/PV-power remain the 30 Jun read and the graphic uses estimateSoc()'
 };
 
 let GRID_DATA = INITIAL_GRID_DATA;
@@ -2803,11 +2803,11 @@ function renderDCTracker(){
 // ═══════════════════════════════════════════════
 const AWN_DATA={
   station:"GX Weather Station", loc:"Gerrards Cross, Bucks (SL9 8AY)", lat:51.58,
-  asOf:"2026-08-01T06:10:00.000Z", localTime:"01 Aug 2026, 07:10 BST",
-  current:{tempC:16.3, feelsC:16.3, humidity:56, windMph:0.9, gustMph:2.2, maxGustMph:3, windDir:"ENE", rainTodayMm:0.0, pressInHg:30.19, uv:0, solarWm2:91, indoorC:24.0},
-  solar:{insolation_kwh_m2:0.06, peakWm2:91, mj_so_far:0.21, hourly:[0,0,0,0,0,5,33,78,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
-  perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:0.7, actualKwh:0.43, realizedPR:0.53},
-  summary:"A cool, dead-calm, thin-cloud start at SL9: 16.3C and 56% humidity at 07:10 BST with almost no wind (ENE 0.9mph) and 91 W/m2 of sun so far. The SigenStor has banked just 0.43 kWh this early, mostly still running off the battery (19.6 kWh discharged overnight) rather than fresh PV - realised PR of 0.53 is noisy this early and not representative. Yesterday (31 Jul) the array made 79.8 kWh off the day's insolation, comfortably ahead of the recent trend, and today's partly-cloudy forecast (max ~26C) should let the arc build steadily through the morning."
+  asOf:"2026-08-03T08:01:00.000Z", localTime:"03 Aug 2026, 09:01 BST",
+  current:{tempC:21.8, feelsC:21.7, humidity:64, windMph:0.2, gustMph:1.1, maxGustMph:5.8, windDir:"E", rainTodayMm:0.0, pressInHg:29.96, uv:0, solarWm2:100, indoorC:25.8},
+  solar:{insolation_kwh_m2:0.18, peakWm2:95, mj_so_far:0.64, hourly:[0,0,0,0,0,4,33,57,76,95,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
+  perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:2.14, actualKwh:3.26, realizedPR:1.37},
+  summary:"A mild, dead-calm start at SL9: 21.8C and 64% humidity at 09:01 BST with barely any wind (E 0.2mph, gusting to 5.8) and just 100 W/m2 of hazy morning sun so far (peak 95 W/m2). The SigenStor has banked 3.26 kWh of PV this morning, still leaning on the battery (17.1 kWh discharged overnight) more than fresh generation this early - realised PR of 1.37 is noisy at this hour (mismatched cumulative windows) and not representative of the full day. Yesterday (2 Aug) the array made 57.4 kWh; today's hazier start suggests a softer day unless the cloud burns off through the afternoon."
 };
 function renderLocalWeather(){
   const el=document.getElementById('awn-body'); if(!el||typeof AWN_DATA==='undefined')return;
@@ -3026,10 +3026,6 @@ const PR_DATA={ refPR:0.90, sysKwp:13.44,
 };
 // Daily consumption by SOURCE (Sigen history, level=Month) — load met by Solar-direct / Battery / Grid (kWh, sums to daily load).
 const ENERGY_DAYS=[
-  {date:"2026-07-01", solar:28.11, battery:31.85, grid:0.04},
-  {date:"2026-07-02", solar:27.25, battery:27.98, grid:0.05},
-  {date:"2026-07-03", solar:26.40, battery:27.49, grid:0.05},
-  {date:"2026-07-04", solar:28.22, battery:32.47, grid:0.12},
   {date:"2026-07-05", solar:27.93, battery:39.76, grid:0.05},
   {date:"2026-07-06", solar:35.11, battery:47.28, grid:0.05},
   {date:"2026-07-07", solar:30.54, battery:41.62, grid:0.92},
@@ -3057,7 +3053,9 @@ const ENERGY_DAYS=[
   {date:"2026-07-29", solar:27.72, battery:36.21, grid:0.03},
   {date:"2026-07-30", solar:23.90, battery:37.76, grid:0.04},
   {date:"2026-07-31", solar:36.99, battery:34.75, grid:5.99},
-  {date:"2026-08-01", solar:0.42, battery:19.63, grid:0.01}
+  {date:"2026-08-01", solar:27.09, battery:31.25, grid:0.04},
+  {date:"2026-08-02", solar:26.73, battery:31.02, grid:0.05},
+  {date:"2026-08-03", solar:2.85, battery:17.14, grid:0.00}
 ];
 function renderPRPanel(){
   const el=document.getElementById('pr-body'); if(!el||typeof PR_DATA==='undefined')return;
@@ -3120,7 +3118,7 @@ function renderEnergyDays(){
 //  Normalised to W/panel so strings of different sizes/orientations compare fairly.
 // ═══════════════════════════════════════════════
 const STRING_DATA={ asOf:"2026-06-30T13:50:00.000Z", ghiWm2:823,
-  note:"STALE - the Sigen realtimeInfo route has returned \"Station not permitted\" (code 1111) every run since 13 Jul (19 days running, checked again 1 Aug), so these are still the 30 Jun values and cannot be refreshed until the station's OpenAPI permission is re-granted in the mySigen portal. For reference, that read: PV1 = 8 SOUTH (main roof) leading at 3.58 kW (~448 W/panel); PV2 = 6 WEST (garage, unshaded) 2.10 kW and PV3 = 8 WEST (main roof, shaded PM + shallower pitch) 2.86 kW, the two West faces neck-and-neck at midday (~350-357 W/panel); PV4 = 6 SPLIT 3S/3W depressed at ~94V (bypass-clamped - the re-stringing candidate). 28 panels / 13.44 kWp; faces 11 S / 17 W. WATCH ITEM: the PV2-vs-PV3 evening gap quantifies the west-roof shading loss. NOTE: the Sigen history endpoint (level=Month) DOES still work despite this block, and was used this run to backfill ENERGY_DAYS through 1 Aug.",
+  note:"STALE - the Sigen realtimeInfo route has returned \"Station not permitted\" (code 1111) every run since 13 Jul (22 days running, checked again 3 Aug, both system IDs tried), so these are still the 30 Jun values and cannot be refreshed until the station's OpenAPI permission is re-granted in the mySigen portal. For reference, that read: PV1 = 8 SOUTH (main roof) leading at 3.58 kW (~448 W/panel); PV2 = 6 WEST (garage, unshaded) 2.10 kW and PV3 = 8 WEST (main roof, shaded PM + shallower pitch) 2.86 kW, the two West faces neck-and-neck at midday (~350-357 W/panel); PV4 = 6 SPLIT 3S/3W depressed at ~94V (bypass-clamped - the re-stringing candidate). 28 panels / 13.44 kWp; faces 11 S / 17 W. WATCH ITEM: the PV2-vs-PV3 evening gap quantifies the west-roof shading loss. NOTE: the Sigen history endpoint (level=Month) DOES still work despite this block, and was used this run to backfill ENERGY_DAYS through 3 Aug.",
   strings:[
     {id:1,panels:8,orient:'South',kwp:3.84,powerKw:3.58,v:351.00,a:10.20},
     {id:2,panels:6,orient:'West', kwp:2.88,powerKw:2.10,v:191.40,a:10.99},
@@ -3154,20 +3152,20 @@ function renderStrings(){
 //  GLOBAL MARKETS — index levels + 24h change (Yahoo v8 chart, same-origin via Chrome).
 //  Baked daily; the dashboard re-fetches live when Chrome is open.
 // ═══════════════════════════════════════════════
-const INDICES_DATA={ asOf:"2026-08-01T07:25:00.000Z",
-  pulse:"Risk appetite stays firm into the weekend: the Nikkei extends its run to +4.03%, with the Nasdaq (+1.00%) and S&P 500 (+0.70%) still grinding higher and the Dow up +0.53%. The VIX has fallen a further 6.4% to 15.99, its lowest print in weeks, signalling little demand for hedges. The FTSE 100 (-0.27%) and FTSE 250 (-0.43%) are the laggards, both modestly in the red while continental Europe (DAX +0.07%, CAC +0.28%, Euro Stoxx 50 +0.21%) ticks up.",
+const INDICES_DATA={ asOf:"2026-08-03T08:05:00.000Z",
+  pulse:"European and US equities push broadly higher: the DAX leads with +1.28%, CAC 40 +0.91% and Euro Stoxx 50 +0.76%, while the Nasdaq (+1.00%) and S&P 500 (+0.70%) extend recent gains and the Dow adds +0.53%. The Nikkei is today's outlier, down -0.94% after its recent run, while Hang Seng ticks up +0.34%. The FTSE 100 is essentially flat (+0.03%) with the FTSE 250 stronger at +0.79%. The VIX edges up +0.38% to 16.05 - still low, no real hedging demand.",
   items:[
-    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10868.05,chg:-0.27},
-    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:23975.02,chg:-0.43},
+    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10871.44,chg:0.03},
+    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:24164.27,chg:0.79},
     {sym:'^GSPC',name:'S&P 500',region:'US',price:7489.72,chg:0.70},
     {sym:'^IXIC',name:'Nasdaq',region:'US',price:25373.85,chg:1.00},
     {sym:'^DJI',name:'Dow Jones',region:'US',price:52485.03,chg:0.53},
-    {sym:'^GDAXI',name:'DAX',region:'DE',price:25629.24,chg:0.07},
-    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8509.64,chg:0.28},
-    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6358.01,chg:0.21},
-    {sym:'^N225',name:'Nikkei 225',region:'JP',price:64362.02,chg:4.03},
-    {sym:'^HSI',name:'Hang Seng',region:'HK',price:25884.43,chg:0.10},
-    {sym:'^VIX',name:'VIX',region:'Vol',price:15.99,chg:-6.44}
+    {sym:'^GDAXI',name:'DAX',region:'DE',price:25956.99,chg:1.28},
+    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8587.06,chg:0.91},
+    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6406.05,chg:0.76},
+    {sym:'^N225',name:'Nikkei 225',region:'JP',price:63754.90,chg:-0.94},
+    {sym:'^HSI',name:'Hang Seng',region:'HK',price:25973.23,chg:0.34},
+    {sym:'^VIX',name:'VIX',region:'Vol',price:16.05,chg:0.38}
   ]
 };
 function renderIndices(){
