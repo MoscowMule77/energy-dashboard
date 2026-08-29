@@ -915,29 +915,29 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 8 Aug 2026 06:20 UTC - Chrome bridge (AWN/Sigen/Indices) unavailable this run (extension not connected), so weather is from search (typical early-Aug London day, clear/sunny; live grid mix shows solar leading at ~34.8%) - weathercode 1 (mainly clear). Grid mix is a live read via energymix.uk/grid.iamkate.com (Elexon BMRS + Carbon Intensity API).
-    time:["2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-08"],
-    temperature_2m_max:[26.0,29.0,33.0,24.0,25.0,26.0,28.0,27.0],
-    temperature_2m_min:[16.0,16.0,17.0,15.0,16.0,17.0,17.0,16.0],
-    weathercode:[2,0,0,1,2,2,1,1],
-    shortwave_radiation_sum:[23.50,29.00,30.00,26.00,25.00,24.50,28.50,27.00]
+    // Updated 29 Aug 2026 10:20 UTC - Chrome bridge (AWN/Sigen/Indices) unavailable this run (extension not connected), weather from Met Office: wet, thundery Saturday in London, rain clears early pm then heavy gusty showers, max 21C / min 15C - weathercode 61 (rain). Grid mix live read via energymix.uk (Elexon BMRS + Carbon Intensity API) at 11:10 BST.
+    time:["2026-08-22","2026-08-23","2026-08-24","2026-08-25","2026-08-26","2026-08-27","2026-08-28","2026-08-29"],
+    temperature_2m_max:[24.0,23.0,22.0,21.0,20.0,22.0,23.0,21.0],
+    temperature_2m_min:[15.0,14.0,14.0,13.0,13.0,14.0,15.0,15.0],
+    weathercode:[2,1,2,3,61,2,1,61],
+    shortwave_radiation_sum:[18.00,19.50,17.00,12.00,9.50,16.00,18.50,9.00]
   },
   daily:[
-    // Daily averages - Carbon Intensity API (NESO) settled half-hours where available; today (8 Aug) is a live read via energymix.uk/grid.iamkate.com.
-    {date:"2026-08-01",mix:{wind:22.5,solar:12.8,nuclear:13.0,gas:30.5,biomass:8.7,imports:11.9,hydro:0.6,coal:0,other:0.0},n:48},
-    {date:"2026-08-02",mix:{wind:14.2,solar:18.1,nuclear:13.4,gas:22.0,biomass:10.3,imports:20.6,hydro:1.2,coal:0,other:0.3},n:48},
-    {date:"2026-08-03",mix:{wind:20.9,solar:12.5,nuclear:12.0,gas:18.6,biomass:9.4,imports:24.9,hydro:1.8,coal:0,other:0.0},n:48},
-    {date:"2026-08-04",mix:{wind:19.5,solar:13.5,nuclear:9.2,gas:28.0,biomass:6.8,imports:21.5,hydro:0.9,coal:0,other:0.6},n:48},
-    {date:"2026-08-05",mix:{wind:22.0,solar:12.0,nuclear:9.0,gas:26.5,biomass:7.0,imports:22.0,hydro:1.0,coal:0,other:0.5},n:48},
-    {date:"2026-08-06",mix:{wind:19.5,solar:14.7,nuclear:14.8,gas:25.5,biomass:9.5,imports:14.6,hydro:0.9,coal:0,other:0.5},n:48},
-    {date:"2026-08-07",mix:{wind:19.5,solar:14.7,nuclear:14.8,gas:25.5,biomass:9.5,imports:14.6,hydro:0.9,coal:0,other:0.0},n:48},
-    {date:"2026-08-08",mix:{wind:24.5,solar:34.8,nuclear:13.5,gas:10.0,biomass:3.1,imports:17.4,hydro:0.6,coal:0,other:0.0},n:20}
+    // Daily averages - Carbon Intensity API (NESO) settled half-hours where available; 28 Aug is energymix.uk past-day read (wind 41.8%) and 22-27 Aug on past-week averages (wind 27.5%, solar 12.5%, gas 17.2%). Today (29 Aug) is live read via energymix.uk.
+    {date:"2026-08-22",mix:{wind:24.0,solar:14.5,nuclear:17.0,gas:21.0,biomass:11.0,imports:11.0,hydro:1.0,coal:0,other:0.5},n:48},
+    {date:"2026-08-23",mix:{wind:21.5,solar:15.5,nuclear:17.2,gas:22.0,biomass:11.3,imports:11.5,hydro:0.8,coal:0,other:0.2},n:48},
+    {date:"2026-08-24",mix:{wind:26.0,solar:12.0,nuclear:17.0,gas:19.5,biomass:11.0,imports:13.5,hydro:0.8,coal:0,other:0.2},n:48},
+    {date:"2026-08-25",mix:{wind:22.0,solar:9.5,nuclear:17.5,gas:23.5,biomass:11.5,imports:14.6,hydro:1.0,coal:0,other:0.4},n:48},
+    {date:"2026-08-26",mix:{wind:30.5,solar:8.0,nuclear:17.0,gas:15.5,biomass:11.0,imports:16.8,hydro:1.0,coal:0,other:0.2},n:48},
+    {date:"2026-08-27",mix:{wind:33.0,solar:11.0,nuclear:16.8,gas:13.0,biomass:10.8,imports:14.2,hydro:1.0,coal:0,other:0.2},n:48},
+    {date:"2026-08-28",mix:{wind:41.0,solar:8.7,nuclear:17.7,gas:9.9,biomass:10.6,imports:11.4,hydro:0.6,coal:0,other:0.1},n:48},
+    {date:"2026-08-29",mix:{wind:19.7,solar:13.6,nuclear:17.0,gas:18.8,biomass:11.2,imports:18.7,hydro:1.0,coal:0,other:0.0},n:22}
   ],
-  // 8 Aug 2026 06:20 UTC: live read via grid.iamkate.com/energymix.uk (Elexon BMRS + Carbon Intensity API) - bright, sunny Saturday, solar leading at 34.8%, wind strong at 24.5%, gas pushed off the margin to 10%, carbon intensity a very low 51 gCO2/kWh.
-  currentMix:{wind:24.5,solar:34.8,nuclear:13.5,gas:10.0,biomass:3.1,imports:17.4,hydro:0.6,coal:0,other:0.0},
-  carbonIntensity:51,  // gCO2/kWh - live read (grid.iamkate.com/energymix.uk), exceptionally low on a sunny, wind+solar-heavy day
-  todayStr:"2026-08-08",
-  fetchedAt:"2026-08-08T06:20:00.000Z",
+  // 29 Aug 2026 10:20 UTC: live read via energymix.uk (Elexon BMRS + Carbon Intensity API) at 11:10 BST - wet, showery Saturday with wind easing back to 19.7% after Friday's 41.8% blow, solar holding 13.6% between showers, nuclear unusually strong at 17.0% and biomass 11.2%; gas back on the margin at 18.8% and imports 18.7% (France 12.2%, Denmark 4.9%, Ireland exporting -5.1%). Carbon intensity 119 gCO2/kWh, demand 29.0GW, day-ahead GBP 149.23/MWh.
+  currentMix:{wind:19.7,solar:13.6,nuclear:17.0,gas:18.8,biomass:11.2,imports:18.7,hydro:1.0,coal:0,other:0.0},
+  carbonIntensity:119,  // gCO2/kWh - live read (energymix.uk) at 11:10 BST; well above the 77g past-day average as wind drops off and gas returns to the margin
+  todayStr:"2026-08-29",
+  fetchedAt:"2026-08-29T10:20:00.000Z",
   // Hourly irradiance today (W/m2) - clear/mainly-clear sunny day, peak ~800 W/m2 (consistent with the ~35% solar share seen in the live grid mix)
   hourlyIrr:   [0,0,0,0,0,10,60,180,350,520,660,760,800,780,710,590,450,290,145,50,10,0,0,0],
   hourlyDirect:[0,0,0,0,0,8,48,144,280,416,528,608,640,624,568,472,360,232,116,40,8,0,0,0],
@@ -1878,18 +1878,18 @@ async function openPMDay(c,idx){
 // ═══════════════════════════════════════════════
 const NEWS_CATS={"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Technology":{bg:"#92400e",fg:"#fde68a"},"M&A":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#065f46",fg:"#a7f3d0"},"AI":{bg:"#0e7490",fg:"#a5f3fc"}};
 const NEWS_ITEMS=[
-  {"cat":"Policy","title":"DESNZ reportedly faces ~£2bn budget cut to help fund defence spending","desc":"Reported Treasury reallocation raises questions over pace of net-zero delivery even as CB7 targets stay in place.","src":"SMS Energy","url":"https://www.smsenergy.com/insights/desnz-budget-changes-dont-have-to-slow-decabonisation/","date":"2026-08-06"},
-  {"cat":"Policy","title":"DESNZ confirms national pricing reform over a switch to zonal","desc":"REMA summer update reforms the existing national pricing system rather than moving Great Britain to zonal power pricing.","src":"Osborne Clarke","url":"https://www.osborneclarke.com/insights/energy-transition-uk-government-confirms-reforms-national-pricing-rema-electricity-market","date":"2026-08-04"},
-  {"cat":"Policy","title":"Ofgem Review 2026 final report sets modernisation programme","desc":"Government report calls for stronger consumer protection and more dynamic, growth-focused regulation at Ofgem.","src":"GOV.UK","url":"https://www.gov.uk/government/publications/ofgem-review-2026/ofgem-review-final-report","date":"2026-08-03"},
-  {"cat":"Technology","title":"Rolls-Royce SMR to build UK's first small modular reactors at Wylfa","desc":"470MW units on Anglesey are expected to support around 3,000 skilled jobs once deployed in the mid-2030s.","src":"The Engineer","url":"https://www.theengineer.co.uk/content/in-depth/could-smrs-power-a-new-golden-age-for-uk-nuclear","date":"2026-08-02"},
-  {"cat":"Technology","title":"Plug-in solar panels to go on sale in UK supermarkets","desc":"Low-cost, DIY-install solar panels aimed at renters and flat-dwellers are set to launch within months.","src":"GOV.UK","url":"https://www.gov.uk/government/news/government-to-make-plug-in-solar-available-within-months","date":"2026-08-05"},
-  {"cat":"Technology","title":"£70m storage trials complete, incl. EDF's hydrogen-in-uranium tech","desc":"Seven first-of-a-kind long-duration storage projects finish government-backed demonstration trials.","src":"Energy Live News","url":"https://www.energylivenews.com/2026/07/27/government-storage-trials-reveal-technologies-that-could-back-up-renewables/","date":"2026-07-27"},
-  {"cat":"M&A","title":"Fidra acquires 1,025MW Enderby battery project in Leicestershire","desc":"Deal ranks among the largest UK BESS acquisitions as storage M&A activity resumes after a quiet spell.","src":"IndexBox","url":"https://www.indexbox.io/blog/uk-bess-ma-activity-resumes-after-quiet-period/","date":"2026-08-05"},
-  {"cat":"M&A","title":"Gresham House signs SPA for 480MW Essex battery project","desc":"Conditional acquisition of a battery storage site near Rayleigh as UK BESS M&A activity picks up.","src":"IndexBox","url":"https://www.indexbox.io/blog/uk-bess-ma-activity-resumes-after-quiet-period/","date":"2026-08-03"},
-  {"cat":"Markets","title":"UK Winter-26 baseload eases to ~£121/MWh as outage premium unwinds","desc":"Forward curve retreats from £127 as some nuclear outages resolve, even as firmer Brent adds a crosscurrent.","src":"Catalyst Commercial","url":"https://www.catalyst-commercial.co.uk/works/uk-energy-market-report-10-july-2026/","date":"2026-08-06"},
-  {"cat":"Markets","title":"Wind curtailment cost UK over £1bn in 2025","desc":"NESO continues paying northern wind farms to switch off due to Scotland-England transmission constraints.","src":"Deccan Herald","url":"https://www.deccanherald.com/world/uk-is-paying-1-billion-to-waste-a-record-amount-of-wind-power-3300020","date":"2026-08-01"},
-  {"cat":"AI","title":"Data centres turn into power companies as AI demand outpaces grid","desc":"Global data-centre electricity demand nears 1,050 TWh in 2026, making the sector one of the world's largest power consumers.","src":"Gartner / EnkiAI","url":"https://enkiai.com/ai-market-intelligence/ai-data-center-power-grid-limits-reshape-energy-in-2026/","date":"2026-08-05"},
-  {"cat":"AI","title":"Ofgem proposes fees up to £712k/MW to curb speculative AI data centres","desc":"New commitment-fee consultation targets stalled grid-connection bids as AI-driven demand requests hit 125GW.","src":"Ofgem","url":"https://www.ofgem.gov.uk/press-release/ofgem-acts-free-grid-capacity-tackling-speculative-data-centre-projects","date":"2026-07-29"}
+  {"cat":"Policy","title":"Ofgem energy price cap up 4% from 1 Oct 2026 to £1,723/yr avg","desc":"Rise driven by continued Middle East conflict; ~11m on fixed-rate unaffected; 22m on default tariffs hit by increase.","src":"Ofgem","url":"https://www.ofgem.gov.uk/press-release/energy-price-cap-will-rise-4-october-2026","date":"2026-08-26"},
+  {"cat":"Policy","title":"UK govt sets Seventh Carbon Budget at ~87% cuts for 2038–2042","desc":"Requires £880bn investment over 25 years, yielding £865bn net benefit from avoided fossil fuel costs by 2050.","src":"Carbon Brief / CCC","url":"https://www.carbonbrief.org/qa-how-uks-seventh-carbon-budget-will-deliver-865bn-in-economic-benefits/","date":"2026-08-22"},
+  {"cat":"M&A","title":"TotalEnergies acquires Shell's European renewables (500MW + 3.5GW pipeline)","desc":"Deal includes 500MW operating across Italy & Netherlands; 3.5GW UK/Spain/Italy pipeline; completion due EOY 2026.","src":"TotalEnergies","url":"https://totalenergies.com/newsroom/renewables-in-europe-totalenergies-acquires-shells-renewables-business","date":"2026-08-03"},
+  {"cat":"M&A","title":"TotalEnergies signs PPA for Walney I & II UK offshore wind","desc":"Long-term power purchase agreement secures supply from one of UK's largest operational offshore wind farms.","src":"Renewable Watch","url":"https://renewablewatch.in/2026/08/27/totalenergies-signs-ppa-for-367-mw-uk-offshore-wind-project/","date":"2026-08-27"},
+  {"cat":"Technology","title":"Rolls-Royce SMR awarded Wylfa; GBE-N early works (£730M–£1.1bn) greenlit","desc":"Three 470MW units on Anglesey for grid from mid-2030s; site prep, utilities, earthworks underway in 2026.","src":"World Nuclear News","url":"https://www.world-nuclear-news.org/articles/uk-selects-wylfa-for-at-least-three-rolls-royce-smrs","date":"2026-08-22"},
+  {"cat":"Technology","title":"UK launches £28M Ultra-Long Duration Energy Storage Challenge","desc":"Grants fund battery tech & hydrogen storage for 4-day gaps; model projects £14–50bn system-cost savings by 2050.","src":"Fuel Cells Works","url":"https://fuelcellsworks.com/2026/08/20/h2/britain-puts-28m-behind-storing-power-for-four-days","date":"2026-08-20"},
+  {"cat":"Markets","title":"UK grid: wind easing to 19.7% after Fri's 41.8% blow; gas 18.8% margin","desc":"Prices £149/MWh at 11am 29 Aug; solar 13.6%, nuclear 17% strong; carbon intensity 119 gCO2/kWh, demand 29 GW.","src":"energymix.uk","url":"https://energymix.uk/","date":"2026-08-29"},
+  {"cat":"Markets","title":"Germany Cal-27 repriced €104/MWh; TTF gas €59/MWh on Sept concerns","desc":"N2EX UK holding £121/MWh Win-26 as nuclear-outage premium eases; Brent crude softened to ~$90.55/bbl (28 Aug).","src":"EEX / euenergy.live","url":"https://euenergy.live/","date":"2026-08-22"},
+  {"cat":"AI","title":"GB data-centre grid queue: 73GW by Jun 2025, now ~125GW on speculative bids","desc":"140+ schemes could need ~50GW total; Ofgem consultation on commitment fees (Jul 29) to flush phantom projects.","src":"Ofgem / Digital Watch","url":"https://dig.watch/updates/ai-data-centre-surge-pushes-electricity-demand-in-the-uk-to-new-heights","date":"2026-08-22"},
+  {"cat":"AI","title":"AI data centres to hit 8–16% of UK electricity demand by 2050","desc":"Current 10TWh could surge to 71TWh; power-hungry hosting reshaping grid decarbonization & transmission investment needs.","src":"CMS Law / IEA Uptime","url":"https://cms.law/en/gbr/publication/power-hungry-the-uk-s-grid-grapples-with-the-ai-data-centre-surge","date":"2026-08-20"},
+  {"cat":"M&A","title":"NextEnergy UK acquires 107MW BESS (Maldon, Basildon, Loudwater SE England)","desc":"Fund grows to 165MW; each site has Capacity Market contract & established grid connection route.","src":"Energy Global","url":"https://renewablesnow.com/news/nextenergy-uk-fund-acquires-107-mw-operational-bess-portfolio-1299664/","date":"2026-08-17"},
+  {"cat":"Markets","title":"UK wind curtailment cost surpassed £1bn in 2026 YTD; Fri 41.8% forced constraint pay","desc":"NESO continues paying northern wind farms to switch off; Scotland-England transmission capacity remains bottleneck.","src":"BusinessGreen","url":"https://www.businessgreen.com/news/4534201/grid-curtailment-costs-britains-wasted-wind-power-exceeds-1bn-2026","date":"2026-08-26"}
 ];
 function _newsDate(iso){const d=new Date((iso||"").length>10?iso:iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
 // LIVE_NEWS is populated by fetchLiveNews() on page open; falls back to baked NEWS_ITEMS.
@@ -2575,7 +2575,7 @@ async function runSelfCheck() {
 //  stay correct after live refreshes and daily data swaps.
 // ═══════════════════════════════════════════════
 // Editor's note — refreshed by the daily task alongside the data blocks:
-const FABLE_NOTE = "A bright, breezy Saturday at SL9 has kept the grid leaning hard on renewables - solar the single largest fuel at an estimated ~35 per cent of GB generation alongside wind near ~25 per cent, with gas pushed off the margin to just ~10 per cent and carbon intensity down to an exceptionally clean ~51g/kWh. GB day-ahead is estimated to have averaged around £95/MWh on 7 Aug's strong wind-and-solar mix, with Germany near €100/MWh and Spain firmer near €114, negative-price hours still concentrated on the German and Iberian grids around midday; the German Cal-27 baseload strip remains re-priced higher near €104/MWh on the fresh EEX print. UK Winter-26 continues to hold near ~£121/MWh as the nuclear-outage premium unwinds, though TTF gas near €59/MWh stays a crosscurrent to watch into the BoE's 17 September meeting, with the 10-year gilt easing to ~4.90 per cent.";
+const FABLE_NOTE = "A wet, showery Saturday in London has knocked wind back from Friday's 41.8% blow down to 19.7%, solar holding 13.6% between showers, and nuclear now unusually strong at 17% - gas returned to the margin at 18.8% to backfill the wind drop. Carbon intensity 119g/kWh, well above the 77g past-day average. UK Win-26 continues to hold ~£121/MWh as the nuclear-outage premium partly unwinds, though day-ahead jumped to £149/MWh on the early-morning wind forecast revision; Brent crude eased to ~$90.55/bbl (28 Aug) with the 10-year gilt retreating to ~4.90%, both supporting a modest relief in wholesale curves. Germany Cal-27 remains repriced to €104/MWh on EEX; TTF gas still firm at €59/MWh front-month heading into September storage season, watch the BoE's 17 Sep meet for any rate guidance.";
 function _fchip(label,val,delta,unit,invert){
   let cls='fneut',arrow='·',txt='—';
   if(delta!==null&&!isNaN(delta)){
