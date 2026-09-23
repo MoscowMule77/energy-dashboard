@@ -792,13 +792,13 @@ function renderBakeAge(){
 }
 
 const DATA_TS = {
-  prices:   {ts:'2026-08-30T07:50:00', source:'Yahoo Finance / LSE / Investing.com (30 Aug: Friday 28 Aug closes; live-refreshed on open)', isLive:true},
+  prices:   {ts:'2026-09-23T06:35:00', source:'Yahoo Finance v8 chart API, read live via the Chrome bridge at 06:35Z on 23 Sep (US marks are Tuesday 22 Sep closes; Europe is early Wednesday, Asia is live)', isLive:true},
   grid:     {ts:null, source:'Carbon Intensity API + Open-Meteo', isLive:true},
   battery:  {ts:null, source:'Computed from date/time/season', isLive:true},
   solar:    {ts:null, source:'Computed from date/time/season', isLive:true},
   n2ex:     {ts:null, source:'Indicative model', isLive:false},
   briefing: {ts:null, source:'Claude AI (Haiku)', isLive:false},
-  forwards: {ts:'2026-08-30T07:50:00', source:'Indicative — verify Bloomberg/ICE', isLive:false},
+  forwards: {ts:'2026-09-23T06:35:00', source:'Indicative — reviewed 23 Sep; UK Win-26 and both carbon legs re-marked to 22 Sep settlements', isLive:false},
   nav:      {ts:'2026-06-11T07:42:50', source:'Discount = live share price vs last published NAV (AIC)', isLive:true},
 };
 
@@ -940,48 +940,48 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 30 Aug 2026 07:45 UTC - grid mix read LIVE from the NESO/Carbon Intensity API (settlement period 07:00-07:30Z). London today (Met Office): dry and bright through the morning, scattered and locally heavy showers developing this afternoon and spreading east into the evening; max 23C / min 14C - weathercode 2 (partly cloudy).
-    time:["2026-08-23","2026-08-24","2026-08-25","2026-08-26","2026-08-27","2026-08-28","2026-08-29","2026-08-30"],
-    temperature_2m_max:[23.0,22.0,21.0,20.0,22.0,23.0,21.0,23.0],
-    temperature_2m_min:[14.0,14.0,13.0,13.0,14.0,15.0,15.0,14.0],
-    weathercode:[1,2,3,61,2,1,61,2],
-    shortwave_radiation_sum:[19.50,17.00,12.00,9.50,16.00,18.50,9.00,16.00]
+    // Updated 23 Sep 2026 06:35 UTC. Grid mix read live from the NESO/Elexon Carbon Intensity + BMRS feed at 07:20 BST. London weather from the Met Office: a dry, mainly sunny day, max 23.0C / min 10.0C, weathercode 1, and 14.25 MJ/m2 of global irradiance - the second strong day in a row and the best of this eight-day window bar Monday. The autumn equinox fell yesterday, so from here every one of these numbers is on the way down. 16-20 Sep are reconstructed daily averages over the unsettled, very windy stretch that ended in a near-record renewable weekend.
+    time:["2026-09-16","2026-09-17","2026-09-18","2026-09-19","2026-09-20","2026-09-21","2026-09-22","2026-09-23"],
+    temperature_2m_max:[20.5,19.8,18.6,17.9,17.2,21.0,22.0,23.0],
+    temperature_2m_min:[14.5,13.2,12.4,11.8,10.6,9.0,8.5,10.0],
+    weathercode:[3,61,51,3,2,1,1,1],
+    shortwave_radiation_sum:[9.80,7.50,9.20,8.60,12.40,14.71,14.40,14.25]
   },
   daily:[
-    // Daily averages - Carbon Intensity API (NESO) settled half-hours. 29 Aug is now the full settled 48-period average (wind 27.1%, CI 112g); 23-28 Aug carried from the previous run's settled/past-week reads. Today (30 Aug) is the live part-day average to 07:30Z.
-    {date:"2026-08-23",mix:{wind:26.0,solar:12.0,nuclear:17.0,gas:19.5,biomass:11.0,imports:13.5,hydro:0.8,coal:0,other:0.2},n:48},
-    {date:"2026-08-24",mix:{wind:22.0,solar:9.5,nuclear:17.5,gas:23.5,biomass:11.5,imports:14.6,hydro:1.0,coal:0,other:0.4},n:48},
-    {date:"2026-08-25",mix:{wind:30.5,solar:8.0,nuclear:17.0,gas:15.5,biomass:11.0,imports:16.8,hydro:1.0,coal:0,other:0.2},n:48},
-    {date:"2026-08-26",mix:{wind:33.0,solar:11.0,nuclear:16.8,gas:13.0,biomass:10.8,imports:14.2,hydro:1.0,coal:0,other:0.2},n:48},
-    {date:"2026-08-27",mix:{wind:41.0,solar:8.7,nuclear:17.7,gas:9.9,biomass:10.6,imports:11.4,hydro:0.6,coal:0,other:0.1},n:48},
-    {date:"2026-08-28",mix:{wind:41.8,solar:8.7,nuclear:18.0,gas:10.1,biomass:10.8,imports:11.6,hydro:0.6,coal:0,other:0.1},n:48},
-    {date:"2026-08-29",mix:{wind:27.1,solar:5.5,nuclear:18.4,gas:16.0,biomass:11.1,imports:18.3,hydro:1.3,coal:0,other:2.3},n:48},
-    {date:"2026-08-30",mix:{wind:20.1,solar:0.9,nuclear:24.0,gas:12.0,biomass:15.5,imports:25.3,hydro:0.9,coal:0,other:1.3},n:16}
+    // 16-20 Sep are reconstructed from the rolling past-week averages published by the NESO/Elexon feed, anchored to the Sunday snapshot in which wind ran above 66% and GB half-hours cleared below zero. 21 Sep is now settled as a full day - the low-wind reversal that took day-ahead to GBP 198.55. 22 Sep is the settled past-day average read from the live feed this morning (gas 41.0%, wind 14.9%, solar 8.7%). Today is the part-day average over the settlement periods to 07:20 BST, which is overnight-weighted: no solar yet, but wind already rebuilding hard.
+    {date:"2026-09-16",mix:{wind:48.0,solar:7.0,nuclear:11.8,gas:19.5,biomass:8.0,imports:3.8,hydro:1.2,coal:0,other:0.7},n:48},
+    {date:"2026-09-17",mix:{wind:42.0,solar:8.5,nuclear:12.0,gas:22.0,biomass:8.2,imports:5.4,hydro:1.2,coal:0,other:0.7},n:48},
+    {date:"2026-09-18",mix:{wind:50.0,solar:8.0,nuclear:12.0,gas:17.5,biomass:7.5,imports:3.5,hydro:1.0,coal:0,other:0.5},n:48},
+    {date:"2026-09-19",mix:{wind:62.0,solar:8.5,nuclear:12.0,gas:10.0,biomass:5.0,imports:1.0,hydro:1.2,coal:0,other:0.3},n:48},
+    {date:"2026-09-20",mix:{wind:66.0,solar:9.5,nuclear:12.5,gas:7.5,biomass:3.2,imports:0.0,hydro:1.3,coal:0,other:0.0},n:48},
+    {date:"2026-09-21",mix:{wind:19.5,solar:7.5,nuclear:12.2,gas:33.5,biomass:10.2,imports:14.5,hydro:2.3,coal:0,other:0.3},n:48},
+    {date:"2026-09-22",mix:{wind:14.9,solar:8.7,nuclear:13.1,gas:41.0,biomass:10.3,imports:9.2,hydro:1.9,coal:0,other:0.9},n:48},
+    {date:"2026-09-23",mix:{wind:32.0,solar:0.2,nuclear:14.6,gas:40.5,biomass:10.2,imports:0.0,hydro:2.0,coal:0,other:0.5},n:15}
   ],
-  // 30 Aug 2026 07:45 UTC: live read from the NESO Carbon Intensity API (settlement period 07:00-07:30Z). Quiet Sunday-morning system - demand is at its overnight trough, so the inflexible plant dominates the share table: nuclear 25.1% and biomass 15.9% are both running well above their usual weight, imports are the single largest block at 26.0% (France and Denmark both flowing in hard), and gas has been squeezed right down to 9.7%. Wind has eased to 17.7% after yesterday's 27.1% day-average, and solar is only just waking up at 5.4%. Carbon intensity 103 gCO2/kWh (index: moderate) against a 112g settled average for yesterday.
-  currentMix:{wind:17.7,solar:5.4,nuclear:25.1,gas:9.7,biomass:15.9,imports:26.0,hydro:0.1,coal:0,other:0.0},
-  carbonIntensity:103,  // gCO2/kWh - live read from the Carbon Intensity API at 07:00-07:30Z (actual 103, forecast 102); yesterday settled at a 112g average
-  todayStr:"2026-08-30",
-  fetchedAt:"2026-08-30T07:45:00.000Z",
-  // Hourly irradiance today (W/m2) - bright start then scattered, locally heavy showers from early afternoon; peak ~600 W/m2 late morning before cloud builds
-  hourlyIrr:   [0,0,0,0,0,5,45,140,280,410,510,580,600,555,470,370,255,150,60,15,0,0,0,0],
-  hourlyDirect:[0,0,0,0,0,4,32,101,202,295,367,418,432,400,338,266,184,108,43,11,0,0,0,0],
+  // 23 Sep 2026 07:20 BST live snapshot. Demand 25.8GW against 27.4GW of home generation, so Britain is EXPORTING 1.74GW rather than importing - the import share on this card is zero, and the biggest single flow is 1.23GW going to Ireland. Wind is back on 40.2% of generation and has overtaken gas at 38.3%; nuclear 13.9%, biomass 9.3%, hydro 2.7%, solar still 0.2% at this hour. Carbon intensity 155 gCO2/kWh against a 178g past-day average - and against 62g over the windiest stretch of the weekend. Day-ahead settled 197.43 pounds/MWh for yesterday, with a 356.28 evening peak.
+  currentMix:{wind:37.9,solar:0.2,nuclear:13.9,gas:36.0,biomass:9.3,imports:0.0,hydro:2.7,coal:0,other:0.0},
+  carbonIntensity:155,  // gCO2/kWh - live read at 07:20 BST; past-day average 178g
+  todayStr:"2026-09-23",
+  fetchedAt:"2026-09-23T06:35:00.000Z",
+  // Hourly irradiance today (W/m2), London, local (BST) hours, from the Met Office forecast: a mainly clear day after a chilly start. The curve peaks at 590 W/m2 at 13:00 and holds above 500 from 12:00 to 15:00, with real direct beam (up to 420 W/m2) across that block. Integrates to 14.25 MJ/m2, matching shortwave_radiation_sum above. Note the post-equinox squeeze: the same clear sky now yields about 3% less than it did on Monday, and the loss compounds daily from here.
+  hourlyIrr:   [0,0,0,0,0,0,0,15,95,190,300,420,530,590,575,495,385,245,105,12,0,0,0,0],
+  hourlyDirect:[0,0,0,0,0,0,0,4,40,90,145,245,350,420,415,360,270,150,48,3,0,0,0,0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:280, currentDirect:202, currentDiffuse:78, // W/m2 ~08:45 BST - from today's modelled bright-morning curve (no live AWN read this run - see AWN_DATA note)
+  currentIrr:35, currentDirect:10, currentDiffuse:25, // W/m2 ~07:30 BST - just after sunrise; the usable block today is the conventional one, 11:00-16:00
 };
 
-// Last reading from the SigenStor. NOTE 3 Aug 2026: the Chrome bridge is connected and the Sigen auth route is
-// LIVE (accessToken issued OK), but the realtimeInfo route has now returned "Station not permitted" (code 1111)
-// for 22 straight days since 13 Jul (checked again this run, both system IDs tried - still down). SOC/PV-power below
-// therefore remain the last good realtime read (30 Jun) and renderSystemGraphic falls back to estimateSoc() (intended
-// behaviour). The history endpoint (level=Month) DOES work despite the realtime block, and was used this run to
-// backfill ENERGY_DAYS through today - see PR_DATA/ENERGY_DAYS comments. Fixing realtime needs the station's OpenAPI
-// permission re-granted in the mySigen portal, not a code change.
+// Last reading from the SigenStor. NOTE 23 Sep 2026: no live Sigen read this run. The Scheduled credentials folder
+// (sigen_keys.txt / awn_keys.txt) sits outside this session's connected folders, so neither the OpenAPI auth nor the
+// realtimeInfo route could be called - the same blocker as every run since 30 Aug. The Chrome bridge itself IS working
+// and was used this run for the Yahoo index feed, and the grid, weather, European price and commodity feeds all came in
+// normally. SOC/PV-power below therefore remain the last good realtime read (30 Jun) and renderSystemGraphic falls back
+// to estimateSoc(), which is the intended behaviour. Fixing this needs /Users/lmoscovitch/Documents/Claude added to the
+// scheduled task's connected folders, not a code change.
 const LAST_KNOWN_SOLAR = {
   solarKw: 12.23,   // live PV power (Sigen pVPower) - 30 Jun 2026 ~14:50 BST
   soc: 0.808,       // 80.8% - 30 Jun 2026 ~14:50 BST (last successful Sigen realtimeInfo read)
   ts: '2026-06-30T13:50:00.000Z',
-  source: 'Sigen OpenAPI - 30 Aug run: no live read. The Scheduled credentials folder (sigen_keys.txt / awn_keys.txt) was not connected to this session, so neither the Sigen nor the AW Net feed could be called. SOC/PV-power remain the last good realtime read (30 Jun) and the graphic falls back to estimateSoc(), driven by today\'s 16.0 MJ/m2 bright-morning-then-showers irradiance.'
+  source: 'Sigen OpenAPI - 23 Sep run: no live read. The Scheduled credentials folder (sigen_keys.txt) is still outside this session\'s connected folders, so neither the OpenAPI auth nor realtimeInfo could be called. SOC/PV-power above remain the last good realtime read (30 Jun) and renderSystemGraphic falls back to estimateSoc(), driven by today\'s 14.25 MJ/m2. That is the second strong day running and the shape is the conventional one - above 500 W/m2 from 12:00 to 15:00 with real direct beam throughout - so the charging window is the middle of the day and a full charge from solar alone is still realistic. The equinox passed yesterday, though, so this is close to the last week of the year that can manage it unaided.'
 };
 
 let GRID_DATA = INITIAL_GRID_DATA;
@@ -1678,10 +1678,10 @@ function updateSectionTs() {
   if(!DATA_TS.grid.ts){const el=document.getElementById('ts-grid');if(el){el.className='ts';el.textContent='Not yet fetched';}}
 }
 
-const PM_DATA={dates:["2026-07-31","2026-08-01","2026-08-02","2026-08-03","2026-08-04","2026-08-05","2026-08-06","2026-08-07","2026-08-08","2026-08-09","2026-08-10","2026-08-11","2026-08-12","2026-08-13","2026-08-14","2026-08-15","2026-08-16","2026-08-17","2026-08-18","2026-08-19","2026-08-20","2026-08-21","2026-08-22","2026-08-23","2026-08-24","2026-08-25","2026-08-26","2026-08-27","2026-08-28","2026-08-29"],
-  gb:{base:[132.1,128.0,122.0,118.0,121.5,120.0,113.6,95.0,92.0,84.0,101.0,112.0,118.0,124.0,121.0,104.0,96.0,118.0,127.0,133.0,136.0,130.0,118.0,126.0,120.0,141.0,144.0,138.0,114.7,125.7],wind:[121.2,118.6,112.2,108.0,109.7,110.0,103.3,86.0,82.9,75.4,92.6,102.2,106.8,113.0,108.9,91.3,83.1,108.1,116.7,122.6,125.5,118.2,107.6,114.9,111.4,128.3,134.7,128.1,104.7,117.5],solar:[110.3,108.6,100.4,90.6,101.3,99.1,87.7,71.5,75.2,58.4,76.1,92.3,100.4,106.2,101.0,79.5,76.8,98.9,110.8,112.6,116.9,108.2,99.0,103.7,98.5,120.7,118.9,112.5,96.9,101.3],bess:[51.8,50.7,51.7,56.5,51.1,51.4,55.9,52.6,49.5,55.7,53.2,50.9,49.9,52.2,51.0,57.4,50.7,50.6,49.3,51.2,50.6,51.8,50.6,52.0,51.7,51.2,53.3,55.7,50.0,55.2],neg:[0,0,0,1,0,0,1,0,0,1,0,0,0,1,0,2,0,0,0,0,0,0,0,0,0,0,0,1,0,1]},
-  de:{base:[110,95,85,95,99.5,100,118,126,131,140,152,138,120,128,146,158,163,149,132,141,155,168,171,150,136,128,119,142,110,86.3],wind:[98.1,81.5,71.2,85.5,88.0,90.7,105.5,115.2,117.5,127.4,142.5,127.9,109.0,116.9,135.9,145.0,149.8,137.3,122.7,128.5,143.0,156.6,158.0,139.3,123.5,114.9,106.1,131.5,96.3,74.7],solar:[71.4,55.1,40.2,60.4,62.4,64.4,83.3,95.0,93.8,99.2,115.1,96.7,81.6,94.5,112.9,119.3,122.4,116.0,92.5,111.3,127.4,131.7,125.1,106.9,103.3,99.0,87.6,103.9,73.5,43.5],bess:[86.8,90.9,99.2,82.4,85.8,84.7,80.9,79.9,89.0,97.9,85.7,90.3,86.7,80.1,79.8,94.9,96.2,82.9,87.4,79.0,75.9,82.0,101.5,94.7,81.1,78.5,80.2,86.4,86.9,96.2],neg:[3,5,8,2,3,3,1,2,5,9,3,4,3,1,1,8,8,3,3,2,1,1,9,6,2,2,2,3,4,7]},
-  es:{base:[120,110,95,90,114,114,122,128,133,140,147,132,118,124,136,142,145,138,124,128,118,112,108,104,99,96,92,105,105,101.8],wind:[115.0,103.3,86.3,82.2,109.3,107.9,113.1,122.1,128.2,131.0,142.7,126.0,111.6,117.4,128.1,137.0,139.2,132.0,119.4,123.6,113.6,104.8,102.2,97.8,92.0,91.3,87.8,97.9,101.0,92.9],solar:[89.6,74.8,55.8,58.0,83.7,81.6,83.9,88.1,94.1,107.2,116.0,97.1,82.7,87.1,102.4,109.3,105.9,105.3,86.6,87.6,84.0,86.8,71.6,65.3,72.9,59.8,53.2,74.2,68.9,59.8],bess:[79.3,87.3,86.4,79.2,75.1,80.9,85.5,88.3,87.5,81.3,79.8,82.9,81.8,85.9,81.9,84.0,86.3,81.1,83.5,88.7,78.0,71.0,88.3,87.4,71.6,84.0,86.0,79.6,85.3,91.4],neg:[5,8,5,4,2,5,5,6,6,5,5,5,4,6,5,7,5,5,4,6,2,2,8,6,2,5,5,5,6,7]}};
+const PM_DATA={dates:["2026-08-24", "2026-08-25", "2026-08-26", "2026-08-27", "2026-08-28", "2026-08-29", "2026-08-30", "2026-08-31", "2026-09-01", "2026-09-02", "2026-09-03", "2026-09-04", "2026-09-05", "2026-09-06", "2026-09-07", "2026-09-08", "2026-09-09", "2026-09-10", "2026-09-11", "2026-09-12", "2026-09-13", "2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19", "2026-09-20", "2026-09-21", "2026-09-22"],
+  gb:{base:[120,141,144,138,114.7,125.7,108,130,132,157.2,94.9,72.8,48,71,128,148.2,165,163.5,176,116,190,179.8,168,142,118,96,62,45,198.6,197.4],wind:[111.4,128.3,134.7,128.1,104.7,117.5,98,120,122,147.2,82.9,58.8,37,60,116,134.2,157,156.5,164,98,184,169.8,156,130,106,84,46,27,190.6,189.4],solar:[98.5,120.7,118.9,112.5,96.9,101.3,82,110,112,135.2,74.9,50.8,20,45,108,126.2,147,149.5,156,90,174,159.8,148,122,98,74,38,20,178.6,177.4],bess:[51.7,51.2,53.3,55.7,50,55.2,53.7,51,51,51.9,51,54.1,63.4,58.1,51,51.9,50.1,48.3,51,55.9,49.2,51,51,51,51,51.9,55,62.1,51,51],neg:[0,0,0,1,0,1,0,0,0,0,0,1,4,2,0,0,0,0,0,1,0,0,0,0,0,0,1,4,0,0]},
+  de:{base:[136,128,119,142,110,86.3,75.6,111.9,138,163.7,129.9,83.2,47.7,109.7,157.5,146.6,146.1,191.8,195.2,138,148.3,256.6,180.1,165,128,96,42.6,21.8,185,226.2],wind:[123.5,114.9,106.1,131.5,96.3,74.7,64.6,100.9,127,152.7,118.9,70.2,32.7,96.7,146.5,135.6,135.1,180.8,184.2,124,135.3,246.6,169.1,154,117,85,26.6,3.8,176,217.2],solar:[103.3,99,87.6,103.9,73.5,43.5,43.6,81.9,108,133.7,99.9,49.2,7.7,73.7,127.5,116.6,116.1,161.8,165.2,103,115.3,226.6,150.1,135,98,64,6.6,-14.2,155,196.2],bess:[81.1,78.5,80.2,86.4,86.9,96.2,90.2,80.8,79.2,77.6,76,85.2,95.8,86.6,76,76,76,77.6,77.6,87.5,84.5,86,76,76,77.6,80.6,91.4,94.6,76,76],neg:[2,2,2,3,4,7,8,3,2,1,0,4,8,4,0,0,0,1,1,5,4,0,0,0,1,2,7,9,0,0]},
+  es:{base:[99,96,92,105,105,101.8,108.9,99.1,125,159.9,157.4,168.6,138.4,140.3,177.2,151.7,153,151.6,162.2,122.2,121.8,183.5,148,135,128,119,107.9,112.2,138,156],wind:[92,91.3,87.8,97.9,101,92.9,102.9,93.1,119,153.9,151.4,162.6,132.4,134.3,171.2,145.7,147,145.6,156.2,116.2,115.8,177.5,142,129,122,113,101.9,106.2,133,151],solar:[72.9,59.8,53.2,74.2,68.9,59.8,78.9,73.1,99,133.9,131.4,142.6,108.4,110.3,151.2,125.7,127,125.6,136.2,93.2,93.8,157.5,122,109,102,93,79.9,84.2,112,130],bess:[71.6,84,86,79.6,85.3,91.4,81.8,77.2,75.8,74.4,68.8,68.8,72,72,68.8,68.8,68.8,68.8,68.8,74,74.6,68.8,68.8,68.8,68.8,68.8,73.2,73.2,68.8,68.8],neg:[2,5,5,5,6,7,7,6,5,4,0,0,0,0,0,0,0,0,0,2,3,0,0,0,0,0,2,2,0,0]}};
 const PM_CFG={gb:{cur:'£'},de:{cur:'€'},es:{cur:'€'}};
 let pmCharts={};
 function renderPowerMarkets(){
@@ -1903,18 +1903,18 @@ async function openPMDay(c,idx){
 // ═══════════════════════════════════════════════
 const NEWS_CATS={"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Technology":{bg:"#92400e",fg:"#fde68a"},"M&A":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#065f46",fg:"#a7f3d0"},"AI":{bg:"#0e7490",fg:"#a5f3fc"}};
 const NEWS_ITEMS=[
-  {"cat":"M&A","title":"NextEnergy UK I buys 107MW/151MWh operational BESS portfolio","desc":"Maldon (40MW), Basildon (28MW) and Loudwater (39MW) bought from Eku Energy, lifting the fund's standalone battery fleet to 165MW on Capacity Market contracts.","src":"Energy-Storage.News","url":"https://www.energy-storage.news/nextenergy-uk-acquires-107mw-151mwh-standalone-bess-portfolio-uk/","date":"2026-08-26"},
-  {"cat":"Policy","title":"Ofgem price cap rises 4% to £1,723/yr from 1 October","desc":"The default-tariff cap climbs on higher wholesale gas, hitting around 22m households while roughly 11m on fixed deals are insulated.","src":"Ofgem","url":"https://www.ofgem.gov.uk/press-release/energy-price-cap-will-rise-4-october-2026","date":"2026-08-26"},
-  {"cat":"Policy","title":"DESNZ and Ofgem warn on BESS volumes flooding into Gate 2","desc":"Joint open letter on connections-reform delivery flags a high volume of battery projects advancing to Gate 2, against a 23-27GW grid-scale target for 2030.","src":"GOV.UK / Solar Power Portal","url":"https://www.gov.uk/government/publications/connections-reform-delivery-update-and-battery-capacity/open-letter-from-desnz-and-ofgem-on-connections-reform-delivery","date":"2026-08-27"},
-  {"cat":"Markets","title":"German and Spanish midday power prices go negative again","desc":"Sunday solar drove eight-plus hours below zero in both markets; German day-average fell to €75.6/MWh while Spain's evening peak still cleared near €190/MWh.","src":"euenergy.live (ENTSO-E)","url":"https://euenergy.live/germany","date":"2026-08-30"},
-  {"cat":"AI","title":"140 data centres request 50GW of grid capacity - above GB peak demand","desc":"Connection requests now exceed the roughly 45GW the country actually peaks at, with some projects quoted waits of up to 15 years.","src":"CMS","url":"https://cms.law/en/gbr/publication/power-hungry-the-uk-s-grid-grapples-with-the-ai-data-centre-surge","date":"2026-08-28"},
-  {"cat":"AI","title":"Government rejects data-centre moratorium, keeps planning route open","desc":"Ministers pushed back on 28 August against calls to freeze new data-centre consents, leaving planning policy unchanged as AI Growth Zones proceed.","src":"Construction Magazine","url":"https://www.constructionmagazine.uk/2026/08/uk-data-centre-construction-2026-government-rejects-freeze.html","date":"2026-08-28"},
-  {"cat":"Technology","title":"DESNZ and UKRI fund 100-hour storage, including underground hydrogen","desc":"Grants target systems that can supply power for at least 100 hours; DESNZ puts the system-cost prize at £14bn-£50bn between 2035 and 2050.","src":"No2NuclearPower weekly","url":"https://www.no2nuclearpower.org.uk/weekly-news/nuclear-news-weekly-summary-w-e-28th-aug-2026/","date":"2026-08-28"},
-  {"cat":"Technology","title":"Rolls-Royce SMR generic design assessment due to complete","desc":"Regulatory sign-off lands this month, with Wylfa confirmed as the first site for up to three units and grid power targeted for the mid-2030s.","src":"World Nuclear News","url":"https://world-nuclear-news.org/articles/rolls-royce-smr-named-as-uks-selected-technology","date":"2026-08-28"},
-  {"cat":"Markets","title":"GB day-ahead baseload slides £22 to £120/MWh on midday renewables","desc":"The peak block fell £37 to £98/MWh and settled below baseload - the signature of heavy solar and wind on a light-demand day.","src":"Prestige Business Solutions","url":"https://www.prestigebusiness.energy/marketreports/energy-market-update24-aug2026","date":"2026-08-24"},
-  {"cat":"Policy","title":"Seventh Carbon Budget: 87% cuts, £880bn spend, £865bn net benefit","desc":"Government impact assessment puts avoided fossil-fuel costs alone at £445bn over 25 years; the net-zero economy already supports 1.1m FTE jobs.","src":"Carbon Brief / CCC","url":"https://www.carbonbrief.org/qa-how-uks-seventh-carbon-budget-will-deliver-865bn-in-economic-benefits/","date":"2026-08-22"},
-  {"cat":"Technology","title":"Plug-in solar panels set for UK supermarkets within months","desc":"Low-cost panels that plug straight into a socket, no installer needed - opening rooftop-style generation to renters for the first time.","src":"GOV.UK / Renewables Now","url":"https://www.gov.uk/government/news/government-to-make-plug-in-solar-available-within-months","date":"2026-08-25"},
-  {"cat":"M&A","title":"TotalEnergies signs long-term PPA for Walney I and II offshore wind","desc":"The 367MW offtake adds UK operational offshore volume alongside its pending purchase of Shell's European renewables platform.","src":"Renewable Watch","url":"https://renewablewatch.in/2026/08/27/totalenergies-signs-ppa-for-367-mw-uk-offshore-wind-project/","date":"2026-08-27"}
+  {"cat":"Markets","title":"UK power hits highest since January 2025 as wind output collapses","desc":"Day-ahead jumped to GBP 198.43/MWh with wind forecast down to around 3GW, less than half this year's average, forcing heavy reliance on costly gas plant.","src":"Bloomberg","url":"https://www.bloomberg.com/news/articles/2026-09-21/uk-power-price-jumps-to-highest-since-january-2025-on-less-wind","date":"2026-09-21"},
+  {"cat":"Technology","title":"NESO passes halfway mark on Gate 2 grid connection offers","desc":"713 projects totalling around 37GW have now received Gate 2 offers, 58% of the 1,223 schemes judged strategically aligned with Clean Power 2030, with DNO offers now landing too.","src":"reNEWS","url":"https://www.renews.biz/other-news/grid/neso-hits-gate-2-grid-offers-milestone/","date":"2026-09-22"},
+  {"cat":"Policy","title":"MPs urge net zero rethink and action on energy misinformation","desc":"A parliamentary push calls on ministers to tackle misleading claims about clean power costs as cross-party consensus frays ahead of Carbon Budget 7 delivery decisions.","src":"Energy Live News","url":"https://www.energylivenews.com/2026/09/22/government-urged-to-tackle-energy-misinformation-as-mps-call-for-net-zero-rethink/","date":"2026-09-22"},
+  {"cat":"Markets","title":"Day-ahead settles at GBP 198/MWh after wind falls two thirds","desc":"Baseload settled at 198.43 against 28.00 on Friday as wind slumped to 19.4% of the mix, with French strike action and low European hydro adding further upward pressure.","src":"Energy Live News","url":"https://www.energylivenews.com/2026/09/22/the-smarta-weekly-market-update-22nd-september-2026/","date":"2026-09-22"},
+  {"cat":"AI","title":"Aberdeen lands GBP 46.3bn energy and AI data centre investment plan","desc":"SSEN Transmission's programme plus a proposed GBP 6bn AI data centre campus at Blackdog could support 2,700 local jobs and make the north east an AI infrastructure hub.","src":"Energy Live News","url":"https://www.energylivenews.com/2026/09/22/aberdeens-big-future-46-3bn-investment-announced/","date":"2026-09-22"},
+  {"cat":"Technology","title":"National Gas starts design of St Fergus to Teesside hydrogen link","desc":"Project Union phase two spans 350 miles, would support around 1,300 jobs and forms part of a planned 1,500-mile underground network connecting UK industrial clusters.","src":"Energy Live News","url":"https://www.energylivenews.com/2026/09/22/national-gas-set-to-transform-underground-hydrogen-network/","date":"2026-09-22"},
+  {"cat":"M&A","title":"Generate Capital exits anaerobic digestion with UK, Canada, US sale","desc":"Generate Upcycle's twelve facilities go to Pinta Energy and Vanguard Renewables in two transactions, a full exit after a decade building the segment.","src":"energynews.pro","url":"https://energynews.pro/en/generate-capital-sells-anaerobic-digestion-platform-to-pinta-energy-and-vanguard-renewables","date":"2026-09-21"},
+  {"cat":"M&A","title":"NextEnergy buys 107MW operational UK battery storage portfolio","desc":"NextEnergy UK I adds three operating standalone BESS assets, extending a run of connection-ready battery deals that has driven UK storage M&A through H2 2026.","src":"SolarQuarter","url":"https://solarquarter.com/2026/09/19/nextenergy-uk-i-acquires-107mw-operational-bess-portfolio-in-uk/","date":"2026-09-19"},
+  {"cat":"Markets","title":"LCP Delta: AR8 could secure 19GW and GBP 11bn of consumer savings","desc":"Analysis of October's CfD round finds GBP 51bn of wholesale cost reduction against 38bn in CfD costs and 2bn in balancing - a net saving worth about GBP 5 per household bill.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/solar-planning/uk-ar8-could-procure-19gw-of-renewables-deliver-11-billion-in-savings-says-lcp-delta","date":"2026-09-19"},
+  {"cat":"Policy","title":"Ofgem consults on fee to thin oversubscribed BESS grid queue","desc":"The minded-to Oversubscribed Technologies Commitment Fee would start at GBP 3,000/MW and rise to 25,000, targeting roughly 90GW of battery capacity against a 29GW system need.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/battery-storage/ofgem-consults-additional-fee-for-oversubscribed-bess-grid-connections","date":"2026-09-18"},
+  {"cat":"Policy","title":"GB Energy opens GBP 30m People's Power fund for community projects","desc":"Great British Energy launched the first wave of up to GBP 1bn of community energy investment, backing over 1,000 local schemes plus a 5m partnerships grant and 1.8m for Scotland.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/solar-finance/gb-energy-launches-30-million-people-s-power-fund-for-community-energy","date":"2026-09-18"},
+  {"cat":"AI","title":"Scotland tightens data centre rules as AI power demand climbs","desc":"Any data centre above 50MW must now submit an environmental impact assessment, with proposals in the Scottish planning system potentially needing up to 6GW - over 1.5 times peak demand.","src":"Energy Live News","url":"https://www.energylivenews.com/2026/09/17/scotland-tightens-data-centre-rules-as-ai-boom-puts-pressure-on-energy-grid/","date":"2026-09-17"}
 ];
 function _newsDate(iso){const d=new Date((iso||"").length>10?iso:iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
 // LIVE_NEWS is populated by fetchLiveNews() on page open; falls back to baked NEWS_ITEMS.
@@ -2600,7 +2600,7 @@ async function runSelfCheck() {
 //  stay correct after live refreshes and daily data swaps.
 // ═══════════════════════════════════════════════
 // Editor's note — refreshed by the daily task alongside the data blocks:
-const FABLE_NOTE = "A quiet Sunday-morning system is showing its bones: with demand at the overnight trough the inflexible plant dominates, nuclear at 25.1% and biomass 15.9%, imports the single biggest block at 26.0%, and gas squeezed to 9.7% - carbon intensity 103g/kWh against yesterday's 112g settled average. Wind has eased to 17.7% after a 27.1% Saturday, and the interconnectors, not CCGTs, are setting the marginal price. The continent is the story today: German and Spanish midday clearing prices are both negative for eight-plus hours on Sunday solar, Germany averaging €75.6/MWh against Spain's €108.7, while Spain's evening peak still prints near €190 - the widest intraday spread of the month and a reminder that the BESS margin in Iberia is an evening-ramp trade, not a midday one. London turns showery this afternoon, so expect our own solar to fade early and gas to walk back up the merit order into the evening peak.";
+const FABLE_NOTE = "Wind is back and the curve has not caught up. At 07:20 wind is running 40.2% of GB generation against gas at 38.3%, carbon intensity has fallen to 155 gCO2/kWh from a 178g past-day average, and Britain is exporting 1.74GW rather than importing - the mirror image of Monday, when wind was under 19% and day-ahead cleared \u00a3198.55. Yesterday still settled at \u00a3197.43 with a \u00a3356 evening peak, so the whole reversal sits ahead of the market rather than in it; Germany cleared \u20ac226 and Spain \u20ac156 with not one negative hour between them, which for late September is itself the story - the continental glut of two weeks ago has gone. On site today is the better half of the trade: mainly clear, 14.25 MJ/m\u00b2 and above 500 W/m\u00b2 from 12:00 to 15:00, enough to fill the battery from solar alone. The equinox passed yesterday, though, and the same clear sky now yields about 3% less than it did on Monday - the window narrows from here.";
 function _fchip(label,val,delta,unit,invert){
   let cls='fneut',arrow='·',txt='—';
   if(delta!==null&&!isNaN(delta)){
@@ -2765,7 +2765,7 @@ function renderGate2(){
           '<div style="width:'+fillPct+'%;height:100%;background:'+col+';border-radius:6px;"></div></div></div>'+
       '<span style="width:118px;text-align:right;color:#94a3b8;">'+fmt(t.start)+' – '+fmt(t.end)+'</span></div>';
   }).join('')+
-  '<div style="font-size:10px;color:#64748b;margin:4px 0 10px;">Reformed pipeline: <strong>'+GATE2_DATA.pipeline.genStorageGW+'GW</strong> generation &amp; storage + <strong>'+GATE2_DATA.pipeline.demandGW+'GW</strong> demand accepted (old queue >'+GATE2_DATA.pipeline.oldQueueGW+'GW cleared; '+GATE2_DATA.pipeline.batteriesCutGW+'GW of batteries removed). Phase 1 connects by 2030, Phase 2 by 2035. <strong>Technology split:</strong> ~30GW solar holds Phase 1 status; batteries 83GW protected (~60GW above CP30 need — next window closed to new BESS); NESO has confirmed slippage for some 2026–27 connectees, pushing energisation dates out (e.g. GRID\\u2019s Lister Drive &amp; Ocker Hill to 2029).</div>';
+  '<div style="font-size:10px;color:#64748b;margin:4px 0 10px;">Reformed pipeline: <strong>'+GATE2_DATA.pipeline.genStorageGW+'GW</strong> generation &amp; storage + <strong>'+GATE2_DATA.pipeline.demandGW+'GW</strong> demand accepted (old queue >'+GATE2_DATA.pipeline.oldQueueGW+'GW cleared; '+GATE2_DATA.pipeline.batteriesCutGW+'GW of batteries removed). Phase 1 connects by 2030, Phase 2 by 2035. <strong>Technology split:</strong> ~30GW solar holds Phase 1 status; batteries 83GW protected (~60GW above CP30 need — next window closed to new BESS); NESO has confirmed slippage for some 2026–27 connectees, pushing energisation dates out (e.g. GRID’s Lister Drive &amp; Ocker Hill to 2029).</div>';
 }
 
 const DC_DATA={
@@ -2832,7 +2832,7 @@ const AWN_DATA={
   current:{tempC:21.8, feelsC:21.7, humidity:64, windMph:0.2, gustMph:1.1, maxGustMph:5.8, windDir:"E", rainTodayMm:0.0, pressInHg:29.96, uv:0, solarWm2:100, indoorC:25.8},
   solar:{insolation_kwh_m2:0.18, peakWm2:95, mj_so_far:0.64, hourly:[0,0,0,0,0,4,33,57,76,95,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
   perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:2.14, actualKwh:3.26, realizedPR:1.37},
-  summary:"A mild, dead-calm start at SL9: 21.8C and 64% humidity at 09:01 BST with barely any wind (E 0.2mph, gusting to 5.8) and just 100 W/m2 of hazy morning sun so far (peak 95 W/m2). The SigenStor has banked 3.26 kWh of PV this morning, still leaning on the battery (17.1 kWh discharged overnight) more than fresh generation this early - realised PR of 1.37 is noisy at this hour (mismatched cumulative windows) and not representative of the full day. Yesterday (2 Aug) the array made 57.4 kWh; today's hazier start suggests a softer day unless the cloud burns off through the afternoon. NOTE 30 Aug: no live station read this run - the Scheduled credentials folder was not connected to the session, so the figures above are the last good AW Net poll; today's modelled London profile is a bright start (peak ~600 W/m2 late morning) with scattered, locally heavy showers from early afternoon."
+  summary:"STALE - no AW Net read this run. The Scheduled credentials folder holding awn_keys.txt sits outside this session's connected folders, so the station API could not be called; the figures above are still the 3 Aug snapshot and the card's own asOf reflects that. For today's conditions the dashboard is using the Met Office London forecast instead: a dry, mainly sunny day, max 23.0C / min 10.0C after a chilly start, light winds, and 14.25 MJ/m2 of global irradiance - the second strong day in a row. The shape is the conventional one: clear through the morning, peaking near 590 W/m2 at 13:00 and above 500 W/m2 from 12:00 to 15:00 with real direct beam (up to 420 W/m2) across the block. On that profile the 13.44 kWp array should make roughly 35-37 kWh, comfortably enough to cover the day's load and take the battery to full from solar alone. The equinox was yesterday, so the same clear sky now yields about 3% less than it did on Monday and the loss compounds daily - this is close to the last week of the year that can do it unaided."
 };
 function renderLocalWeather(){
   const el=document.getElementById('awn-body'); if(!el||typeof AWN_DATA==='undefined')return;
@@ -3143,7 +3143,7 @@ function renderEnergyDays(){
 //  Normalised to W/panel so strings of different sizes/orientations compare fairly.
 // ═══════════════════════════════════════════════
 const STRING_DATA={ asOf:"2026-06-30T13:50:00.000Z", ghiWm2:823,
-  note:"STALE - the Sigen realtimeInfo route has returned \"Station not permitted\" (code 1111) every run since 13 Jul (22 days running, checked again 3 Aug, both system IDs tried), so these are still the 30 Jun values and cannot be refreshed until the station's OpenAPI permission is re-granted in the mySigen portal. For reference, that read: PV1 = 8 SOUTH (main roof) leading at 3.58 kW (~448 W/panel); PV2 = 6 WEST (garage, unshaded) 2.10 kW and PV3 = 8 WEST (main roof, shaded PM + shallower pitch) 2.86 kW, the two West faces neck-and-neck at midday (~350-357 W/panel); PV4 = 6 SPLIT 3S/3W depressed at ~94V (bypass-clamped - the re-stringing candidate). 28 panels / 13.44 kWp; faces 11 S / 17 W. WATCH ITEM: the PV2-vs-PV3 evening gap quantifies the west-roof shading loss. NOTE: the Sigen history endpoint (level=Month) DOES still work despite this block, and was used this run to backfill ENERGY_DAYS through 3 Aug.",
+  note:"STALE - the Sigen realtimeInfo route has returned \"Station not permitted\" (code 1111) on every run since 13 Jul, and since 30 Aug the credentials folder itself has been unreachable from the scheduled session (re-checked 23 Sep). These are still the 30 Jun values and cannot be refreshed until /Users/lmoscovitch/Documents/Claude is added to the task's connected folders AND the station's OpenAPI permission is re-granted in the mySigen portal. For reference, that read: PV1 = 8 SOUTH (main roof) leading at 3.58 kW (~448 W/panel); PV2 = 6 WEST (garage, unshaded) 2.10 kW and PV3 = 8 WEST (main roof, shaded PM + shallower pitch) 2.86 kW, the two West faces neck-and-neck at midday (~350-357 W/panel); PV4 = 6 SPLIT 3S/3W depressed at ~94V (bypass-clamped - the re-stringing candidate). 28 panels / 13.44 kWp; faces 11 S / 17 W. WATCH ITEM: the PV2-vs-PV3 evening gap quantifies the west-roof shading loss.",
   strings:[
     {id:1,panels:8,orient:'South',kwp:3.84,powerKw:3.58,v:351.00,a:10.20},
     {id:2,panels:6,orient:'West', kwp:2.88,powerKw:2.10,v:191.40,a:10.99},
@@ -3177,20 +3177,20 @@ function renderStrings(){
 //  GLOBAL MARKETS — index levels + 24h change (Yahoo v8 chart, same-origin via Chrome).
 //  Baked daily; the dashboard re-fetches live when Chrome is open.
 // ═══════════════════════════════════════════════
-const INDICES_DATA={ asOf:"2026-08-30T07:50:00.000Z",
-  pulse:"Friday's close leaves risk appetite firmly on: the DAX leads Europe at +1.66% and the Nikkei adds +1.34%, with the Nasdaq +0.85%, Dow +0.53% and S&P 500 +0.49% all higher, while the VIX collapses -8.96% to 14.43 - complacency, not caution. The laggards are narrow and idiosyncratic: Hang Seng -1.63% and the CAC 40 -0.61%. The FTSE 100 is close to flat (+0.07%) but the domestically-geared FTSE 250 is up +0.89%, the wider gap of the two - a rate-cut-hope trade that sits awkwardly with the 10-yr gilt back at 5.16%.",
+const INDICES_DATA={ asOf:"2026-09-23T06:35:00.000Z",
+  pulse:"A quiet, mildly risk-on tape with Tokyo doing all the work: the Nikkei is up 1.38% to 65,019 while Hang Seng gives back 0.84%. Europe has barely moved at the open - DAX +0.02%, CAC +0.20%, Euro Stoxx 50 +0.10% - and the FTSE 100 is the laggard at -0.29%, handing back part of Monday's energy-led gain as Brent grinds into a sixth consecutive down session near $98. The US marks are Tuesday's close: S&P unchanged, Dow -0.36%, but Nasdaq +0.45% keeps the AI leg bid. VIX at 14.21, down 4.44%, says nobody is paying up for protection.",
   items:[
-    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10824.26,chg:0.07},
-    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:24938.79,chg:0.89},
-    {sym:'^GSPC',name:'S&P 500',region:'US',price:7711.76,chg:0.49},
-    {sym:'^IXIC',name:'Nasdaq',region:'US',price:26402.42,chg:0.85},
-    {sym:'^DJI',name:'Dow Jones',region:'US',price:53559.99,chg:0.53},
-    {sym:'^GDAXI',name:'DAX',region:'DE',price:26569.99,chg:1.66},
-    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8401.18,chg:-0.61},
-    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6485.67,chg:0.58},
-    {sym:'^N225',name:'Nikkei 225',region:'JP',price:66405.56,chg:1.34},
-    {sym:'^HSI',name:'Hang Seng',region:'HK',price:25584.79,chg:-1.63},
-    {sym:'^VIX',name:'VIX',region:'Vol',price:14.43,chg:-8.96}
+    {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10708.33,chg:-0.29},
+    {sym:'^FTMC',name:'FTSE 250',region:'UK',price:24526.45,chg:0.14},
+    {sym:'^GSPC',name:'S&P 500',region:'US',price:7764.64,chg:0.00},
+    {sym:'^IXIC',name:'Nasdaq',region:'US',price:27244.28,chg:0.45},
+    {sym:'^DJI',name:'Dow Jones',region:'US',price:51863.69,chg:-0.36},
+    {sym:'^GDAXI',name:'DAX',region:'DE',price:25578.85,chg:0.02},
+    {sym:'^FCHI',name:'CAC 40',region:'FR',price:8154.91,chg:0.20},
+    {sym:'^STOXX50E',name:'Euro Stoxx 50',region:'EU',price:6324.72,chg:0.10},
+    {sym:'^N225',name:'Nikkei 225',region:'JP',price:65018.95,chg:1.38},
+    {sym:'^HSI',name:'Hang Seng',region:'HK',price:24832.51,chg:-0.84},
+    {sym:'^VIX',name:'VIX',region:'Vol',price:14.21,chg:-4.44}
   ]
 };
 function renderIndices(){
@@ -3238,22 +3238,22 @@ function switchPage(name){
     if(name==='energy'){['renderGridCharts','renderIrrChart','renderPowerMarkets','renderEnergyDays','renderDCTracker','renderLongTermForecast'].forEach(function(f){try{if(typeof window[f]==='function')window[f]();}catch(e){}});}
   },50);
 }
-const MACRO_DATA={asOf:"2026-08-30",rows:[
-  {l:"BoE base rate",v:"3.75%",sub:"held 30 Jul on a 6-3 vote (Greene, Mann and Pill voted for 4%); with July CPI at 2.9% markets now price ~24bp of tightening by December and ~36bp by Feb 2027 - next MPC 17 Sep",dir:0},
-  {l:"CPI inflation (Jul)",v:"2.9%",sub:"rose from 2.6% in June (released 19 Aug), driven by higher household energy bills; core steady at 2.6% and the BoE still sees a Q4 peak near 3.2%",dir:1},
-  {l:"RPI inflation (Jun)",v:"3.0%",sub:"eased to 3.0% in June (released 22 Jul), down from 3.1% in May - July RPI not separately verified this run",dir:0},
-  {l:"10-yr gilt yield",v:"5.16%",sub:"back above 5% and the highest since May 2026, as hawkish Fed commentary outweighs softer Brent; the next BoE hike is now priced into 2027 - verified 30 Aug",dir:1},
-  {l:"Unemployment",v:"4.9%",sub:"Mar-May - employment 75.1%, claimant count 1.689m in Jun; the labour market stays subdued, which is what keeps the MPC cautious - not re-released since",dir:0},
-  {l:"GBP/USD",v:"1.350",sub:"Friday 28 Aug close, -0.88% on the day (Yahoo Finance); live-refreshed via ECB reference rates on open",dir:-1,fx:"USD"},
-  {l:"GBP/EUR",v:"1.170",sub:"Friday 28 Aug close, -0.08% on the day (Yahoo Finance); live-refreshed via ECB reference rates on open",dir:0,fx:"EUR"}
+const MACRO_DATA={asOf:"2026-09-23",rows:[
+  {l:"BoE base rate",v:"3.75%",sub:"held on 16 Sep by 6-3, with three members voting for a 25bp rise to 4% - the most hawkish split of this cycle. Last changed 18 Dec 2025; next decision 5 Nov. Markets still price no cut before 2027, and the dissenters rather than a cut are the live question",dir:0},
+  {l:"CPI inflation (Aug)",v:"3.1%",sub:"up from 2.9% in July (released 16 Sep, the day before the MPC) on household energy bills; CPIH 3.3%. Underlying measures remain above target-consistent rates and the BoE still sees a Q4 peak near 3.2%",dir:1},
+  {l:"RPI inflation (Aug)",v:"3.4%",sub:"August print, released 16 Sep alongside CPI - up on the 3.0% June reading this card previously carried. RPI still runs above CPI, which matters for index-linked network revenues and RPI-linked infrastructure income",dir:1},
+  {l:"10-yr gilt yield",v:"5.22%",sub:"22 Sep close, down about 7bp from the 5.29% eighteen-year high struck on 18 Sep. The retreat came without any change in the fiscal picture, so treat it as consolidation rather than a turn",dir:-1},
+  {l:"Unemployment",v:"4.9%",sub:"three months to July, released 15 Sep - better than the 5.0% forecast but up from 4.7% a year earlier, with employment 75.1% and inactivity 20.9%. A subdued labour market is what keeps the MPC majority cautious",dir:0},
+  {l:"GBP/USD",v:"1.332",sub:"1.3317 on 23 Sep, down from 1.3343 at Tuesday's close and softer again despite gilts near an eighteen-year high - rarely a comfortable combination; live-refreshed via ECB reference rates on open",dir:-1,fx:"USD"},
+  {l:"GBP/EUR",v:"1.166",sub:"1.1655 on 23 Sep, essentially unchanged on the week. Steady sterling holds the euro leg of the carbon spread still, so the widening in the UK/EU discount below is a carbon move rather than an FX one",dir:0,fx:"EUR"}
 ]};
-const CMDTY_DATA={asOf:"2026-08-30",rows:[
-  {l:"Brent crude",v:"$88.10/bbl",sub:"28 Aug close, -0.54% on the day - the softer oil print is part of what has taken pressure off the UK inflation path",dir:-1},
-  {l:"TTF gas (front-month)",v:"€67.5/MWh",sub:"28 Aug close, off an intraday spike but still near the highest since Jan 2023; whipsawed this week by Iran headlines - up sharply from €59 in early Aug",dir:1},
-  {l:"UK NBP gas",v:"135p/th",sub:"no fresher public print found this run - last verified 6 Aug (day-ahead 134-135p/th). NB the TTF leg has since risen ~14%, so this row is likely understated",dir:0},
-  {l:"Gold",v:"$4,529.90/oz",sub:"28 Aug close, -2.33% on the day - a sharp risk-on unwind alongside the VIX collapse to 14.4",dir:-1},
-  {l:"Copper",v:"$6.66/lb",sub:"28 Aug close, -0.75% (COMEX, ≈$14,680/t) - still historically elevated on grid and data-centre cable demand",dir:-1},
-  {l:"Lithium carbonate",v:"CN¥146.0k/t",sub:"no fresher print found this run - last verified 29 Jul (≈$21.57/kg LCE battery-grade, China, near a four-month low)",dir:0}
+const CMDTY_DATA={asOf:"2026-09-23",rows:[
+  {l:"Brent crude",v:"$98.36/bbl",sub:"23 Sep, down 0.90% on the session and a sixth consecutive fall. The Hormuz risk premium is fully out and crude is now drifting on fundamentals rather than headlines; it is marginally above the $97.60 this card carried on Monday",dir:-1},
+  {l:"TTF gas (front-month)",v:"€71.43/MWh",sub:"23 Sep, down 2.60% and a sharp retreat from the €79.38 of two days ago - gas has finally followed crude lower. The ICE ENDEX strip is backwardated across the winter (Oct 72.80 to Mar 69.40), which is unusual heading into the heating season and says storage anxiety has eased",dir:-1},
+  {l:"UK NBP gas",v:"~178p/th",sub:"178.25p on 23 Sep, down 2.26%, and a genuine improvement on the 195p Oct-26 open this card carried from 9 Sep. Sources disagree by a few pence (175-180p) so treat the level as approximate; the direction is not in doubt",dir:-1},
+  {l:"Gold",v:"$4,329.60/oz",sub:"23 Sep, down 0.80% from $4,385.50 - the haven bid is finally leaking away now that both energy legs are falling together",dir:-1},
+  {l:"Copper",v:"$6.73/lb",sub:"COMEX 23 Sep (≈$14,840/t); LME official settlement was $14,797/t on 22 Sep. Little changed on the week and holding Monday's gain - grid build-out and data-centre cable demand remain the structural bid underneath",dir:0},
+  {l:"Lithium carbonate",v:"CN¥135.2k/t",sub:"battery-grade China, 23 Sep, up 0.56% on the day (≈$20.2/kg LCE, or about $17.8/kg ex-VAT). First fresh print since 29 Jul and materially BELOW the CN¥146.0k this card had been carrying - cheaper cells for the BESS build-out",dir:1}
 ]};
 function renderMacroCmdty(){
   const arrow=d=>d>0?'<span style="color:#dc2626;font-size:9px;">▲</span>':d<0?'<span style="color:#16a34a;font-size:9px;">▼</span>':'';
@@ -3264,20 +3264,22 @@ function renderMacroCmdty(){
   if(cb){cb.innerHTML=CMDTY_DATA.rows.map(r=>row(r,carrow)).join('');try{document.getElementById('cmdty-asof').textContent='Updated '+new Date(CMDTY_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
 }
 // ═══ POWER FORWARDS + CARBON — baked daily by the 7am task (was hard-coded HTML) ═══
-const FWD_DATA={asOf:"2026-08-30",rows:[
-  {l:"UK Win-26",v:"£121/MWh",sub:"no fresher public print found this run - last verified 8 Aug (~£121/MWh, down from £127 on 23 Jul). Watch this row: TTF has since rallied ~14%, which argues the curve has moved up"},
-  {l:"UK Sum-27",v:"£78/MWh",sub:"£77.82 (13 Jul curve) - illiquid and not publicly quoted since; last verified 13 Jul"},
-  {l:"UK Cal-27",v:"£94/MWh",sub:"not separately quoted; Win-27 last printed at £79.58 - last verified 28 May, the stalest row on this card"},
-  {l:"Germany Cal-27",v:"€104/MWh",sub:"€104.24/MWh (31 Jul EEX) - no fresher public print this run; German day-ahead has meanwhile swung from €151 on wind lulls to €75.6 on a solar-flooded Sunday"},
-  {l:"TTF Gas Win-26",v:"€67.5/MWh",sub:"marked to the 28 Aug front-month close - up from €59.4 at the start of the month and near the highest since Jan 2023"}
-],note:"Verify on Bloomberg/ICE. Reviewed 30 Aug: only the TTF leg had a fresh public print, and it has moved materially (€59 → €67.5), so the UK Win-26 and Germany Cal-27 rows should be treated as understated until re-quoted. UK Sum-27 (13 Jul) and Cal-27 (28 May) remain the stalest rows - illiquid contracts with no public quotes available."};
-const CO2_DATA={asOf:"2026-08-30",rows:[
-  {l:"EU ETS Dec-26",v:"€83.75/t",sub:"no fresher reliable print found this run - last verified 3 Aug (opened at €83.75, above the €79.4-82 July range)",dir:0},
-  {l:"EU ETS Dec-27",v:"€84/t",sub:"last verified 9 Jul"},
-  {l:"UK ETS Dec-26",v:"£58.70/t",sub:"UKA last confirmed £58.70 (17 Jul close) - held its gains after the 22 Jul UK-EU summit advanced ETS linkage; no fresher print found this run",dir:0},
+const FWD_DATA={asOf:"2026-09-23",rows:[
+  {l:"UK Win-26",v:"£148.13/MWh",sub:"22 Sep settlement, down £10.82 on the session - the first fresh mark on this row since 8 Sep and a clear break below the £151.00 it carried. TTF falling 2.6% to €71.43 is doing the work"},
+  {l:"UK Sum-27",v:"£98.71/MWh",sub:"settlement mark, 4 Sep - reviewed 23 Sep, no fresher public print found"},
+  {l:"UK Cal-27",v:"£94/MWh",sub:"not separately quoted; Win-27 last printed at £79.58 - last verified 28 May and by a wide margin the stalest row on this card, almost certainly understated against a Sum-27 at £98.71"},
+  {l:"Germany Cal-27",v:"€132.03/MWh",sub:"11 Sep EEX close - a substantial re-mark from the €104 (31 Jul) this row had been carrying, which was badly understated. A same-day ICE ENDEX 2027 monthly strip on 22 Sep implies roughly €127/MWh, so the true level is somewhere in the €127-132 band"},
+  {l:"TTF Gas Win-26",v:"€71.90/MWh",sub:"23 Sep, derived as the day-weighted Oct-26 to Mar-27 ICE ENDEX strip (Oct 72.80 / Nov 72.67 / Dec 72.47 / Jan 72.24 / Feb 71.75 / Mar 69.40). No exchange publishes a single seasonal quote publicly, so this is computed rather than printed"}
+],note:"Verify on Bloomberg/ICE. Reviewed 23 Sep. Two rows moved materially this run: UK Win-26 re-marked to the 22 Sep settlement of £148.13, down £10.82 on the day, and Germany Cal-27 corrected from a stale €104 (31 Jul) to the 11 Sep EEX close of €132.03. Sum-27 (4 Sep) and UK Cal-27 (28 May) remain stale and are the rows to treat with most caution. The whole complex is now pointing the same way for the first time in a month - crude, TTF, NBP and the UK winter mark all lower together - which is a cleaner signal than the crude/gas divergence of two days ago."
+};
+const CO2_DATA={asOf:"2026-09-23",rows:[
+  {l:"EU ETS Dec-26",v:"€87.08/t",sub:"live on 23 Sep against a €86.73 settlement on 22 Sep - a fresh mark, up from the €84.18 (4 Sep) this row carried, and now ABOVE the €86.60 six-month high struck on 22 Jul",dir:1},
+  {l:"EU ETS Dec-27",v:"€84/t",sub:"last verified 9 Jul - now inverted against a Dec-26 at €87.08, which is unlikely to be real and marks this row as stale rather than informative"},
+  {l:"UK ETS Dec-26",v:"£58.12/t",sub:"ICE UKA Dec-26 settlement, 22 Sep - down from £59.73 (4 Sep). UKAs are quoted publicly far less often than EUAs, so a fresh settlement on this row is worth more than the small move it shows",dir:-1},
   {l:"UK ETS Dec-27",v:"£62/t",sub:"last verified 9 Jul"},
-  {l:"UK/EU spread",v:"-£12.9/t",sub:"EUA €83.75 ≈ £71.6 at 1.170 GBP/EUR vs UKA £58.70 - a ~18.0% discount, re-priced this run on the fresher FX but neither carbon leg independently re-quoted",dir:0}
-],note:"The 22 Jul UK-EU summit advanced ETS linkage, with full alignment still targeted for 2029. EUAs last marked €83.75 (3 Aug) while UKAs sit ~£58.70 (17 Jul); the discount holds near £12.9/t once re-struck at Friday's 1.170 GBP/EUR. Energy Aspects still sees UKAs averaging £74/t in H2 and the spread below €10/t by year-end. Carbon values reviewed 30 Aug; no fresher public print found for either leg."};
+  {l:"UK/EU spread",v:"-£16.3/t",sub:"EUA €86.73 ≈ £74.41 at 1.1655 GBP/EUR against UKA £58.12 - a 21.9% discount, materially wider than the 17.3% carried on Monday. Both legs reprinted and they moved in opposite directions, so this is a real widening rather than an FX artefact",dir:-1},
+],note:"Both legs re-marked this run for the first time since 4 Sep: the EUA Dec-26 up to €87.08 (above its July high) and the UKA Dec-26 down to £58.12, pushing the UK discount out to 21.9% from 17.3%. What that discount is worth swings with the mix - across the weekend gas set under 8% of GB generation and the allowance touched almost nothing, whereas this morning gas is still on 38.3% even with wind back above 40%, so carbon remains a live cost on the marginal MWh. The 22 Jul UK-EU summit advanced ETS linkage with full alignment still targeted for 2029; Energy Aspects sees UKAs averaging £74/t in H2 and the spread below €10/t by year-end, which on this print looks a considerable stretch."
+};
 const NAV_ASOF="2026-05-28"; // bump when NAVs in PRICES are re-verified against AIC — not re-checked this run
 function renderFwdCarbon(){
   const row=r=>'<div class="fr"><span class="fl">'+r.l+(r.sub?'<br><span style="font-size:9px;color:#94a3b8;font-weight:400;">'+r.sub+'</span>':'')+'</span><span class="fval">'+r.v+'</span></div>';
@@ -3369,7 +3371,7 @@ async function loadAll(){
   requestAnimationFrame(()=>{
     try{
       drawIntraday(now);
-      setFeedStatus('n2ex','ok','Live grid-mix read via the NESO Carbon Intensity API at 07:00-07:30Z 30 Aug: a quiet Sunday-morning system with nuclear 25.1 per cent, biomass 15.9 per cent and imports 26.0 per cent all running heavy, gas squeezed to 9.7 per cent, wind 17.7 per cent and solar just waking at 5.4 per cent (carbon intensity 103g/kWh; yesterday settled at a 112g average). GB day-ahead past-day GBP 114.7-125.7/MWh; Germany averaging EUR 75.6/MWh today with eight-plus negative midday hours, Spain EUR 108.7/MWh. Brent ~USD 88/bbl and the 10-year gilt back at 5.16 per cent (28 Aug) after the 30 Jul BoE hold at 3.75 per cent - 30 Aug 2026');
+      setFeedStatus('n2ex','ok','Live grid-mix read via the NESO/Elexon Carbon Intensity and BMRS feed at 07:20 BST on 23 Sep: wind is back on 40.2 per cent of generation and has overtaken gas at 38.3 per cent, with Britain EXPORTING 1.74GW rather than importing - demand 25.8GW against 27.4GW of home generation. Carbon intensity 155 gCO2 per kWh against a past-day average of 178g. Yesterday settled as a gas-led day (gas 41.0 per cent, wind 14.9 per cent, solar 8.7 per cent) with N2EX day-ahead baseload at 197.43 pounds per MWh and a 356.28 pounds evening peak. Germany cleared 226.18 euros and Spain 156.02 euros, both with zero negative hours. N2EX prices on this card remain modelled, not read.');
     }catch(e){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
@@ -3916,3 +3918,4 @@ setInterval(()=>{try{fetchSkyNow();}catch(e){}},10*60*1000);
 </script>
 </body>
 </html>
+
