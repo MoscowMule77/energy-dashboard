@@ -174,7 +174,12 @@ table.sh tr:hover td{background:#fafbfc;}
 .news-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
 @media(max-width:900px){.news-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:540px){.news-grid{grid-template-columns:1fr;}}
-\1/* Three-column news band: Energy News | Solar Power Portal | PV Tech (24 Oct 2026) */
+/* Solar Power Portal section — stacks 1-wide inside the news column; multi-col rules kept as fallback */
+.spp-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
+@media(max-width:1200px){.spp-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+@media(max-width:900px){.spp-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:540px){.spp-grid{grid-template-columns:1fr;}}
+/* Three-column news band: Energy News | Solar Power Portal | PV Tech (24 Oct 2026) */
 .news-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start;margin-top:18px;}
 @media(max-width:1100px){.news-columns{grid-template-columns:1fr;}}
 .news-columns .news-section{margin:0;}
