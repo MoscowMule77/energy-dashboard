@@ -3327,7 +3327,7 @@ const MACRO_DATA={asOf:"2026-10-24",rows:[
   {l:"BoE base rate",v:"3.75%",sub:"held on 16 Sep by 6-3; next decision 5 Nov with markets about 95% priced for a 25bp hike to 4.00% after the hot September CPI and tight labour data",dir:0},
   {l:"CPI inflation (Sep)",v:"3.5%",sub:"released 21 Oct - up from 3.1% in August and above the 3.4% consensus, driven by motor fuel (petrol 169.5p/l, highest since Aug 2022); CPIH 3.6%, services 3.7%, core 2.8%. Next release 18 Nov",dir:1},
   {l:"RPI inflation (Sep)",v:"3.9%",sub:"September print released 21 Oct alongside CPI, up from 3.4% - RPI runs well above CPI, which matters for index-linked network revenues",dir:1},
-  {l:"10-yr gilt yield",v:"5.36%",sub:"last verified 21 Oct close (no fresher print found) (TradingEconomics), down 6bp on the session but near multi-year highs into the 28 Oct Budget; intraday sources ranged to 5.43%",dir:-1},
+  {l:"10-yr gilt yield",v:"5.36%",sub:"last verified 21 Oct close (TradingEconomics; no fresher print found), down 6bp on the session but near multi-year highs into the 28 Oct Budget; intraday sources ranged to 5.43%",dir:-1},
   {l:"Unemployment",v:"4.7%",sub:"Jun-Aug, released 20 Oct - unexpectedly down from 4.9% with regular pay growth 3.7%; the tight print is part of the November hike case",dir:-1},
   {l:"GBP/USD",v:"1.338",sub:"1.3375 at the Friday 23 Oct close (Yahoo), off 0.15% on the session; live-refreshed via ECB reference rates on open",dir:-1,fx:"USD"},
   {l:"GBP/EUR",v:"1.193",sub:"1.1933 at the Friday close (Yahoo), little changed on the session (-0.04%) and holding the rate-spread gains (EUR/GBP 0.838)",dir:0,fx:"EUR"}
@@ -3350,7 +3350,7 @@ function renderMacroCmdty(){
 }
 // ═══ POWER FORWARDS + CARBON — baked daily by the 7am task (was hard-coded HTML) ═══
 const FWD_DATA={asOf:"2026-10-24",rows:[
-  {l:"UK Win-26",v:"£144.34/MWh",sub:"29 Sep settlement (Prestige) - the season is now IN DELIVERY and trades as months: Nov-26 £174.34 (22 Oct settle, Prestige report of 23 Oct), Dec-26 £172.52 and Q1-27 £177.92, so read those, not this stale seasonal mark; UK Win-27 closed at £128.78 on 22 Oct (£105.07 a month earlier)"},,
+  {l:"UK Win-26",v:"£144.34/MWh",sub:"29 Sep settlement (Prestige) - the season is now IN DELIVERY and trades as months: Nov-26 £174.34 (22 Oct settle, Prestige report of 23 Oct), Dec-26 £172.52 and Q1-27 £177.92, so read those, not this stale seasonal mark; UK Win-27 closed at £128.78 on 22 Oct (£105.07 a month earlier)"},
   {l:"UK Sum-27",v:"£127.96/MWh",sub:"indicative broker forward as at 20 Oct (Catalyst Commercial) - up about 25% from the £102.90 of 29 Sep; flagged indicative, not an exchange settle"},
   {l:"UK Cal-27",v:"£136.25/MWh",sub:"20 Oct settlement (Prestige; £139.31 on 19 Oct), up about 19% from £114.40 on 29 Sep as the gas rally and nuclear outages repriced the UK curve"},
   {l:"Germany Cal-27",v:"€140.21/MWh",sub:"9 Oct EEX close (year-high; a 15 Oct 1-yr forward print was €145.54) - freshest verified German print, replacing the 25 Sep €145.04"},
