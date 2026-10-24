@@ -174,6 +174,11 @@ table.sh tr:hover td{background:#fafbfc;}
 .news-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
 @media(max-width:900px){.news-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:540px){.news-grid{grid-template-columns:1fr;}}
+/* Solar Power Portal section — 10 cards, 5-up on wide screens */
+.spp-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
+@media(max-width:1200px){.spp-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+@media(max-width:900px){.spp-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:540px){.spp-grid{grid-template-columns:1fr;}}
 .news-card{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s;}
 .news-card:hover{border-color:#3b82f6;transform:translateY(-2px);}
 .news-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:20px;}
@@ -743,6 +748,13 @@ table.sh tr:hover td{background:#fafbfc;}
   <div class="news-chips" id="news-chips"></div>
   <div class="news-grid" id="news-grid">
     <!-- rendered from LIVE_NEWS (fetched on open) or baked NEWS_ITEMS fallback -->
+  </div>
+</div>
+
+<div class="news-section page-news">
+  <h2>☀️ Solar Power Portal — latest 10 <span id="spp-status" onclick="fetchLiveSpp()" title="Click to refresh articles" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved articles</span></h2>
+  <div class="news-grid spp-grid" id="spp-grid">
+    <!-- rendered from LIVE_SPP (fetched on open) or baked SPP_ITEMS fallback -->
   </div>
 </div>
 
@@ -2036,6 +2048,74 @@ async function fetchLiveNews(){
   }catch(e){
     LIVE_NEWS=null; renderNews();
     if(st){st.textContent="saved headlines"+(bakedDate?" · "+bakedDate:"")+" (live unavailable)";st.title="Live fetch blocked or proxies unreachable — showing the daily-curated set. Click to retry. "+((e&&e.message)||"");}
+  }
+}
+
+// ── Solar Power Portal — latest 10 articles ───────────────────────────────
+// Baked SPP_ITEMS (refreshed by the daily run) render immediately; fetchLiveSpp() then pulls
+// the site's own RSS feed through the same CORS-proxy race as the main news grid and, on
+// success, replaces them with the 10 newest articles. Any failure keeps the baked set.
+const SPP_FEED="https://www.solarpowerportal.co.uk/rss.xml?content_types=article";
+const SPP_SECTIONS={"solar-pv":"Solar PV","solar-projects":"Projects","utility-scale-solar":"Utility-scale","commercial-solar":"C&I","residential-solar":"Residential","battery-storage":"Storage","energy-storage":"Storage","colocation":"Co-location","energy-policy":"Policy","grid":"Grid","finance":"Finance","markets":"Markets"};
+const SPP_COLORS={"Solar PV":{bg:"#a16207",fg:"#fef08a"},"Projects":{bg:"#b45309",fg:"#fde68a"},"Utility-scale":{bg:"#b45309",fg:"#fde68a"},"C&I":{bg:"#9a3412",fg:"#fed7aa"},"Residential":{bg:"#9a3412",fg:"#fed7aa"},"Storage":{bg:"#065f46",fg:"#a7f3d0"},"Co-location":{bg:"#0e7490",fg:"#a5f3fc"},"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Grid":{bg:"#4338ca",fg:"#c7d2fe"},"Finance":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#7e22ce",fg:"#e9d5ff"}};
+const SPP_ITEMS=[
+  {"sec":"Solar PV","title":"Heatwaves: Solar energy’s hidden enemy","desc":"Ossila’s Stephen Gibbs on why panel efficiency falls as cell temperatures climb, and what that means for summer yields.","url":"https://www.solarpowerportal.co.uk/solar-pv/heatwaves-solar-energy-s-hidden-enemy","date":"2026-10-23T10:45:44Z"},
+  {"sec":"Projects","title":"UK solar approvals, progress and purchases","desc":"This week’s roundup of UK solar planning approvals, construction progress and project acquisitions.","url":"https://www.solarpowerportal.co.uk/solar-projects/uk-solar-approvals-progress-purchases","date":"2026-10-23T09:25:29Z"},
+  {"sec":"Projects","title":"Boom Power secures planning permission for 49.99MW Drove Lane solar PV plant in East Yorkshire","desc":"Council approval in October clears Boom Power’s 49.99MW scheme near Wawne to proceed.","url":"https://www.solarpowerportal.co.uk/solar-projects/boom-power-secures-planning-permission-for-49-99mw-drove-lane-solar-pv-plant-in-east-yorkshire","date":"2026-10-23T00:41:16Z"},
+  {"sec":"Storage","title":"BW ESS secures financing for 3.5-hour 350MW Hams Hall BESS","desc":"OCBC, Rabobank and Societe Generale are contributing equal shares of the debt facility for the 350MW, 3.5-hour project.","url":"https://www.solarpowerportal.co.uk/battery-storage/bw-ess-secures-financing-for-3-5-hour-350mw-hams-hall-bess","date":"2026-10-22T09:51:47Z"},
+  {"sec":"Policy","title":"UK government approves new North Sea gas field, says tax revenue will fund clean energy","desc":"Ministers consented the Jackdaw field, saying gas could reach UK homes by month-end and tax receipts will support clean energy.","url":"https://www.solarpowerportal.co.uk/energy-policy/uk-government-approves-new-north-sea-gas-field-says-tax-revenue-will-fund-clean-energy","date":"2026-10-21T14:46:59Z"},
+  {"sec":"Storage","title":"Ørsted completes 600MWh BESS, Econonergy connects 120MWh battery storage in Scotland","desc":"Commissioning is under way at Ørsted’s 600MWh Iceni battery, while Econergy’s 120MWh Dalmarnock site is due online in December.","url":"https://www.solarpowerportal.co.uk/battery-storage/-rsted-completes-construction-of-600mwh-bess-econonergy-connects-120mwh-battery-storage-in-scotland","date":"2026-10-21T08:24:54Z"},
+  {"sec":"Storage","title":"ACCURE AI-based platform to provide analytics for Fidra’s 1.4GW Thorpe Marsh BESS","desc":"ACCURE’s AI analytics will monitor Fidra’s 1.4GW Thorpe Marsh battery from factory testing through to commercial operation.","url":"https://www.solarpowerportal.co.uk/battery-storage/accure-ai-based-platform-to-provide-analytics-for-fidra-s-1-4gw-thorpe-marsh-bess","date":"2026-10-20T08:34:06Z"},
+  {"sec":"Policy","title":"Independent investigation finds no evidence of NESO misconduct","desc":"An independent probe found no evidence NESO hid blackout risk during June’s heatwave, as whistleblower claims publicised by Claire Coutinho alleged.","url":"https://www.solarpowerportal.co.uk/energy-policy/independent-investigation-no-evidence-neso-misconduct","date":"2026-10-20T08:00:00Z"},
+  {"sec":"Storage","title":"Ares invests in 1.9GW of Statera’s UK battery and gas portfolio, but not its LDES projects","desc":"Ares Infrastructure Equity’s first European investment covers 1.9GW of Statera’s UK battery and gas assets, leaving the LDES pipeline out.","url":"https://www.solarpowerportal.co.uk/battery-storage/ares-invests-in-1-9gw-of-statera-s-uk-battery-and-gas-portfolio-but-not-its-ldes-projects","date":"2026-10-19T10:30:47Z"},
+  {"sec":"Storage","title":"Foresight invests in 40GWh LDES cap-and-floor winning pumped hydro project in Scotland","desc":"Foresight’s FEIP II fund is backing the 40GWh Earba pumped hydro scheme, a winner in the LDES cap-and-floor round.","url":"https://www.solarpowerportal.co.uk/energy-storage/foresight-invests-in-40gwh-ldes-cap-and-floor-winning-pumped-hydro-project-in-scotland","date":"2026-10-19T09:34:30Z"}
+];
+let LIVE_SPP=null;
+function _sppSection(url){try{const seg=new URL(url).pathname.split("/").filter(Boolean)[0]||"";return SPP_SECTIONS[seg]||"Solar";}catch(e){return "Solar";}}
+function _sppText(s){try{return (new DOMParser().parseFromString(String(s||""),"text/html").body.textContent||"").replace(/\s+/g," ").trim();}catch(e){return String(s||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();}}
+function renderSpp(){
+  const g=document.getElementById("spp-grid"); if(!g)return;
+  const items=((LIVE_SPP&&LIVE_SPP.length)?LIVE_SPP:SPP_ITEMS).slice(0,10);
+  g.innerHTML=items.map(function(it){
+    const sec=it.sec||_sppSection(it.url); const c=SPP_COLORS[sec]||{bg:"#334155",fg:"#cbd5e1"};
+    return "<div class=\"news-card\">"+
+      "<span class=\"news-badge\" style=\"background:"+c.bg+";color:"+c.fg+";\">"+_esc(sec)+"</span>"+
+      "<div class=\"news-title\"><a href=\""+_esc(it.url)+"\" target=\"_blank\" rel=\"noopener\">"+_esc(it.title)+"</a></div>"+
+      (it.desc?"<div class=\"news-desc\">"+_esc(it.desc)+"</div>":"")+
+      "<div class=\"news-meta\">Solar Power Portal · "+_newsDate(it.date)+"</div>"+
+    "</div>";
+  }).join("");
+}
+async function fetchLiveSpp(){
+  const st=document.getElementById("spp-status");
+  if(st){st.textContent="updating…";st.title="Fetching the latest Solar Power Portal articles…";}
+  const bakedDate=(SPP_ITEMS[0]&&SPP_ITEMS[0].date)?_newsDate(SPP_ITEMS[0].date):"";
+  try{
+    const xml=await _proxyFetch(SPP_FEED);
+    if(!xml) throw new Error("no feed");
+    const doc=new DOMParser().parseFromString(xml,"text/xml");
+    const nodes=[...doc.querySelectorAll("item")];
+    if(!nodes.length) throw new Error("empty feed");
+    const seen={}, out=[];
+    for(const n of nodes){
+      const title=_sppText((n.querySelector("title")||{}).textContent||"");
+      const link=((n.querySelector("link")||{}).textContent||"").trim();
+      if(!title||!link||!/solarpowerportal\.co\.uk/.test(link)) continue;
+      if(seen[link]) continue; seen[link]=1;
+      const pd=(n.querySelector("pubDate")||{}).textContent||"";
+      const d=pd?new Date(pd):null;
+      let desc=_sppText((n.querySelector("description")||{}).textContent||"");
+      if(desc.length>160) desc=desc.slice(0,157).replace(/\s+\S*$/,"")+"…";
+      out.push({sec:_sppSection(link),title:title.length>110?title.slice(0,107)+"…":title,desc:desc,url:link,date:(d&&!isNaN(d))?d.toISOString():""});
+    }
+    if(out.length<3) throw new Error("too few items");
+    out.sort((a,b)=>(b.date||"").localeCompare(a.date||"")); // newest first
+    LIVE_SPP=out.slice(0,10);
+    renderSpp();
+    if(st){st.textContent="live · "+(typeof fmtTime==="function"?fmtTime(new Date()):new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));st.title="Live from the Solar Power Portal RSS feed · refreshed this load · click to refresh";}
+  }catch(e){
+    LIVE_SPP=null; renderSpp();
+    if(st){st.textContent="saved articles"+(bakedDate?" · "+bakedDate:"")+" (live unavailable)";st.title="Live fetch blocked or proxies unreachable — showing the daily-curated set. Click to retry. "+((e&&e.message)||"");}
   }
 }
 
@@ -3348,6 +3428,7 @@ async function loadAll(){
   // 3. Share prices
   try{renderShares();}catch(e){console.error('[loadAll] shares:',e.message);}
   try{renderNews();}catch(e){console.error('[loadAll] news:',e.message);}
+  try{renderSpp();}catch(e){console.error('[loadAll] spp:',e.message);}
   try{renderFableTake();}catch(e){console.error('[loadAll] fable take:',e.message);}
   try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
   try{renderBakeAge();}catch(e){console.error('[loadAll] bake age:',e.message);}
@@ -3362,6 +3443,7 @@ async function loadAll(){
   fetchLiveFx();
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
+  try{fetchLiveSpp();}catch(e){console.error('[loadAll] live spp:',e.message);}
 
   // 4. Grid mix + weather (baked data — renders immediately, live fetch in background)
   try{
