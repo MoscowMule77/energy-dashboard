@@ -174,11 +174,11 @@ table.sh tr:hover td{background:#fafbfc;}
 .news-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
 @media(max-width:900px){.news-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:540px){.news-grid{grid-template-columns:1fr;}}
-/* Solar Power Portal section — 10 cards, 5-up on wide screens */
-.spp-grid{grid-template-columns:repeat(5,minmax(0,1fr));}
-@media(max-width:1200px){.spp-grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
-@media(max-width:900px){.spp-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-@media(max-width:540px){.spp-grid{grid-template-columns:1fr;}}
+\1/* Three-column news band: Energy News | Solar Power Portal | PV Tech (24 Oct 2026) */
+.news-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start;margin-top:18px;}
+@media(max-width:1100px){.news-columns{grid-template-columns:1fr;}}
+.news-columns .news-section{margin:0;}
+.news-columns .news-grid,.news-columns .spp-grid,.news-columns .pvt-grid{grid-template-columns:1fr !important;}
 .news-card{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;transition:border-color .2s,transform .2s;}
 .news-card:hover{border-color:#3b82f6;transform:translateY(-2px);}
 .news-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:20px;}
@@ -743,19 +743,28 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
-<div class="news-section page-news">
-  <h2>📰 Energy News — Policy · Tech · M&amp;A · Markets · AI <span id="news-status" onclick="fetchLiveNews()" title="Click to refresh headlines" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved headlines</span></h2>
+<div class="news-columns page-news">
+<div class="news-section">
+  <h2>📰 Energy News — top 5 <span id="news-status" onclick="fetchLiveNews()" title="Click to refresh headlines" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved headlines</span></h2>
   <div class="news-chips" id="news-chips"></div>
   <div class="news-grid" id="news-grid">
     <!-- rendered from LIVE_NEWS (fetched on open) or baked NEWS_ITEMS fallback -->
   </div>
 </div>
 
-<div class="news-section page-news">
-  <h2>☀️ Solar Power Portal — latest 10 <span id="spp-status" onclick="fetchLiveSpp()" title="Click to refresh articles" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved articles</span></h2>
+<div class="news-section">
+  <h2>☀️ Solar Power Portal — latest 5 <span id="spp-status" onclick="fetchLiveSpp()" title="Click to refresh articles" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved articles</span></h2>
   <div class="news-grid spp-grid" id="spp-grid">
     <!-- rendered from LIVE_SPP (fetched on open) or baked SPP_ITEMS fallback -->
   </div>
+</div>
+
+<div class="news-section">
+  <h2>🔆 PV Tech — latest 5 <span id="pvt-status" onclick="fetchLivePvt()" title="Click to refresh articles" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved articles</span></h2>
+  <div class="news-grid pvt-grid" id="pvt-grid">
+    <!-- rendered from LIVE_PVT (fetched on open) or baked PVT_ITEMS fallback -->
+  </div>
+</div>
 </div>
 
 <div class="footer">Not investment advice · SigEnergy 13.44kWp / 54kWh · CMU110A53B80283
@@ -1920,18 +1929,11 @@ async function openPMDay(c,idx){
 // ═══════════════════════════════════════════════
 const NEWS_CATS={"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"Technology":{bg:"#92400e",fg:"#fde68a"},"M&A":{bg:"#7e22ce",fg:"#e9d5ff"},"Markets":{bg:"#065f46",fg:"#a7f3d0"},"AI":{bg:"#0e7490",fg:"#a5f3fc"}};
 const NEWS_ITEMS=[
-  {"cat":"Policy","title":"UK approves Jackdaw gas field, launches £2bn Energy Wealth Fund","desc":"Energy Secretary Miatta Fahnbulleh granted Jackdaw consent with first gas due by end-October, while the government said North Sea tax revenue will seed a £2bn fund for clean energy; Rosebank remains undecided and bills will not fall this winter.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/energy-policy/uk-government-approves-new-north-sea-gas-field-says-tax-revenue-will-fund-clean-energy","date":"2026-10-21"},
-  {"cat":"Markets","title":"Brent hits $114 as Houthi attacks threaten Saudi energy assets","desc":"Crude climbed to a five-month high as attacks on Saudi infrastructure compounded the Hormuz crisis, keeping upward pressure on UK gas and power prices.","src":"OilPrice.com","url":"https://oilprice.com/Latest-Energy-News/World-News/Brent-Hits-114-as-Houthi-Attacks-Threaten-Saudi-Energy-Infrastructure.html","date":"2026-10-23"},
-  {"cat":"Markets","title":"European gas prices surge to highest level since 2022","desc":"Benchmark European gas jumped again, with EU storage only just above 70 percent full and withdrawals under way, tightening the outlook for UK winter supply.","src":"OilPrice.com","url":"https://oilprice.com/Latest-Energy-News/World-News/European-Natural-Gas-Prices-Surge-to-Highest-Level-Since-2022.html","date":"2026-10-23"},
-  {"cat":"Policy","title":"Gate 2 Phase 1 offers: NESO deadline now 31 October","desc":"Ofgem granted a second one-month extension for NESO to issue the remaining Gate 2 Phase 1 grid offers, citing the earlier NGET extension and a few late additions; no new offer totals have been published.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/solar-planning/ofgem-allows-month-long-extension-to-grid-connection-offers","date":"2026-10-07"},
-  {"cat":"Policy","title":"Government puts affordability ahead of Clean Power 2030 target","desc":"Speaking at the Energy UK conference, Miatta Fahnbulleh said the system is not working for consumers and that oil and gas will remain in the mix for decades.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/energy-policy/uk-energy-policy-clean-power-2030-affordability-politics","date":"2026-10-16"},
   {"cat":"Markets","title":"NESO rules out winter shortages as UK gas prices soar","desc":"NESO forecasts a 5.5GW electricity surplus (8.8% above peak demand) from 31 Oct to 31 Mar, with January the riskiest month; Reuters puts front-month gas up 180% since February.","src":"OilPrice.com","url":"https://oilprice.com/Latest-Energy-News/World-News/UK-Rules-Out-Winter-Energy-Shortages-as-Gas-Prices-Soar.html","date":"2026-10-23"},
   {"cat":"AI","title":"Microsoft exits £2bn Nscale AI data centre over grid delays","desc":"Microsoft pulled out of the planned Loughton, Essex AI campus after the site was told it could not get a grid connection until the early-to-mid 2030s.","src":"Gas to Power Journal","url":"https://gastopowerjournal.com/news/projectsandfinance/microsoft-exits-2-billion-uk-ai-data-centre-amid-grid-delays/","date":"2026-10-23"},
-  {"cat":"AI","title":"ACCURE AI platform to provide analytics for 1.4GW Thorpe Marsh BESS","desc":"Fidra Energy has chosen ACCURE's AI-based battery analytics for what is billed as one of the UK's largest battery storage projects.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/battery-storage/accure-ai-based-platform-to-provide-analytics-for-fidra-s-1-4gw-thorpe-marsh-bess","date":"2026-10-20"},
-  {"cat":"Technology","title":"BW ESS secures financing for 350MW Hams Hall battery","desc":"The 3.5-hour, 350MW Hams Hall BESS in the West Midlands has reached financial close, adding to the UK long-duration battery build-out.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/battery-storage/bw-ess-secures-financing-for-3-5-hour-350mw-hams-hall-bess","date":"2026-10-22"},
-  {"cat":"Technology","title":"Ørsted completes 600MWh BESS; Econergy connects 120MWh in Scotland","desc":"Two large battery projects reached completion or grid connection, boosting UK flexibility capacity ahead of winter.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/battery-storage/-rsted-completes-construction-of-600mwh-bess-econonergy-connects-120mwh-battery-storage-in-scotland","date":"2026-10-21"},
-  {"cat":"M&A","title":"Enviromena buys Essex solar project, to take 233MWp from Innova","desc":"Enviromena acquired the 22.5MW Parkgate Farm CfD-backed project and will take on 233MWp of solar plus 75MW of co-located storage from Innova Renewables by end-2026.","src":"Energy Global","url":"https://www.energyglobal.com/solar/22102026/enviromena-acquires-essex-solar-project-from-innova/","date":"2026-10-22"},
-  {"cat":"Policy","title":"Ofgem approves deal to keep UK-Belgium gas import capacity","desc":"The regulator approved an arrangement to keep the interconnector operating at lower flows because of higher operating and maintenance costs, as European gas tightens.","src":"OilPrice.com","url":"https://oilprice.com/Latest-Energy-News/World-News/Ofgem-Approves-Deal-to-Keep-UK-Gas-Import-Capacity-From-Europe.html","date":"2026-10-22"}
+  {"cat":"Markets","title":"Brent hits $114 as Houthi attacks threaten Saudi energy assets","desc":"Crude climbed to a five-month high as attacks on Saudi infrastructure compounded the Hormuz crisis, keeping upward pressure on UK gas and power prices.","src":"OilPrice.com","url":"https://oilprice.com/Latest-Energy-News/World-News/Brent-Hits-114-as-Houthi-Attacks-Threaten-Saudi-Energy-Infrastructure.html","date":"2026-10-23"},
+  {"cat":"Policy","title":"UK approves Jackdaw gas field, launches £2bn Energy Wealth Fund","desc":"Energy Secretary Miatta Fahnbulleh granted Jackdaw consent with first gas due by end-October, while the government said North Sea tax revenue will seed a £2bn fund for clean energy; Rosebank remains undecided and bills will not fall this winter.","src":"Solar Power Portal","url":"https://www.solarpowerportal.co.uk/energy-policy/uk-government-approves-new-north-sea-gas-field-says-tax-revenue-will-fund-clean-energy","date":"2026-10-21"},
+  {"cat":"M&A","title":"Enviromena buys Essex solar project, to take 233MWp from Innova","desc":"Enviromena acquired the 22.5MW Parkgate Farm CfD-backed project and will take on 233MWp of solar plus 75MW of co-located storage from Innova Renewables by end-2026.","src":"Energy Global","url":"https://www.energyglobal.com/solar/22102026/enviromena-acquires-essex-solar-project-from-innova/","date":"2026-10-22"}
 ];
 function _newsDate(iso){const d=new Date((iso||"").length>10?iso:iso+"T00:00:00");return isNaN(d)?iso:d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
 // LIVE_NEWS is populated by fetchLiveNews() on page open; falls back to baked NEWS_ITEMS.
@@ -1949,9 +1951,9 @@ function renderNewsChips(items){
 function renderNews(){
   const g=document.getElementById("news-grid"); if(!g)return;
   const all=(LIVE_NEWS&&LIVE_NEWS.length)?LIVE_NEWS:NEWS_ITEMS;
-  renderNewsChips(all.slice(0,12));
+  renderNewsChips(all.slice(0,5));
   const items=NEWS_FILTER==='All'?all:all.filter(it=>it.cat===NEWS_FILTER);
-  g.innerHTML=items.slice(0,12).map(function(it){
+  g.innerHTML=items.slice(0,5).map(function(it){
     const c=NEWS_CATS[it.cat]||{bg:"#334155",fg:"#cbd5e1"};
     return "<div class=\"news-card\">"+
       "<span class=\"news-badge\" style=\"background:"+c.bg+";color:"+c.fg+";\">"+_esc(it.cat)+"</span>"+
@@ -2060,19 +2062,14 @@ const SPP_ITEMS=[
   {"sec":"Projects","title":"UK solar approvals, progress and purchases","desc":"This week’s roundup of UK solar planning approvals, construction progress and project acquisitions.","url":"https://www.solarpowerportal.co.uk/solar-projects/uk-solar-approvals-progress-purchases","date":"2026-10-23T09:25:29Z"},
   {"sec":"Projects","title":"Boom Power secures planning permission for 49.99MW Drove Lane solar PV plant in East Yorkshire","desc":"Council approval in October clears Boom Power’s 49.99MW scheme near Wawne to proceed.","url":"https://www.solarpowerportal.co.uk/solar-projects/boom-power-secures-planning-permission-for-49-99mw-drove-lane-solar-pv-plant-in-east-yorkshire","date":"2026-10-23T00:41:16Z"},
   {"sec":"Storage","title":"BW ESS secures financing for 3.5-hour 350MW Hams Hall BESS","desc":"OCBC, Rabobank and Societe Generale are contributing equal shares of the debt facility for the 350MW, 3.5-hour project.","url":"https://www.solarpowerportal.co.uk/battery-storage/bw-ess-secures-financing-for-3-5-hour-350mw-hams-hall-bess","date":"2026-10-22T09:51:47Z"},
-  {"sec":"Policy","title":"UK government approves new North Sea gas field, says tax revenue will fund clean energy","desc":"Ministers consented the Jackdaw field, saying gas could reach UK homes by month-end and tax receipts will support clean energy.","url":"https://www.solarpowerportal.co.uk/energy-policy/uk-government-approves-new-north-sea-gas-field-says-tax-revenue-will-fund-clean-energy","date":"2026-10-21T14:46:59Z"},
-  {"sec":"Storage","title":"Ørsted completes 600MWh BESS, Econonergy connects 120MWh battery storage in Scotland","desc":"Commissioning is under way at Ørsted’s 600MWh Iceni battery, while Econergy’s 120MWh Dalmarnock site is due online in December.","url":"https://www.solarpowerportal.co.uk/battery-storage/-rsted-completes-construction-of-600mwh-bess-econonergy-connects-120mwh-battery-storage-in-scotland","date":"2026-10-21T08:24:54Z"},
-  {"sec":"Storage","title":"ACCURE AI-based platform to provide analytics for Fidra’s 1.4GW Thorpe Marsh BESS","desc":"ACCURE’s AI analytics will monitor Fidra’s 1.4GW Thorpe Marsh battery from factory testing through to commercial operation.","url":"https://www.solarpowerportal.co.uk/battery-storage/accure-ai-based-platform-to-provide-analytics-for-fidra-s-1-4gw-thorpe-marsh-bess","date":"2026-10-20T08:34:06Z"},
-  {"sec":"Policy","title":"Independent investigation finds no evidence of NESO misconduct","desc":"An independent probe found no evidence NESO hid blackout risk during June’s heatwave, as whistleblower claims publicised by Claire Coutinho alleged.","url":"https://www.solarpowerportal.co.uk/energy-policy/independent-investigation-no-evidence-neso-misconduct","date":"2026-10-20T08:00:00Z"},
-  {"sec":"Storage","title":"Ares invests in 1.9GW of Statera’s UK battery and gas portfolio, but not its LDES projects","desc":"Ares Infrastructure Equity’s first European investment covers 1.9GW of Statera’s UK battery and gas assets, leaving the LDES pipeline out.","url":"https://www.solarpowerportal.co.uk/battery-storage/ares-invests-in-1-9gw-of-statera-s-uk-battery-and-gas-portfolio-but-not-its-ldes-projects","date":"2026-10-19T10:30:47Z"},
-  {"sec":"Storage","title":"Foresight invests in 40GWh LDES cap-and-floor winning pumped hydro project in Scotland","desc":"Foresight’s FEIP II fund is backing the 40GWh Earba pumped hydro scheme, a winner in the LDES cap-and-floor round.","url":"https://www.solarpowerportal.co.uk/energy-storage/foresight-invests-in-40gwh-ldes-cap-and-floor-winning-pumped-hydro-project-in-scotland","date":"2026-10-19T09:34:30Z"}
+  {"sec":"Policy","title":"UK government approves new North Sea gas field, says tax revenue will fund clean energy","desc":"Ministers consented the Jackdaw field, saying gas could reach UK homes by month-end and tax receipts will support clean energy.","url":"https://www.solarpowerportal.co.uk/energy-policy/uk-government-approves-new-north-sea-gas-field-says-tax-revenue-will-fund-clean-energy","date":"2026-10-21T14:46:59Z"}
 ];
 let LIVE_SPP=null;
 function _sppSection(url){try{const seg=new URL(url).pathname.split("/").filter(Boolean)[0]||"";return SPP_SECTIONS[seg]||"Solar";}catch(e){return "Solar";}}
 function _sppText(s){try{return (new DOMParser().parseFromString(String(s||""),"text/html").body.textContent||"").replace(/\s+/g," ").trim();}catch(e){return String(s||"").replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();}}
 function renderSpp(){
   const g=document.getElementById("spp-grid"); if(!g)return;
-  const items=((LIVE_SPP&&LIVE_SPP.length)?LIVE_SPP:SPP_ITEMS).slice(0,10);
+  const items=((LIVE_SPP&&LIVE_SPP.length)?LIVE_SPP:SPP_ITEMS).slice(0,5);
   g.innerHTML=items.map(function(it){
     const sec=it.sec||_sppSection(it.url); const c=SPP_COLORS[sec]||{bg:"#334155",fg:"#cbd5e1"};
     return "<div class=\"news-card\">"+
@@ -2107,7 +2104,7 @@ async function fetchLiveSpp(){
     }
     if(out.length<3) throw new Error("too few items");
     out.sort((a,b)=>(b.date||"").localeCompare(a.date||"")); // newest first
-    LIVE_SPP=out.slice(0,10);
+    LIVE_SPP=out.slice(0,5);
     renderSpp();
     if(st){st.textContent="live · "+(typeof fmtTime==="function"?fmtTime(new Date()):new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));st.title="Live from the Solar Power Portal RSS feed · refreshed this load · click to refresh";}
   }catch(e){
@@ -2116,7 +2113,66 @@ async function fetchLiveSpp(){
   }
 }
 
-// ═══════════════════════════════════════════════
+
+// ─────────────────────────────────────────────────────────────
+//  PV TECH — latest 5 (added 24 Oct 2026). Baked PVT_ITEMS are refreshed by the daily run;
+//  fetchLivePvt() then pulls the live WordPress RSS feed through the same proxy chain as SPP.
+// ─────────────────────────────────────────────────────────────
+const PVT_FEED="https://www.pv-tech.org/feed/";
+const PVT_COLORS={"Markets & Finance":{bg:"#065f46",fg:"#a7f3d0"},"Power Plants":{bg:"#b45309",fg:"#fde68a"},"Manufacturing":{bg:"#7e22ce",fg:"#e9d5ff"},"Policy":{bg:"#1d4ed8",fg:"#bfdbfe"},"News":{bg:"#334155",fg:"#cbd5e1"}};
+const PVT_ITEMS=[
+  {"sec":"Markets & Finance","title":"Scatec and EBRD establish US$221 million renewable energy investment platform for Egypt","desc":"Scatec and the EBRD signed a share purchase agreement establishing a renewable energy investment platform for Egypt.","url":"https://www.pv-tech.org/scatec-ebrd-establish-us221-million-renewable-energy-investment-platform-egypt/","date":"2026-10-23"},
+  {"sec":"Markets & Finance","title":"Voltalia Q3 results show strong growth, improvements in curtailment metrics","desc":"Turnover of 177.4 million euros and a 29% increase in electricity generation to 4.1TWh.","url":"https://www.pv-tech.org/voltalia-q3-results-strong-growth-improvement-curtailment-metrics/","date":"2026-10-23"},
+  {"sec":"Policy","title":"Socket Full of Sunshine Act calls for first federal-level support for US plug-in solar","desc":"New Jersey representative Rob Menendez introduced the first federal-level bill to support plug-in (balcony) solar.","url":"https://www.pv-tech.org/socket-full-of-sunshine-act-federal-level-support-us-plug-in-solar/","date":"2026-10-23"},
+  {"sec":"Markets & Finance","title":"European solar PPA prices up 0.4% in Europe and 4.9% in the US","desc":"Average European solar PPA prices rose 0.4% between Q2 and Q3 2026, per LevelTen Energy.","url":"https://www.pv-tech.org/european-solar-ppa-prices-up-0-4-europe-4-9-us/","date":"2026-10-23"},
+  {"sec":"Power Plants","title":"Deriva secures US$540 million for largest solar PV project to date","desc":"Financing closed for the 350MW Sullivan County Power Project, Deriva's largest solar PV project so far.","url":"https://www.pv-tech.org/deriva-secures-us540-million-largest-solar-pv-project-to-date/","date":"2026-10-23"}
+];
+let LIVE_PVT=null;
+function renderPvt(){
+  const g=document.getElementById("pvt-grid"); if(!g)return;
+  const items=((LIVE_PVT&&LIVE_PVT.length)?LIVE_PVT:PVT_ITEMS).slice(0,5);
+  g.innerHTML=items.map(function(it){
+    const sec=it.sec||"News"; const c=PVT_COLORS[sec]||PVT_COLORS["News"];
+    return "<div class=\"news-card\">"+
+      "<span class=\"news-badge\" style=\"background:"+c.bg+";color:"+c.fg+";\">"+_esc(sec)+"</span>"+
+      "<div class=\"news-title\"><a href=\""+_esc(it.url)+"\" target=\"_blank\" rel=\"noopener\">"+_esc(it.title)+"</a></div>"+
+      (it.desc?"<div class=\"news-desc\">"+_esc(it.desc)+"</div>":"")+
+      "<div class=\"news-meta\">PV Tech \u00b7 "+_newsDate(it.date)+"</div>"+
+    "</div>";
+  }).join("");
+}
+async function fetchLivePvt(){
+  const st=document.getElementById("pvt-status");
+  if(st){st.textContent="updating\u2026";st.title="Fetching the latest PV Tech articles\u2026";}
+  const bakedDate=(PVT_ITEMS[0]&&PVT_ITEMS[0].date)?_newsDate(PVT_ITEMS[0].date):"";
+  try{
+    const xml=await _proxyFetch(PVT_FEED);
+    if(!xml) throw new Error("no feed");
+    const doc=new DOMParser().parseFromString(xml,"text/xml");
+    const nodes=[...doc.querySelectorAll("item")];
+    const out=[];
+    for(const nd of nodes){
+      const title=((nd.querySelector("title")||{}).textContent||"").trim();
+      const link=((nd.querySelector("link")||{}).textContent||"").trim();
+      if(!title||!link) continue;
+      let desc=((nd.querySelector("description")||{}).textContent||"").replace(/<[^>]*>/g,"").trim();
+      if(desc.length>160) desc=desc.slice(0,157)+"\u2026";
+      const pd=(nd.querySelector("pubDate")||{}).textContent||"";
+      const d=pd?new Date(pd):null;
+      out.push({sec:"News",title:title,desc:desc,url:link,date:(d&&!isNaN(d))?d.toISOString():""});
+      if(out.length>=5) break;
+    }
+    if(out.length<3) throw new Error("too few items");
+    LIVE_PVT=out.slice(0,5);
+    renderPvt();
+    if(st){st.textContent="live \u00b7 "+(typeof fmtTime==="function"?fmtTime(new Date()):new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}));st.title="Live from the PV Tech RSS feed \u00b7 refreshed this load \u00b7 click to refresh";}
+  }catch(e){
+    LIVE_PVT=null; renderPvt();
+    if(st){st.textContent="saved articles"+(bakedDate?" \u00b7 "+bakedDate:"")+" (live unavailable)";st.title="Live fetch blocked or proxies unreachable \u2014 showing the daily-curated set. Click to retry. "+((e&&e.message)||"");}
+  }
+}
+
+// ═══════════════════════════════════════════
 //  SHARE PRICE DATA
 // ═══════════════════════════════════════════════
 // Prices refreshed 24 Oct 2026 10:35Z - live Yahoo v8 quotes via the built-in browser (Saturday: Friday 23 Oct closes); 1-day % is the real Friday session move. 52wk ranges unchanged from 23 Oct.
@@ -3426,6 +3482,7 @@ async function loadAll(){
   try{renderShares();}catch(e){console.error('[loadAll] shares:',e.message);}
   try{renderNews();}catch(e){console.error('[loadAll] news:',e.message);}
   try{renderSpp();}catch(e){console.error('[loadAll] spp:',e.message);}
+  try{renderPvt();}catch(e){console.error('[loadAll] pvt:',e.message);}
   try{renderFableTake();}catch(e){console.error('[loadAll] fable take:',e.message);}
   try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
   try{renderBakeAge();}catch(e){console.error('[loadAll] bake age:',e.message);}
@@ -3441,6 +3498,7 @@ async function loadAll(){
   // Live headlines on the public share page (RSS via CORS proxy); falls back to baked items.
   try{fetchLiveNews();}catch(e){console.error('[loadAll] live news:',e.message);}
   try{fetchLiveSpp();}catch(e){console.error('[loadAll] live spp:',e.message);}
+  try{fetchLivePvt();}catch(e){console.error('[loadAll] live pvt:',e.message);}
 
   // 4. Grid mix + weather (baked data — renders immediately, live fetch in background)
   try{
