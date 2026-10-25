@@ -832,7 +832,7 @@ function renderBakeAge(){
 }
 
 const DATA_TS = {
-  prices:   {ts:'2026-10-24T10:35:00', source:'Yahoo Finance v8 chart feed read live at 10:30Z on Sat 24 Oct: all markets closed, so every index, commodity and trust quote is the Friday 23 Oct close/last print', isLive:true},
+  prices:   {ts:'2026-10-25T16:15:00', source:'Yahoo Finance v8 chart feed read live at 16:15Z on Sun 25 Oct: all markets closed, so every index, commodity and trust quote is the Friday 23 Oct close/last print', isLive:true},
   grid:     {ts:null, source:'Carbon Intensity API + Open-Meteo', isLive:true},
   battery:  {ts:null, source:'Computed from date/time/season', isLive:true},
   solar:    {ts:null, source:'Computed from date/time/season', isLive:true},
@@ -980,42 +980,38 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 24 Oct 2026 10:35 UTC. All eight days are REAL Open-Meteo daily values for London (51.5,-0.1). Today (Sat 24 Oct):
-    // rain (code 63), max 15.8C / min 7.4C, a very dull 1.34 MJ/m2 - the weakest day of the week bar 23 Oct.
-    time:["2026-10-17","2026-10-18","2026-10-19","2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-24"],
-    temperature_2m_max:[14.0,13.6,14.1,13.1,11.7,14.9,13.3,15.8],
-    temperature_2m_min:[7.7,8.4,9.5,10.3,8.7,8.9,8.8,7.4],
-    weathercode:[3,61,51,53,55,61,63,63],
-    shortwave_radiation_sum:[7.50,7.46,5.90,1.80,2.81,7.34,1.70,1.34]
+    // Updated 25 Oct 2026 16:15 UTC. All eight days are REAL Open-Meteo daily values for London (51.5,-0.1). Today (Sun 25 Oct):
+    // drizzle (code 51) but brighter - max 13.7C / min 9.4C, 7.38 MJ/m2, the sunniest since 22 Oct; clocks went back at 01:00 UTC.
+    time:["2026-10-18","2026-10-19","2026-10-20","2026-10-21","2026-10-22","2026-10-23","2026-10-24","2026-10-25"],
+    temperature_2m_max:[13.6,14.1,13.1,11.7,14.9,13.3,15.7,13.7],
+    temperature_2m_min:[8.4,9.5,10.0,8.7,9.4,8.5,7.4,9.4],
+    weathercode:[61,51,53,55,61,63,63,51],
+    shortwave_radiation_sum:[7.46,5.90,1.80,2.81,7.34,1.70,1.58,7.38]
   },
   daily:[
-    // 17-23 Oct are settled 48-period averages from the Carbon Intensity API (api.carbonintensity.org.uk, read 24 Oct 10:35Z);
-    // 23 Oct finished at 81g average (it was 85g part-day on the evening read). The API mix includes imports as a supply
-    // share, so rows sum to 100.0 natively; 'other' carries pumped/unclassified. Today is the part-day average over 21
-    // settlement periods to 10:30 UTC (CI running at about 62g so far - wind above 54% overnight and this morning).
-    {date:"2026-10-17",mix:{wind:37.5,solar:6.2,nuclear:16.7,gas:7.6,biomass:7.0,imports:19.8,hydro:2.8,coal:0,other:2.4},n:48},
+    // 18-24 Oct are settled averages from the Carbon Intensity API (read 25 Oct 16:15Z; 24 Oct from the 47 half-hours returned,
+    // normalised to 100.0). Today is the part-day average over 32 settlement periods to 16:00 UTC (GMT now).
     {date:"2026-10-18",mix:{wind:34.1,solar:5.3,nuclear:16.9,gas:15.3,biomass:8.5,imports:15.3,hydro:2.2,coal:0,other:2.4},n:48},
     {date:"2026-10-19",mix:{wind:29.9,solar:3.6,nuclear:14.9,gas:30.4,biomass:9.1,imports:7,hydro:2.2,coal:0,other:2.9},n:48},
     {date:"2026-10-20",mix:{wind:39.1,solar:1.7,nuclear:14.8,gas:24.2,biomass:9.3,imports:6.5,hydro:2.0,coal:0,other:2.4},n:48},
     {date:"2026-10-21",mix:{wind:39.7,solar:2.3,nuclear:14.7,gas:17.5,biomass:9.0,imports:12.3,hydro:2.1,coal:0,other:2.4},n:48},
     {date:"2026-10-22",mix:{wind:32.8,solar:4.5,nuclear:15.1,gas:17.0,biomass:8.3,imports:17.2,hydro:2.2,coal:0,other:2.9},n:48},
     {date:"2026-10-23",mix:{wind:42.9,solar:2.1,nuclear:15.0,gas:11.9,biomass:7.4,imports:15.9,hydro:2.6,coal:0,other:2.2},n:48},
-    {date:"2026-10-24",mix:{wind:54.1,solar:1.3,nuclear:17.5,gas:7.5,biomass:2.5,imports:11.5,hydro:3.0,coal:0,other:2.6},n:21}
+    {date:"2026-10-24",mix:{wind:55.0,solar:1.4,nuclear:15.6,gas:12.2,biomass:2.8,imports:8.3,hydro:2.2,coal:0,other:2.5},n:48},
+    {date:"2026-10-25",mix:{wind:52.2,solar:7.1,nuclear:17.0,gas:11.5,biomass:2.5,imports:6.3,hydro:1.7,coal:0,other:1.7},n:32}
   ],
-  // 24 Oct 2026 10:00-10:30 UTC (11:00-11:30 BST) live period (Carbon Intensity API /generation): wind 56.0, nuclear 15.7,
-  // imports 10.7, gas 9.1, solar 5.9, biomass 2.5 (normalised: wind +0.1) - a windy, low-carbon Saturday morning, gas squeezed
-  // to single digits. grid.iamkate.com was not used (stale-page risk); the CI API is the source.
-  currentMix:{wind:56.1,solar:5.9,nuclear:15.7,gas:9.1,biomass:2.5,imports:10.7,hydro:0,coal:0,other:0},
-  carbonIntensity:61,  // gCO2/kWh - CI API forecast for the 10:00-10:30 UTC period (low); today averaging about 62g over 21 periods
-  todayStr:"2026-10-24",
-  fetchedAt:"2026-10-24T10:35:00.000Z",
-  // Hourly irradiance today (W/m2), London, local (BST) hours - REAL Open-Meteo hourly values for 24 Oct, a wet overcast
-  // Saturday: a weak curve peaking at 69 W/m2 at 10:00 with zero direct beam. Integrates to 1.34 MJ/m2, matching
-  // shortwave_radiation_sum above.
-  hourlyIrr:   [0,0,0,0,0,0,0,0,1,12,69,66,61,59,41,37,18,8,0,0,0,0,0,0],
-  hourlyDirect:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+  // 25 Oct 2026 15:30-16:00 UTC live period (Carbon Intensity API /generation): wind 55.2, nuclear 15.9, imports 11.5, gas 9.0,
+  // solar 6.2, biomass 2.1 - a windy, low-carbon Sunday afternoon. grid.iamkate.com not used (stale-page risk); the CI API is the source.
+  currentMix:{wind:55.2,solar:6.2,nuclear:15.9,gas:9.0,biomass:2.1,imports:11.5,hydro:0,coal:0,other:0},
+  carbonIntensity:59,  // gCO2/kWh - CI API actual for the 15:30-16:00 UTC period (low)
+  todayStr:"2026-10-25",
+  fetchedAt:"2026-10-25T16:15:00.000Z",
+  // Hourly irradiance today (W/m2), London, local (GMT) hours - REAL Open-Meteo hourly values for 25 Oct: a bright drizzly
+  // Sunday peaking at 363 W/m2 at 11:00. Integrates to 7.38 MJ/m2, matching shortwave_radiation_sum above.
+  hourlyIrr:   [0,0,0,0,0,0,0,2,63,203,254,363,302,280,278,200,106,0,0,0,0,0,0,0],
+  hourlyDirect:[0,0,0,0,0,0,0,1,28,148,146,265,151,126,151,111,47,0,0,0,0,0,0,0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:66, currentDirect:0, currentDiffuse:66, // 11:00-12:00 BST hour at refresh time
+  currentIrr:106, currentDirect:47, currentDiffuse:59, // 16:00-17:00 hour at refresh time
 };
 
 // Last reading from the SigenStor. NOTE 30 Sep 2026: no live Sigen read this run - by design, not a fault in the run:
@@ -2760,7 +2756,7 @@ async function runSelfCheck() {
 //  stay correct after live refreshes and daily data swaps.
 // ═══════════════════════════════════════════════
 // Editor's note — refreshed by the daily task alongside the data blocks:
-const FABLE_NOTE = "A windy, low-carbon Saturday: wind is carrying 56% of GB supply and gas is down to 9% with carbon at 61g, so the grid is as clean as it has been all week even though Friday's day-ahead rose \u00a311 to \u00a3163 on weaker wind, against \u20ac138 in Germany and \u20ac110 in Spain, none of the three with a negative hour. The roof gets almost nothing from a rain-soaked 1.34 MJ/m2 day (about 4 kWh from the 13.44 kWp array), so the battery should take the cheap windy overnight energy; with Brent at $112, TTF near \u20ac94 and a Budget and a likely Bank Rate hike to come, price rather than margin is the winter risk, and the marginal fuel setting that price is still gas.";
+const FABLE_NOTE = "A windy, low-carbon Sunday: wind is carrying 55% of GB supply and gas is down to 9% with carbon at 59g, while the roof finally gets a decent day - 7.4 MJ/m2 of bright drizzle, roughly 22 kWh from the 13.44 kWp array at PR 0.80 and the best since 22 Oct. With Brent near $112, TTF about \\u20ac94, the Budget on 28 Oct and a likely Bank Rate hike on 5 Nov, price rather than margin is the winter risk, and the marginal fuel setting that price is still gas.";
 function _fchip(label,val,delta,unit,invert){
   let cls='fneut',arrow='·',txt='—';
   if(delta!==null&&!isNaN(delta)){
@@ -2992,7 +2988,7 @@ const AWN_DATA={
   current:{tempC:21.8, feelsC:21.7, humidity:64, windMph:0.2, gustMph:1.1, maxGustMph:5.8, windDir:"E", rainTodayMm:0.0, pressInHg:29.96, uv:0, solarWm2:100, indoorC:25.8},
   solar:{insolation_kwh_m2:0.18, peakWm2:95, mj_so_far:0.64, hourly:[0,0,0,0,0,4,33,57,76,95,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
   perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:2.14, actualKwh:3.26, realizedPR:1.37},
-  summary:"STALE - no AW Net read this run (credentials in a protected location and the AW Net API unreachable), so the figures above are still the 3 Aug snapshot and the card's own asOf reflects that. Today from live Open-Meteo instead: a wet, very dull Saturday - rain (WMO 63), max 15.8C / min 7.4C, just 1.34 MJ/m2 of global irradiance with no direct beam (peak 69 W/m2 at 10:00). At PR 0.80 the 13.44 kWp array manages only about 4 kWh today, so the battery leans on cheap, windy overnight grid rather than the roof."
+  summary:"STALE - no AW Net read (AW Net API unreachable from the sandbox). Open-Meteo for London on Sun 25 Oct: drizzle but bright, max 13.7C / min 9.4C, 7.38 MJ/m2 peaking near 363 W/m2 at 11:00 GMT; expected about 22 kWh from the 13.44 kWp array at PR 0.80 (2.05 kWh/m2 x 13.44 x 0.80)."
 };
 function renderLocalWeather(){
   const el=document.getElementById('awn-body'); if(!el||typeof AWN_DATA==='undefined')return;
@@ -3337,8 +3333,8 @@ function renderStrings(){
 //  GLOBAL MARKETS — index levels + 24h change (Yahoo v8 chart, same-origin via Chrome).
 //  Baked daily; the dashboard re-fetches live when Chrome is open.
 // ═══════════════════════════════════════════════
-const INDICES_DATA={ asOf:"2026-10-24T10:35:00.000Z",
-  pulse:"Weekend, so every market is shut and these are Friday closes: a risk-off finish with the Dow down 1.2% and VIX up 2.2% to 19.5 as Brent touched $114 on the Saudi attacks, Europe soft (DAX -0.8%) and London outperforming with a 0.3% dip - energy-led inflation nerves ahead of next week's UK Budget; Asia was mixed (Nikkei -0.3%, Hang Seng +0.7%).",
+const INDICES_DATA={ asOf:"2026-10-25T16:15:00.000Z",
+  pulse:"Weekend, so every market is shut and these are unchanged Friday closes: a risk-off finish with the Dow down 1.2% and VIX up 2.2% to 19.5 as Brent held near $112 on the Middle-East supply squeeze, Europe soft (DAX -0.8%) and London outperforming with a 0.3% dip - energy-led inflation nerves ahead of the 28 Oct UK Budget; Asia was mixed (Nikkei -0.3%, Hang Seng +0.7%).",
   items:[
     {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10690.36,chg:-0.32},
     {sym:'^FTMC',name:'FTSE 250',region:'UK',price:24237.39,chg:0.11},
@@ -3533,7 +3529,7 @@ async function loadAll(){
   requestAnimationFrame(()=>{
     try{
       drawIntraday(now);
-      setFeedStatus('n2ex','ok','Grid mix read from the Carbon Intensity API at 11:35 BST on Sat 24 Oct: wind 56.0 per cent of supply, nuclear 15.7, imports 10.7, gas just 9.1 and solar 5.9 - carbon 61 gCO2 per kWh now (low) against about 62g averaged over the 21 periods so far. Settled days: Wednesday 97g, Thursday 107g, Friday 81g. GB day-ahead rose 11.18 pounds to 162.95 for Friday delivery on weaker wind; Germany cleared 137.59 euros and Spain 110.09 euros the same day with no negative hours. N2EX prices on this card remain modelled, not read.');
+      setFeedStatus('n2ex','ok','Grid mix read from the Carbon Intensity API at 16:15 GMT on Sun 25 Oct: wind 55.2 per cent of supply, nuclear 15.9, imports 11.5, gas 9.0 and solar 6.2 - carbon 59 gCO2 per kWh now (low). Saturday 24 Oct settled at wind 55.0 and gas 12.2 per cent. N2EX prices on this card remain modelled, not read.');
     }catch(e){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
