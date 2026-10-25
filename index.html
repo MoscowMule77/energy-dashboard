@@ -169,8 +169,8 @@ table.sh tr:hover td{background:#fafbfc;}
 .tl-dot[data-status="pending"].tl-pip{background:#64748b;}
 /* ── News Section ─────────────────────────────────────────────── */
 .news-section{margin:18px 0 0;padding:0 4px;}
-.news-section h2{font-size:13px;font-weight:700;color:#e2e8f0;letter-spacing:.05em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:6px;}
-.news-section h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#334155,transparent);}
+.news-section h2{font-size:13px;font-weight:700;color:#0d2137;letter-spacing:.05em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:6px;}
+.news-section h2::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#94a3b8,transparent);}
 .news-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
 @media(max-width:900px){.news-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:540px){.news-grid{grid-template-columns:1fr;}}
@@ -185,9 +185,9 @@ table.sh tr:hover td{background:#fafbfc;}
 .news-columns .news-section{margin:0;}
 .news-columns .news-grid,.news-columns .spp-grid,.news-columns .pvt-grid{grid-template-columns:1fr !important;}
 /* Tidy band (25 Oct 2026): uniform header zone and equal-height cards so rows align across the three columns */
-.news-columns .news-colhead{min-height:72px;display:flex;flex-direction:column;}
+.news-columns .news-colhead{min-height:30px;display:flex;flex-direction:column;}
 .news-columns .news-colhead h2{margin:0 0 8px;}
-.news-columns .news-colhead .news-chips{margin:0 0 8px;}
+.news-columns{margin-top:10px;}
 .news-columns .news-card{height:152px;overflow:hidden;}
 .news-columns .news-title{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .news-columns .news-desc{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;flex:initial;}
@@ -756,11 +756,11 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
+<div class="news-chips page-news" id="news-chips" style="margin:18px 4px 0;"></div>
 <div class="news-columns page-news">
 <div class="news-section">
   <div class="news-colhead">
-    <h2>📰 General News <span id="news-status" onclick="fetchLiveNews()" title="Click to refresh headlines" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved headlines</span></h2>
-    <div class="news-chips" id="news-chips"></div>
+    <h2>📰 General News <span id="news-status" onclick="fetchLiveNews()" title="Click to refresh headlines" style="font-size:10px;font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved headlines</span></h2>
   </div>
   <div class="news-grid" id="news-grid">
     <!-- rendered from LIVE_NEWS (fetched on open) or baked NEWS_ITEMS fallback -->
@@ -769,7 +769,7 @@ table.sh tr:hover td{background:#fafbfc;}
 
 <div class="news-section">
   <div class="news-colhead">
-    <h2>☀️ Solar Power Portal <span id="spp-status" onclick="fetchLiveSpp()" title="Click to refresh articles" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved articles</span></h2>
+    <h2>☀️ Solar Power Portal <span id="spp-status" onclick="fetchLiveSpp()" title="Click to refresh articles" style="font-size:10px;font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved articles</span></h2>
   </div>
   <div class="news-grid spp-grid" id="spp-grid">
     <!-- rendered from LIVE_SPP (fetched on open) or baked SPP_ITEMS fallback -->
@@ -778,7 +778,7 @@ table.sh tr:hover td{background:#fafbfc;}
 
 <div class="news-section">
   <div class="news-colhead">
-    <h2>🔆 PV Tech <span id="pvt-status" onclick="fetchLivePvt()" title="Click to refresh articles" style="font-size:10px;font-weight:400;color:#94a3b8;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved articles</span></h2>
+    <h2>🔆 PV Tech <span id="pvt-status" onclick="fetchLivePvt()" title="Click to refresh articles" style="font-size:10px;font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;margin-left:6px;cursor:pointer;">saved articles</span></h2>
   </div>
   <div class="news-grid pvt-grid" id="pvt-grid">
     <!-- rendered from LIVE_PVT (fetched on open) or baked PVT_ITEMS fallback -->
