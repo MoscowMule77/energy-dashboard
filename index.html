@@ -832,13 +832,13 @@ function renderBakeAge(){
 }
 
 const DATA_TS = {
-  prices:   {ts:'2026-11-01T08:56:00', source:'Yahoo Finance v8 chart feed read on Sun 1 Nov: markets are shut for the weekend so every index, commodity and trust quote is the Friday 30 Oct close (Asia the Friday session close); GBP/USD is the live weekend FX print', isLive:true},
+  prices:   {ts:'2026-11-01T12:30:00', source:'Yahoo Finance v8 chart feed read on Sun 1 Nov: markets are shut for the weekend so every index, commodity and trust quote is the Friday 30 Oct close (Asia the Friday session close); GBP/USD is the live weekend FX print', isLive:true},
   grid:     {ts:null, source:'Carbon Intensity API + Open-Meteo', isLive:true},
   battery:  {ts:null, source:'Computed from date/time/season', isLive:true},
   solar:    {ts:null, source:'Computed from date/time/season', isLive:true},
   n2ex:     {ts:null, source:'Indicative model', isLive:false},
   briefing: {ts:null, source:'Claude AI (Haiku)', isLive:false},
-  forwards: {ts:'2026-11-01T08:56:00', source:'Indicative - reviewed 1 Nov (Prestige 30 Oct report, the latest; no weekend report): Nov-26 and Cal-27 power, NBP day-ahead, EUA and UKA to the 30 Oct settles, Jan-27 and Sum-27 the 26 Oct settles, Dec-26/Q1-27/Win-27 still the 22-23 Oct marks, Germany Cal-27 a 9 Oct EEX close; TTF Win-26 strip still 23 Sep and badly stale', isLive:false},
+  forwards: {ts:'2026-11-01T12:30:00', source:'Indicative - reviewed 1 Nov (Prestige 30 Oct report, the latest; no weekend report): Nov-26 and Cal-27 power, NBP day-ahead, EUA and UKA to the 30 Oct settles, Jan-27 and Sum-27 the 26 Oct settles, Dec-26/Q1-27/Win-27 still the 22-23 Oct marks, Germany Cal-27 a 9 Oct EEX close; TTF Win-26 strip still 23 Sep and badly stale', isLive:false},
   nav:      {ts:'2026-06-11T07:42:50', source:'Discount = live share price vs last published NAV (AIC)', isLive:true},
 };
 
@@ -980,17 +980,17 @@ function irrKwh(shortwave_mj_m2) {
 // ═══════════════════════════════════════════════
 const INITIAL_GRID_DATA = {
   weather:{
-    // Updated 1 Nov 2026 08:56 UTC. Eight days 25 Oct-1 Nov are REAL Open-Meteo daily values for London (51.5,-0.1); 30 Oct revised to 7.64 MJ/m2 / max 16.3C.
-    // Today (Sun 1 Nov): overcast, code 3 - max 13.0C / min 9.0C, 3.84 MJ/m2 full-day model (peak 199 W/m2 at 13:00 GMT). Clocks went back on 25 Oct, so hours are GMT.
+    // Updated 1 Nov 2026 12:30 UTC (second refresh of the day). Eight days 25 Oct-1 Nov are REAL Open-Meteo daily values for London (51.5,-0.1); 30 Oct revised to 7.64 MJ/m2 / max 16.3C.
+    // Today (Sun 1 Nov): overcast, code 3 - max 13.1C / min 9.0C, 3.81 MJ/m2 full-day model (peak 186 W/m2 at 11:00 GMT). Clocks went back on 25 Oct, so hours are GMT.
     time:["2026-10-25","2026-10-26","2026-10-27","2026-10-28","2026-10-29","2026-10-30","2026-10-31","2026-11-01"],
-    temperature_2m_max:[13.7,16.8,16.8,15.9,16.2,16.3,15.0,13.0],
+    temperature_2m_max:[13.7,16.8,16.8,15.9,16.2,16.3,15.0,13.1],
     temperature_2m_min:[9.3,9.3,9.7,8.2,11.6,9.2,9.6,9.0],
     weathercode:[51,55,61,3,3,45,3,3],
-    shortwave_radiation_sum:[7.34,1.42,5.83,6.16,4.56,7.64,7.15,3.84]
+    shortwave_radiation_sum:[7.34,1.42,5.83,6.16,4.56,7.64,7.15,3.81]
   },
   daily:[
     // 25-29 Oct are settled averages from the Carbon Intensity API; 30 and 31 Oct promoted to settled (48 half-hours each, normalised to 100.0).
-    // The 31 Oct scheduled run did not execute, so both days are promoted in this run. Today is the part-day average over 17 settlement periods (00:00-08:30 UTC / GMT).
+    // The 31 Oct scheduled run did not execute, so both days are promoted in this run. Today is the part-day average over 24 settlement periods (00:00-12:00 UTC / GMT).
     {date:"2026-10-25",mix:{wind:51.6,solar:4.7,nuclear:16.2,gas:12.7,biomass:3,imports:6.8,hydro:2.5,coal:0,other:2.5},n:48},
     {date:"2026-10-26",mix:{wind:51.3,solar:1.1,nuclear:14.9,gas:14.2,biomass:7.2,imports:6.4,hydro:2.5,coal:0,other:2.4},n:48},
     {date:"2026-10-27",mix:{wind:51.5,solar:3.9,nuclear:14.4,gas:16.4,biomass:6.8,imports:2.4,hydro:2.2,coal:0,other:2.4},n:48},
@@ -998,20 +998,20 @@ const INITIAL_GRID_DATA = {
     {date:"2026-10-29",mix:{wind:13.6,solar:3.5,nuclear:14.6,gas:48,biomass:9.4,imports:5.6,hydro:2.7,coal:0,other:2.6},n:48},
     {date:"2026-10-30",mix:{wind:20.6,solar:4.1,nuclear:14.8,gas:40.2,biomass:9.6,imports:5.8,hydro:2.1,coal:0,other:2.8},n:48},
     {date:"2026-10-31",mix:{wind:10.9,solar:4.4,nuclear:17.2,gas:41.3,biomass:11.1,imports:10.5,hydro:2.5,coal:0,other:2.1},n:48},
-    {date:"2026-11-01",mix:{wind:12.8,solar:0.3,nuclear:20,gas:38.4,biomass:13,imports:12.3,hydro:2.2,coal:0,other:1},n:17}
+    {date:"2026-11-01",mix:{wind:12.1,solar:3.3,nuclear:18.7,gas:36.6,biomass:12.2,imports:13.9,hydro:2.2,coal:0,other:1},n:24}
   ],
-  // 1 Nov 2026 08:00-08:30 UTC live period (Carbon Intensity API /generation): gas 36.9, nuclear 18.0, imports 15.9, wind 11.6, biomass 11.6,
-  // solar 3.0, hydro 2.3, other 0.7 (sums 100.0). Source is the CI API, not grid.iamkate.com (stale-page risk).
-  currentMix:{wind:11.6,solar:3,nuclear:18,gas:36.9,biomass:11.6,imports:15.9,hydro:2.3,coal:0,other:0.7},
-  carbonIntensity:173,  // gCO2/kWh - CI API actual for the 08:00-08:30 UTC period (index high)
+  // 1 Nov 2026 11:30-12:00 UTC live period (Carbon Intensity API /generation): gas 30.7, imports 16.9, nuclear 14.7, solar 13.3, wind 11.6,
+  // biomass 9.5, hydro 2.2, other 1.1 (sums 100.0). Source is the CI API, not grid.iamkate.com (stale-page risk).
+  currentMix:{wind:11.6,solar:13.3,nuclear:14.7,gas:30.7,biomass:9.5,imports:16.9,hydro:2.2,coal:0,other:1.1},
+  carbonIntensity:156,  // gCO2/kWh - CI API actual for the 11:30-12:00 UTC period (index moderate)
   todayStr:"2026-11-01",
-  fetchedAt:"2026-11-01T08:56:00.000Z",
-  // Hourly irradiance today (W/m2), London, GMT hours - Open-Meteo hourly values for 1 Nov (observed to ~08:00, modelled after): an overcast, dim day
-  // peaking at 199 W/m2 at 13:00 (37 direct). Integrates to 3.84 MJ/m2, matching shortwave_radiation_sum above.
-  hourlyIrr:   [0, 0, 0, 0, 0, 0, 0, 0, 23, 61, 145, 163, 155, 199, 141, 128, 53, 0, 0, 0, 0, 0, 0, 0],
-  hourlyDirect:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 13, 26, 37, 1, 15, 16, 1, 0, 0, 0, 0, 0, 0, 0],
+  fetchedAt:"2026-11-01T12:30:00.000Z",
+  // Hourly irradiance today (W/m2), London, GMT hours - Open-Meteo hourly values for 1 Nov: an overcast, dim day peaking at 186 W/m2 at 11:00
+  // (25 direct). Integrates to 3.81 MJ/m2, matching shortwave_radiation_sum above.
+  hourlyIrr:   [0, 0, 0, 0, 0, 0, 0, 0, 25, 75, 140, 186, 127, 174, 143, 140, 48, 0, 0, 0, 0, 0, 0, 0],
+  hourlyDirect:[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 25, 18, 22, 14, 38, 0, 0, 0, 0, 0, 0, 0, 0],
   irrStartHour:0, // first entry = 00:00 local
-  currentIrr:23, currentDirect:0, currentDiffuse:23, // 08:00-09:00 hour at refresh time
+  currentIrr:127, currentDirect:18, currentDiffuse:109, // 12:00-13:00 hour at refresh time
 };
 
 // Last reading from the SigenStor. NOTE 30 Sep 2026: no live Sigen read this run - by design, not a fault in the run:
@@ -1022,7 +1022,7 @@ const LAST_KNOWN_SOLAR = {
   solarKw: 12.23,   // live PV power (Sigen pVPower) - 30 Jun 2026 ~14:50 BST
   soc: 0.808,       // 80.8% - 30 Jun 2026 ~14:50 BST (last successful Sigen realtimeInfo read)
   ts: '2026-06-30T13:50:00.000Z',
-  source: 'Sigen OpenAPI - 1 Nov run: no live read (credentials in a protected location and the Sigen API unreachable; station permission code 1111 also outstanding since 13 Jul). SOC/PV-power above remain the last good realtime read (30 Jun) and renderSystemGraphic falls back to estimateSoc(), driven by a dim 3.84 MJ/m2 today - expect only a modest, late-morning-to-afternoon solar charge.'
+  source: 'Sigen OpenAPI - 1 Nov run: no live read (credentials in a protected location and the Sigen API unreachable; station permission code 1111 also outstanding since 13 Jul). SOC/PV-power above remain the last good realtime read (30 Jun) and renderSystemGraphic falls back to estimateSoc(), driven by a dim 3.81 MJ/m2 today - expect only a modest, late-morning-to-afternoon solar charge.'
 };
 
 let GRID_DATA = INITIAL_GRID_DATA;
@@ -2988,7 +2988,7 @@ const AWN_DATA={
   current:{tempC:21.8, feelsC:21.7, humidity:64, windMph:0.2, gustMph:1.1, maxGustMph:5.8, windDir:"E", rainTodayMm:0.0, pressInHg:29.96, uv:0, solarWm2:100, indoorC:25.8},
   solar:{insolation_kwh_m2:0.18, peakWm2:95, mj_so_far:0.64, hourly:[0,0,0,0,0,4,33,57,76,95,0,0,0,0,0,0,0,0,0,0,0,0,0,0]},
   perf:{refPR:0.90, sysKwp:13.44, expectedKwhSoFar:2.14, actualKwh:3.26, realizedPR:1.37},
-  summary:"STALE - no AW Net read (AW Net API unreachable from the sandbox). Open-Meteo for London on Sun 1 Nov: an overcast, mild-but-dim day, max 13.0C / min 9.0C, 3.84 MJ/m2 with a low, broad curve peaking near 199 W/m2 at 13:00 GMT; expected about 11.5 kWh from the 13.44 kWp array at PR 0.80 (1.07 kWh/m2 x 13.44 x 0.80)."
+  summary:"STALE - no AW Net read (AW Net API unreachable from the sandbox). Open-Meteo for London on Sun 1 Nov: an overcast, mild-but-dim day, max 13.1C / min 9.0C, 3.81 MJ/m2 with a low, broad curve peaking near 186 W/m2 at 11:00 GMT; expected about 11.4 kWh from the 13.44 kWp array at PR 0.80 (1.07 kWh/m2 x 13.44 x 0.80)."
 };
 function renderLocalWeather(){
   const el=document.getElementById('awn-body'); if(!el||typeof AWN_DATA==='undefined')return;
@@ -3333,7 +3333,7 @@ function renderStrings(){
 //  GLOBAL MARKETS — index levels + 24h change (Yahoo v8 chart, same-origin via Chrome).
 //  Baked daily; the dashboard re-fetches live when Chrome is open.
 // ═══════════════════════════════════════════════
-const INDICES_DATA={ asOf:"2026-11-01T08:56:00.000Z",
+const INDICES_DATA={ asOf:"2026-11-01T12:30:00.000Z",
   pulse:"Risk-off into the weekend: Friday closes saw the Nasdaq fall 2.9%, the S&P 500 1.8% and the Dow 1.1%, the VIX jump 12.9% to 19.4, Europe slide (Euro Stoxx 50 -1.2%, DAX -0.9%, FTSE 250 -0.9%) with the FTSE 100 flat at +0.07% to 10,730, the Nikkei down 2.1% and the Hang Seng up 1.5% - Brent held near $113 and TTF gas jumped 6% to about €104 while gold fell 3.3%. All quotes are Friday 30 Oct closes; markets reopen Monday.",
   items:[
     {sym:'^FTSE',name:'FTSE 100',region:'UK',price:10729.78,chg:0.07},
@@ -3529,7 +3529,7 @@ async function loadAll(){
   requestAnimationFrame(()=>{
     try{
       drawIntraday(now);
-      setFeedStatus('n2ex','ok','Grid mix read from the Carbon Intensity API at 08:30 GMT on Sun 1 Nov: gas 36.9 per cent of supply, nuclear 18.0, imports 15.9, wind 11.6, biomass 11.6 and solar 3.0 - carbon about 173 gCO2 per kWh (high). Saturday 31 Oct settled at gas 41.3 and wind 10.9 per cent. N2EX prices on this card remain modelled, not read.');
+      setFeedStatus('n2ex','ok','Grid mix read from the Carbon Intensity API at 12:00 GMT on Sun 1 Nov: gas 30.7 per cent of supply, imports 16.9, nuclear 14.7, solar 13.3, wind 11.6 and biomass 9.5 - carbon about 156 gCO2 per kWh (moderate). Saturday 31 Oct settled at gas 41.3 and wind 10.9 per cent. N2EX prices on this card remain modelled, not read.');
     }catch(e){
       console.error('[loadAll] N2EX intraday:',e.message);
       setFeedStatus('n2ex','error',e.message);
