@@ -3383,7 +3383,7 @@ function switchPage(name){
   const bar=document.getElementById('page-tabs'); if(!bar)return;
   let el=bar.nextElementSibling;
   while(el && !(el.classList&&el.classList.contains('footer'))){
-    if(el.classList&&(el.classList.contains('row')||el.classList.contains('news-section'))){
+    if(el.classList&&(el.classList.contains('row')||el.classList.contains('news-section')||el.classList.contains('news-columns')||el.classList.contains('news-chips'))){
       const p=el.classList.contains('page-markets')?'markets':(el.classList.contains('page-news')?'news':'energy');
       el.style.display=(p===name)?'':'none';
     }
