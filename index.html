@@ -722,6 +722,19 @@ table.sh tr:hover td{background:#fafbfc;}
   </div>
 </div>
 
+<!-- ═══ GLOBAL MACRO — GROWTH MOMENTUM (added 5 Nov 2026) ═══ -->
+<div class="row page-markets">
+  <div class="card">
+    <div class="sec" style="color:#0d2137;border-color:#cbd5e1;">
+      <span>🧭 Global Macro — Growth Momentum</span>
+      <div class="sec-r"><span id="gmacro-asof" class="ts">–</span><a href="https://www.imf.org/en/publications/weo" target="_blank">IMF WEO ↗</a><a href="https://tradingeconomics.com/bonds" target="_blank">Yields ↗</a></div>
+    </div>
+    <div id="gmacro-banner"></div>
+    <div id="gmacro-body"></div>
+    <div class="fn" id="gmacro-note"></div>
+  </div>
+</div>
+
 <!-- ═══ FORWARDS + CARBON + BESS ═══ -->
 <div class="row col3">
   <div class="card">
@@ -3420,6 +3433,67 @@ function renderMacroCmdty(){
   if(cb){cb.innerHTML=CMDTY_DATA.rows.map(r=>row(r,carrow)).join('');try{document.getElementById('cmdty-asof').textContent='Updated '+new Date(CMDTY_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}}
 }
 // ═══ POWER FORWARDS + CARBON — baked daily by the 7am task (was hard-coded HTML) ═══
+// ─────────────────────────────────────────────────────────────
+//  GLOBAL MACRO & GROWTH MOMENTUM (added 5 Nov 2026 at Lee's request).
+//  Each reading carries mom: +1 growth-supportive / 0 neutral / -1 growth-negative, scored from
+//  a GLOBAL GROWTH perspective (GDP prints by direction; rising inflation and policy rates count
+//  against growth; 10-yr yields near cycle highs tighten conditions; trade and shipping read as
+//  demand signals; VIX is read live from the indices feed: <=18 supportive, >=25 stress).
+//  The banner sums all readings: >=+4 POSITIVE, <=-4 NEGATIVE, else NEUTRAL.
+//  Refreshed by the daily run (see runbook Step 6k) - GDP/CPI/rates move only on release days.
+const GMACRO_DATA={asOf:"2026-11-05",
+ regions:[
+  {r:"US",
+   gdp:{v:"+3.4% q/q ann. (Q3)",sub:"BEA advance, 29 Oct - up from +2.2% in Q2, consumption +3.8%; inventories flattered the headline",mom:1},
+   cpi:{v:"3.7% (Sep)",sub:"up from 3.4%, energy-led (gasoline +9.1% m/m); core 2.6%. Oct print due 10 Nov",mom:-1},
+   rate:{v:"3.75-4.00%",sub:"held 28 Oct (10-2, two hike dissents) after the Sep HIKE; markets ~80% priced for another on 9 Dec",mom:-1},
+   y10:{v:"4.92%",sub:"4 Nov close (TradingEconomics) - near cycle highs on inflation and hike risk",mom:-1}},
+  {r:"China",
+   gdp:{v:"+4.5% y/y (Q3)",sub:"NBS, 19 Oct - up from 4.3%, carried by exports (+36% y/y in Sep) while retail sales grew just 1.1%",mom:1},
+   cpi:{v:"0.9% (Sep)",sub:"near-deflationary domestic demand; imported energy the only real upward push. Oct print ~9 Nov",mom:-1},
+   rate:{v:"LPR 3.00%",sub:"1-yr loan prime rate unchanged a 17th straight month at the 20 Oct fixing; next 20 Nov",mom:0},
+   y10:{v:"1.62%",sub:"4 Nov - ultra-low yields signal entrenched weak-demand expectations",mom:-1}},
+  {r:"Eurozone",
+   gdp:{v:"+0.4% q/q (Q3)",sub:"Eurostat flash, 30 Oct - beat the 0.2% consensus, but uneven: France -0.1%, Germany +0.2%",mom:1},
+   cpi:{v:"4.0% (Oct)",sub:"flash, 4 Nov - a 3-year high, almost entirely the energy shock (energy +20.8% y/y); core ~2.5%",mom:-1},
+   rate:{v:"2.50% depo",sub:"held 29 Oct after 25bp hikes in Jun and Sep; December live. Lagarde departing Feb 2027",mom:-1},
+   y10:{v:"3.29% Bund",sub:"4 Nov - near recent highs, consistent with hike risk",mom:-1}},
+  {r:"UK",
+   gdp:{v:"+0.1% m/m (Aug)",sub:"ONS monthly GDP, slowing from +0.4% in Jul (3m/3m +0.7%); Q3 due 12 Nov - momentum fading",mom:-1},
+   cpi:{v:"3.5% (Sep)",sub:"energy-led overshoot of the 2% target; Oct print ~18 Nov",mom:-1},
+   rate:{v:"3.75%",sub:"BoE decision TODAY at 12:00 - markets ~94% priced for a 25bp hike to 4.00%, the first since 2023",mom:-1},
+   y10:{v:"5.16%",sub:"4 Nov - gilts rallied ~20bp since the 28 Oct Budget, but still very high in absolute terms",mom:0}}
+ ],
+ global:[
+  {l:"World trade (WTO barometer)",v:"102.0",sub:"Sep reading, above trend: AI/electronics demand offsetting the Hormuz drag (container sub-index 99.6). IMF Oct WEO revised 2026 global growth UP to 3.1%",mom:1},
+  {l:"Container rates (Drewry WCI)",v:"$4,429/40ft",sub:"wk of 29 Oct, -3% w/w and falling - Drewry sees US imports -11% m/m: a softening demand signal (only 2 Hormuz transits last week)",mom:-1},
+  {l:"Baltic Dry Index",v:"2,694",sub:"4 Nov, +4% on the day in a choppy range - capesize-led bounce, no clear trend",mom:0},
+  {l:"VIX (live)",v:"",live:"vix",sub:"read live from the indices feed above - below 18 reads growth-supportive, 25+ reads as stress",mom:0}
+ ],
+ note:"Scoring: every reading is scored -1/0/+1 for what it means for global growth, then summed (>=+4 positive, <=-4 negative). Current read: headline growth is holding up - the US accelerating, Chinese exports booming, the eurozone beating - but the energy shock has central banks hiking into it, long yields sit near cycle highs, UK momentum is fading and container rates point to softening demand, so breadth is narrow and momentum reads negative. Refreshed daily; GDP, CPI and rates move only on release days."
+};
+function renderGMacro(){
+  const b=document.getElementById('gmacro-body'), ban=document.getElementById('gmacro-banner'); if(!b)return;
+  let vix=null; try{ vix=INDICES_DATA.items.find(function(i){return i.sym==='^VIX';}); }catch(e){}
+  let score=0, total=0;
+  const mark=function(m){score+=m;total++;return m>0?'<span style="color:#15803d;font-weight:700;">\u25b2</span>':m<0?'<span style="color:#b91c1c;font-weight:700;">\u25bc</span>':'<span style="color:#94a3b8;font-weight:700;">\u00b7</span>';};
+  const td=function(o){return '<td style="padding:6px 8px;vertical-align:top;border-bottom:1px solid #f1f5f9;"><div style="font-weight:700;color:#0f172a;font-size:12px;white-space:nowrap;">'+o.v+' '+mark(o.mom)+'</div><div style="font-size:9px;color:#94a3b8;line-height:1.35;">'+o.sub+'</div></td>';};
+  let html='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;min-width:640px;"><tr style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#64748b;"><th style="text-align:left;padding:4px 8px;"></th><th style="text-align:left;padding:4px 8px;">GDP growth</th><th style="text-align:left;padding:4px 8px;">Inflation</th><th style="text-align:left;padding:4px 8px;">Policy rate</th><th style="text-align:left;padding:4px 8px;">10-yr yield</th></tr>';
+  for(const r of GMACRO_DATA.regions){ html+='<tr><td style="padding:6px 8px;font-weight:700;color:#0d2137;white-space:nowrap;vertical-align:top;">'+r.r+'</td>'+td(r.gdp)+td(r.cpi)+td(r.rate)+td(r.y10)+'</tr>'; }
+  html+='</table></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin-top:10px;">';
+  for(const g of GMACRO_DATA.global){
+    let v=g.v, m=g.mom;
+    if(g.live==='vix'&&vix){ v=vix.price.toFixed(1)+' ('+(vix.chg>0?'+':'')+vix.chg.toFixed(1)+'%)'; m=vix.price>=25?-1:(vix.price<=18?1:0); }
+    html+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;"><div style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">'+g.l+'</div><div style="font-weight:700;color:#0f172a;font-size:13px;">'+v+' '+mark(m)+'</div><div style="font-size:9px;color:#94a3b8;line-height:1.35;">'+g.sub+'</div></div>';
+  }
+  html+='</div>';
+  b.innerHTML=html;
+  const lab=score>=4?['POSITIVE','#15803d','#dcfce7']:(score<=-4?['NEGATIVE','#b91c1c','#fee2e2']:['NEUTRAL','#92400e','#fef3c7']);
+  if(ban)ban.innerHTML='<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:'+lab[2]+';border:1px solid '+lab[1]+'33;border-radius:8px;padding:8px 12px;margin-bottom:10px;"><span style="font-size:11px;font-weight:800;letter-spacing:.08em;color:'+lab[1]+';">GROWTH MOMENTUM: '+lab[0]+'</span><span style="font-size:11px;color:#475569;">score '+(score>0?'+':'')+score+' across '+total+' readings (+1 growth-supportive / -1 growth-negative)</span></div>';
+  try{document.getElementById('gmacro-asof').textContent='Updated '+new Date(GMACRO_DATA.asOf+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'});}catch(e){}
+  try{document.getElementById('gmacro-note').textContent=GMACRO_DATA.note;}catch(e){}
+}
+
 const FWD_DATA={asOf:"2026-11-04",rows:[
   {l:"UK Win-26",v:"£144.34/MWh",sub:"29 Sep settlement (Prestige) - the season is now IN DELIVERY and trades as months: Nov-26 £194.66 (30 Oct settle, Prestige report of 30 Oct), Jan-27 £200.01 (26 Oct), Dec-26 £181.90 and Q1-27 £186.78 (3 Nov, Prestige), so read those, not this stale seasonal mark; UK Win-27 closed at £128.78 on 22 Oct"},
   {l:"UK Sum-27",v:"£134.19/MWh",sub:"26 Oct settlement (Prestige report of 27 Oct) - no fresher print in the 28 Oct report; up from the £127.96 broker indication of 20 Oct"},
@@ -3502,6 +3576,7 @@ async function loadAll(){
   try{renderMacroCmdty();}catch(e){console.error('[loadAll] macro/cmdty:',e.message);}
   try{renderBakeAge();}catch(e){console.error('[loadAll] bake age:',e.message);}
   try{renderIndices();}catch(e){console.error('[loadAll] indices:',e.message);}
+  try{renderGMacro();}catch(e){console.error('[loadAll] gmacro:',e.message);}
   try{switchPage((function(){try{return localStorage.getItem('dash_page')||'energy';}catch(e){return 'energy';}})());}catch(e){console.error('[loadAll] tabs:',e.message);}
   try{renderFwdCarbon();}catch(e){console.error('[loadAll] fwd/carbon:',e.message);}
   try{renderLocalWeather();}catch(e){console.error('[loadAll] local weather:',e.message);}
